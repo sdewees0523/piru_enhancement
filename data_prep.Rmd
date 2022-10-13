@@ -1,0 +1,78 @@
+---
+title: "Untitled"
+author: "Shane Dewees"
+date: "2022-10-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(tidyverse)
+library(lubridate)
+```
+
+```{r}
+survival <- read.csv(here("data", "survival_data.csv")) %>% 
+  select(date, plot_number, MAFA_removal, species, alive) %>% 
+  mutate(date = mdy(date),
+         month = month(date),
+         year = year(date)) %>% 
+  group_by(month, year, plot_number, species) %>% 
+  summarise(alive = sum(alive, na.rm = TRUE)) %>% 
+  ungroup()
+  
+
+mafa_cover <- read.csv(here("data", "mafa_cover.csv")) %>%
+  filter(plot_type == "enhancement") %>% 
+  select(date, plot_number, MAFA_removal, cover_type, cover_.) %>% 
+  rename(cover_percent = cover_.) %>% 
+  mutate(date = mdy(date),
+         month = month(date),
+         year = year(date)) %>% 
+  filter(cover_type %in% c("MAFA", "MAFA alive")) 
+    
+par <- read.csv(here("data", "par_data.csv")) %>% 
+  select(date, plot, ambient_PAR_1, below_PAR_1) %>% 
+  rename(plot_number = plot) %>% 
+  mutate(date = case_when(date == "Jan. 30, 2019"~"1/30/2019",
+                          date == "25-Jan-19"~"1/25/2019",
+                          date == "24-Mar-19"~"3/24/2019",
+                          date == "Nov. 16, 2019" ~ "11/16/2019",
+                          date == "9-Sep-19" ~ "9/09/2019",
+                          date == "19-Jul-19"~ "7/19/2019",
+                          date == "24-May-19" ~ "5/24/2019",
+                          TRUE ~ date),
+         plot_number = str_remove(plot_number, "ENH0"),
+         plot_number = str_remove(plot_number, "ENH"),
+         plot_number = as.numeric(plot_number),
+         date = mdy(date)) %>% 
+  group_by(date, plot_number) %>% 
+  summarize(ambient_par = mean(ambient_PAR_1),
+            below_par = mean(below_PAR_1)) %>% 
+  ungroup() %>% 
+  mutate(normalized_par = below_par/ambient_par,
+         month = month(date),
+         year = year(date)) %>% 
+  select(month, year, plot_number, normalized_par)
+  
+tdr <- read.csv(here("data", "tdr_data.csv")) %>% 
+  select(date, plot, TDR.value) %>% 
+  rename(plot_number = plot,
+         soil_moisture = TDR.value) %>% 
+  mutate(plot_number = str_remove(plot_number, "ENH0"),
+         plot_number = str_remove(plot_number, "ENH"),
+         plot_number = as.numeric(plot_number),
+         date = dmy(date)) %>% 
+  group_by(date, plot_number) %>% 
+  summarize(soil_moisture = mean(soil_moisture, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  mutate(month = month(date),
+         year = year(date)) %>% 
+  select(!date)
+
+survival_soil_moisture <- survival %>% 
+  left_join(tdr, by = c("month", "year", "plot_number"))
+  drop_na()
+```
+
