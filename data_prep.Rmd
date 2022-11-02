@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Piru Enhancement - data preparation"
 author: "Shane Dewees"
 date: "2022-10-11"
 output: html_document
@@ -8,11 +8,11 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(here)
-library(tidyverse)
-library(lubridate)
+library(tidyverse) # data wrangling
+library(lubridate) # dates and times
 ```
 
-```{r}
+```{r loaddata, include=TRUE}
 survival <- read.csv(here("data", "survival_data.csv")) %>% 
   select(date, plot_number, MAFA_removal, species, alive) %>% 
   mutate(date = mdy(date),
