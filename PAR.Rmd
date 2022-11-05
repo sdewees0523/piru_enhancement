@@ -30,32 +30,17 @@ par_meanSD <- par %>%
  
 print(par_meanSD)
 ```
-```{r par line graph by month and by treatment, include=FALSE, echo=FALSE}
+```{r par line graph by month and by treatment, include=TRUE, echo=FALSE}
 par_line <- ggplot(data = par_meanSD, aes(x = month, y = mean, group=treatment)) +
-   geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.1, 
-    position=position_dodge(0.05)) +
-   geom_line(aes(linetype=treatment))+
-     geom_point()+
-  labs(title="Normalized PAR",x="Month", y = "Normalized PAR")+
-    theme_classic()
-  
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.1, 
+  position = position_dodge(0.05)) +
+  geom_line(aes(color = treatment)) +
+  geom_point()+
+  scale_color_manual(values=c('#F19B34', '#D3E3CA', '#9F7E75'))+
+  theme_classic() +
+  labs(title="Normalized PAR",x="Month", y = "Normalized PAR")
 
-par_line
-
-
-
-
-
-# Change color by groups
-# Add error bars
-p <- ggplot(df3, aes(x=dose, y=len, group = supp, color=supp))+ 
-    geom_errorbar(aes(ymin=len-sd, ymax=len+sd), width=.1, 
-    position=position_dodge(0.05)) +
-    geom_line(aes(linetype=supp)) + 
-    geom_point(aes(shape=supp))+
-    labs(title="Plot of lengthby dose",x="Dose (mg)", y = "Length")+
-    theme_classic()
-p + theme_classic() + scale_color_manual(values=c('#999999','#E69F00'))
+print(par_line)
 ```
 
 
