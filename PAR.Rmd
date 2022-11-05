@@ -34,9 +34,9 @@ print(par_meanSD)
 par_line <- ggplot(data = par_meanSD, aes(x = month, y = mean, group=treatment)) +
   geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.1, 
   position = position_dodge(0.05)) +
-  geom_line(aes(color = treatment)) +
+  geom_line(aes(color = treatment, linetype = treatment)) +
   geom_point()+
-  scale_color_manual(values=c('#F19B34', '#D3E3CA', '#9F7E75'))+
+  scale_color_manual(values=c('#F19B34', '#D3E3CA', '#9F7E75')) +
   theme_classic() +
   labs(title="Normalized PAR",x="Month", y = "Normalized PAR")
 
