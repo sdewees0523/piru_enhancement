@@ -7,9 +7,64 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(here) # similar to set working directory
+library(tidyverse) # data wrangling
+library(lubridate) # dates and times
+library(ggplot2)
 ```
 
-```{r}
-par_canopycover <- ggplot()
+```{r view normalized par, include=TRUE}
+print(par)
 ```
+Testing the normPAR dataset for normality.
+```{r par test for normality}
+par_normality <- ggplot(par) + geom_histogram(aes(x = normalized_par))
+par_normality
+```
+Calculate the mean and standard errors of norm_PAR by ENH treatment.
+```{r norm_PAR mean and SD by treatment}
+
+par_meanSD <- par %>%
+  group_by(treatment, month) %>% # to graph by ENH treatment
+  summarise_at(vars(normalized_par), funs(mean,sd)) 
+ 
+print(par_meanSD)
+```
+```{r par line graph by month and by treatment, include=FALSE, echo=FALSE}
+par_line <- ggplot(data = par_meanSD, aes(x = month, y = mean, group=treatment)) +
+   geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.1, 
+    position=position_dodge(0.05)) +
+   geom_line(aes(linetype=treatment))+
+     geom_point()+
+  labs(title="Normalized PAR",x="Month", y = "Normalized PAR")+
+    theme_classic()
+  
+
+par_line
+
+
+
+
+
+# Change color by groups
+# Add error bars
+p <- ggplot(df3, aes(x=dose, y=len, group = supp, color=supp))+ 
+    geom_errorbar(aes(ymin=len-sd, ymax=len+sd), width=.1, 
+    position=position_dodge(0.05)) +
+    geom_line(aes(linetype=supp)) + 
+    geom_point(aes(shape=supp))+
+    labs(title="Plot of lengthby dose",x="Dose (mg)", y = "Length")+
+    theme_classic()
+p + theme_classic() + scale_color_manual(values=c('#999999','#E69F00'))
+```
+
+
+```{r plot par x canopy cover, include=TRUE}
+par_canopycover <- ggplot(data = par, aes(x = month, y = normalized_par, group=treatment)) +
+   geom_line(aes(linetype=treatment)) 
+#  geom_point(color="red", size=3)
+print(par_canopycover)
+
+```
+
 
