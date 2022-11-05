@@ -55,8 +55,9 @@ print(mortality)
 
 ```{r par, include=TRUE}
 par <- read.csv(here("data", "par_data.csv")) %>% 
-  select(date, plot, readingno, ambient_PAR_1, below_PAR_1) %>% 
+  select(date, plot, weeding, readingno, ambient_PAR_1, below_PAR_1) %>% 
   rename(plot_number = plot) %>% 
+  rename(treatment = weeding) %>% 
   mutate(date = case_when(date == "Jan. 30, 2019"~"1/30/2019",
                           date == "25-Jan-19"~"1/25/2019",
                           date == "24-Mar-19"~"3/24/2019",
@@ -68,15 +69,16 @@ par <- read.csv(here("data", "par_data.csv")) %>%
          plot_number = str_remove(plot_number, "ENH0"),
          plot_number = str_remove(plot_number, "ENH"),
          plot_number = as.numeric(plot_number),
+         treatment = str_remove(treatment, "removal"),
          date = mdy(date)) %>% 
-  group_by(date, plot_number) %>% 
+  group_by(date, plot_number, treatment) %>% 
   summarize(ambient_par = mean(ambient_PAR_1),
             below_par = mean(below_PAR_1)) %>% 
   ungroup() %>% 
   mutate(normalized_par = below_par/ambient_par,
          month = month(date),
          year = year(date)) %>% 
-  select(year, month, plot_number, normalized_par)
+  select(year, month, plot_number, treatment, normalized_par)
 
 print(par)
 ```
