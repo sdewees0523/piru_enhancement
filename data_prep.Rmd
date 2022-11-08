@@ -117,7 +117,5 @@ par_mafacover <- par %>%
   left_join(mafa_cover, by = c("plot_number")) %>% 
   drop_na() 
 
-
-
 print(par_mafacover)
 ```
