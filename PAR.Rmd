@@ -38,7 +38,7 @@ par_line <- ggplot(data = par_meanSD, aes(x = month, y = mean, group=treatment))
   geom_point()+
   scale_color_manual(values=c('#F19B34', '#D3E3CA', '#9F7E75')) +
   theme_classic() +
-  labs(title="Normalized Photosynthetically Active Radiation (electrons/m2/s)",x="Month", y = "Normalized PAR")
+  labs(title="Normalized Photosynthetically Active Radiation (electrons/m2/s) in July 2019",x="Month", y = "Normalized PAR")
 
 print(par_line)
 ```
@@ -62,7 +62,7 @@ par_cover_scatter <- ggplot(
  # scale_color_manual(values=c('#D3E3CA', '#92A587', '#2F3525', '#9F7E75', '#B9B994', '#F19B34')) +
   theme(legend.position="top") +
   theme_classic() +
-  labs(title="Normalized Photosynthetically Active Radiation (electrons/m2/s)",x="MFAF Cover (%)", y = "Normalized PAR")
+  labs(title="Normalized Photosynthetically Active Radiation (electrons/m2/s) in July 2019",x="MFAF Cover (%)", y = "Normalized PAR")
 
 print(par_cover_scatter)
 ```
