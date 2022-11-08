@@ -46,9 +46,18 @@ print(par_line)
 ```{r par scatterplot by month and by mafa cover, include=TRUE}
 par.2019 <- par_mafacover %>% 
   filter(year.x =="2019") %>%  
-  filter(year.y =="2019")
+  filter(year.y =="2019") 
 
-par_cover_scatter <- ggplot(data = par.2019, aes(x = cover_percent, y = normalized_par, color = month.x)) +
+par.2019.1 <- par.2019 %>% 
+  filter(month.x == "1")
+
+par.2019.7 <- par.2019 %>% 
+  filter(month.x == "7")
+
+par_cover_scatter <- ggplot(
+  #data = par.2019, 
+  data = par.2019.7,
+  aes(x = cover_percent, y = normalized_par, color = month.x)) +
   geom_point(size=2, shape=16) +
  # scale_color_manual(values=c('#D3E3CA', '#92A587', '#2F3525', '#9F7E75', '#B9B994', '#F19B34')) +
   theme(legend.position="top") +

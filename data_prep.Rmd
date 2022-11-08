@@ -78,7 +78,7 @@ par <- read.csv(here("data", "par_data.csv")) %>%
   mutate(normalized_par = below_par/ambient_par,
          month = month(date),
          year = year(date)) %>% 
-  select(year, month, plot_number, treatment, normalized_par)
+  select(year, month, plot_number, treatment, normalized_par) 
 
 print(par)
 ```
@@ -111,3 +111,13 @@ survival_soil_moisture <- survival %>%
 print(survival_soil_moisture)
 ```
 
+```{r par_mafacover join, include=TRUE}
+par_mafacover <- par %>% 
+  filter(year == "2019") %>% 
+  left_join(mafa_cover, by = c("plot_number")) %>% 
+  drop_na() 
+
+
+
+print(par_mafacover)
+```
