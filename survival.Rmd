@@ -1,0 +1,62 @@
+---
+title: "survival"
+author: "Stephanie Ma Lucero"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here) # similar to set working directory
+library(tidyverse) # data wrangling
+library(lubridate) # dates and times
+library(ggplot2)
+```
+
+```{r view normalized par, include=TRUE}
+print(survival)
+```
+Testing the normPAR dataset for normality.
+```{r survival test for normality}
+survival_normality <- ggplot(survival) + geom_histogram(aes(x = alive))
+print(survival_normality)
+# not normally distributed
+```
+Calculate the mean and standard errors of norm_survival by ENH treatment.
+```{r norm_survival mean and SD by treatment}
+
+survival_meanSD <- survival %>%
+  group_by(MAFA_removal, year, month) %>% # to graph by ENH treatment
+  summarise_at(vars(alive), funs(mean,sd)) 
+ 
+print(survival_meanSD)
+```
+
+```{r survival line graph by month and by treatment, include=TRUE, echo=FALSE}
+survival_line <- ggplot(data = survival_meanSD, aes(x = month, y = mean, group=MAFA_removal)) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.1, 
+  position = position_dodge(0.05)) +
+  geom_line(aes(color = MAFA_removal, linetype = MAFA_removal)) +
+  geom_point()+
+  scale_color_manual(values=c('#F19B34', '#D3E3CA', '#9F7E75')) +
+  theme_classic() +
+  labs(title="Survival",x="Month", y = "Alive (n)")
+
+print(survival_line)
+```
+
+```{r survival scatterplot by month and by soil moisture, include=TRUE}
+survival.2019 <- survival_soil_moisture %>% 
+  filter(year =="2019" | year == "2020")  
+
+survival_soilmoisture_scatter.2019 <- ggplot(
+ data = survival.2019,
+  aes(x = soil_moisture, y = alive, color = month)) +
+  geom_point(size=2, shape=16) +
+ # scale_color_manual(values=c('#D3E3CA', '#92A587', '#2F3525', '#9F7E75', '#B9B994', '#F19B34')) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="Seedling survival 2019-2021",x="Soil Moisture (%)", y = "Total seedling survival (#)")
+
+print(survival_soilmoisture_scatter.2019)
+```
