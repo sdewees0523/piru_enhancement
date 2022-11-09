@@ -23,9 +23,17 @@ mafa_cover <- read.csv(here("data", "mafa_cover.csv")) %>%
   filter(cover_type %in% c("MAFA", "MAFA alive")) 
 
 print(mafa_cover)
+
+mafa_cover_dates <- mafa_cover %>% 
+  group_by(year, month) %>% 
+ dplyr::summarize(mafa_cover_dates = n_distinct(year))
+
+print(mafa_cover_dates)
+# two monitoring dates: Fall 2017 and spring/summer 2019
+# each monitoring event spanned two months 
 ```
 
-```{r survivial, include=TRUE}
+```{r survivial, include=TRUE} 
 survival <- read.csv(here("data", "survival_data.csv")) %>% 
   select(date, plot_number, MAFA_removal, species, alive) %>% 
   mutate(date = mdy(date),
@@ -37,6 +45,12 @@ survival <- read.csv(here("data", "survival_data.csv")) %>%
 
 print(survival) # will only print the first 100 pages
 # view(survival) # full data set for 2018-2021 here
+
+survival_dates <- survival %>% 
+  group_by(year, month) %>% 
+ dplyr::summarize(survival_dates = n_distinct(year))
+
+print(survival_dates)
 ```
 
 ```{r mortality, include=TRUE}
@@ -50,7 +64,14 @@ mortality <- read.csv(here("data", "survival_data.csv")) %>%
     ungroup()
 
 print(mortality)
+# mortality is the inverse of survival
 
+mortality_dates <- mortality %>% 
+  group_by(year, month) %>% 
+ dplyr::summarize(mortality_dates = n_distinct(year))
+
+print(mortality_dates)
+# mortality_dates should be the same as survival_dates
 ```
 
 ```{r par, include=TRUE}
@@ -81,7 +102,14 @@ par <- read.csv(here("data", "par_data.csv")) %>%
   select(year, month, plot_number, treatment, normalized_par) 
 
 print(par)
+
+par_dates <- par %>% 
+  group_by(year, month) %>% 
+ dplyr::summarize(par_dates = n_distinct(year))
+
+print(par_dates)
 ```
+
 
 ```{r tdr, include=TRUE}
 tdr <- read.csv(here("data", "tdr_data.csv")) %>% 
@@ -101,6 +129,12 @@ tdr <- read.csv(here("data", "tdr_data.csv")) %>%
   select(year, month, plot_number, soil_moisture)
 
 print(tdr)
+
+tdr_dates <- tdr %>% 
+  group_by(year, month) %>% 
+ dplyr::summarize(tdr_dates = n_distinct(year))
+
+print(tdr_dates)
 ```
 
 ```{r survival_soil_moisture, include=TRUE}
