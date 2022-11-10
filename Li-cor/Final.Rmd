@@ -1,0 +1,70 @@
+---
+title: "Untitled"
+author: "Kit Swift"
+date: "2022-09-13"
+output: html_document
+---
+
+
+```{r, echo=FALSE, results=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(readxl)
+library(ggplot2)
+library(plotly)
+library(ggnewscale)
+```
+
+```{r, echo=FALSE, warning=FALSE}
+#pulling the photo + ParI data and sorting it by species
+Data_unsort <- read_excel("2_Final - R.xlsx")
+
+Data_CEOL <- Data_unsort[1:40,]
+Data_HEAR <- Data_unsort[41:72,]
+Data_RHOV <- Data_unsort[73:112,]
+Data_SAAP <- Data_unsort[113:152,]
+```
+
+```{r, echo=FALSE, warning=FALSE}
+allline <- ggplot() + 
+    geom_smooth(method = stats::loess, formula = y ~ x, data = Data_CEOL, aes(x=PAR, y=Photo, color = "CEOL", Species = "Ceonthus Oliganthus")) +
+    geom_smooth(method = stats::loess, formula = y ~ x, data = Data_HEAR, aes(x=PAR, y=Photo, color = "HEAR", Species = "Heteromeles arbutifolia")) +
+    geom_smooth(method = stats::loess, formula = y ~ x, data = Data_RHOV, aes(x=PAR, y=Photo, color = "RHOV", Species = "Rhus Ovata")) +
+    geom_smooth(method = stats::loess, formula = y ~ x, data = Data_SAAP, aes(x=PAR, y=Photo, color = "SAAP", Species = "Salvia Apiana")) +
+    scale_color_manual(name='Species',
+                     breaks=c('CEOL', 'HEAR', 'RHOV', 'SAAP'),
+                     values=c('CEOL'='red', 'HEAR'='blue', 'RHOV'='green', 'SAAP'='yellow')) 
+ggplotly(allline, tooltip = c("Species"))
+```
+
+```{r, echo=FALSE, warning=FALSE}
+allpoint <- ggplot() + 
+    geom_point(data = Data_CEOL, aes(x=PAR, y=Photo, color = "CEOL", Species = "Ceonthus Oliganthus", ID = ID)) +
+    geom_point(data = Data_HEAR, aes(x=PAR, y=Photo, color = "HEAR", Species = "Heteromeles arbutifolia", ID = ID)) +
+    geom_point(data = Data_RHOV, aes(x=PAR, y=Photo, color = "RHOV", Species = "Rhus Ovata", ID = ID)) +
+    geom_point(data = Data_SAAP, aes(x=PAR, y=Photo, color = "SAAP", Species = "Salvia Apiana", ID = ID)) +
+    scale_color_manual(name='Species',
+                     breaks=c('CEOL', 'HEAR', 'RHOV', 'SAAP'),
+                     values=c('CEOL'='red', 'HEAR'='blue', 'RHOV'='green', 'SAAP'='yellow'))
+    
+ggplotly(allpoint, tooltip = c("Species", "PAR", "Photo", "ID"))
+
+```
+
+```{r, echo=FALSE, warning=FALSE}
+all <- ggplot() + 
+    geom_point(data = Data_CEOL, aes(x=PAR, y=Photo, color = "CEOL", Species = "Ceonthus Oliganthus", ID = ID)) +
+    geom_point(data = Data_HEAR, aes(x=PAR, y=Photo, color = "HEAR", Species = "Heteromeles arbutifolia", ID = ID)) +
+    geom_point(data = Data_RHOV, aes(x=PAR, y=Photo, color = "RHOV", Species = "Rhus Ovata", ID = ID)) +
+    geom_point(data = Data_SAAP, aes(x=PAR, y=Photo, color = "SAAP", Species = "Salvia Apiana", ID = ID)) +
+   geom_smooth(method = stats::loess, formula = y ~ x, data = Data_CEOL, aes(x=PAR, y=Photo, color = "CEOL", Species = "Ceonthus Oliganthus"), se=FALSE) +
+    geom_smooth(method = stats::loess, formula = y ~ x, data = Data_HEAR, aes(x=PAR, y=Photo, color = "HEAR", Species = "Heteromeles arbutifolia"), se=FALSE) +
+    geom_smooth(method = stats::loess, formula = y ~ x, data = Data_RHOV, aes(x=PAR, y=Photo, color = "RHOV", Species = "Rhus Ovata"), se=FALSE) +
+    geom_smooth(method = stats::loess, formula = y ~ x, data = Data_SAAP, aes(x=PAR, y=Photo, color = "SAAP", Species = "Salvia Apiana"), se=FALSE) +
+    scale_color_manual(name='Species',
+                     breaks=c('CEOL', 'HEAR', 'RHOV', 'SAAP'),
+                     values=c('CEOL'='red', 'HEAR'='blue', 'RHOV'='green', 'SAAP'='yellow'))
+
+
+
+ggplotly(all, tooltip = c("Species", "PAR", "Photo", "ID"))
+```
