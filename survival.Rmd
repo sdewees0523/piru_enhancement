@@ -26,7 +26,7 @@ Calculate the mean and standard errors of norm_survival by ENH treatment.
 ```{r norm_survival mean and SD by treatment}
 
 survival_meanSD <- survival %>%
-  group_by(MAFA_removal, year, month) %>% # to graph by ENH treatment
+  group_by(MAFA_removal, plot_number, year, month) %>% # to graph by ENH treatment
   summarise_at(vars(alive), funs(mean,sd)) 
  
 print(survival_meanSD)
@@ -59,4 +59,101 @@ survival_soilmoisture_scatter.2019 <- ggplot(
   labs(title="Seedling survival 2019-2021",x="Soil Moisture (%)", y = "Total seedling survival (#)")
 
 print(survival_soilmoisture_scatter.2019)
+```
+
+
+```{r}
+print(survival_mafacover.2018)
+```
+```{r survival_all.2018, include=TRUE}
+survival_all.2018 <- survival_mafacover.2018 %>% 
+  group_by(plot_number, month.survival, year.survival, cover_percent, year.MAFAcover) %>% 
+  summarise(alive_total = sum(alive, na.rm = TRUE)) %>% 
+  filter(plot_number < 11 | plot_number > 18) # <-- omitting plots 11 - 18 because two data collections in one month
+
+print(survival_all.2018)
+```
+```{r survival_all.2018_scatter, include=TRUE, echo=FALSE}
+survival_all.2018_scatter <- ggplot(survival_all.2018, aes(x=month.survival, y=cover_percent, color = alive_total)) + 
+  geom_point() +
+  scale_colour_gradient(high = "green")+
+ylim(0, 100) +
+xlim(1, 12) +
+labs(title = "2018 Seedling Survival") +
+ylab("MAFA Cover (%)") +
+xlab("Month of 2018")
+  
+
+print(survival_all.2018_scatter)
+```
+```{r survival_all.2019, include=TRUE}
+survival_all.2019 <- survival_mafacover.2019 %>% 
+  group_by(plot_number, month.survival, year.survival, cover_percent, year.MAFAcover) %>% 
+  summarise(alive_total = sum(alive, na.rm = TRUE))
+#  filter(plot_number < 11 | plot_number > 18) # <-- omitting plots 11 - 18 because two data collections in one month
+
+print(survival_all.2019)
+```
+
+
+```{r survival_all.2019_scatter, include=TRUE, echo=FALSE}
+survival_all.2019_scatter <- ggplot(survival_all.2019, aes(x=month.survival, y=cover_percent, color = alive_total)) + 
+  geom_point() +
+    scale_colour_gradient(high = "green")+
+ylim(0, 100) +
+xlim(1, 12) +
+labs(title = "2019 Seedling Survival") +
+ylab("MAFA Cover (%)") +
+xlab("Month of 2019")
+
+print(survival_all.2019_scatter)
+```
+
+```{r survival_species.2019, include=TRUE}
+survival_species.2019_all <- survival_mafacover.2019 %>% 
+  group_by(species, month.survival, year.survival, cover_percent, year.MAFAcover) %>% 
+  summarise(alive_total = sum(alive, na.rm = TRUE))
+# filter(plot_number < 11 | plot_number > 18) # <-- omitting plots 11 - 18 because two data collections in one month
+
+print(survival_species.2019_all)
+```
+
+
+
+```{r survival_species.2019_CEOL_scatter, include=TRUE, echo=FALSE}
+
+survival_species.2019_CEOL <- survival_species.2019_all %>% 
+  filter(species == "CEOL")
+
+survival_species.2019_CEOL_scatter <- ggplot(survival_species.2019_CEOL,
+                                             aes(x=month.survival, y=cover_percent, color = alive_total)) + 
+  geom_point() +
+  scale_colour_gradient(high = "green")+
+ylim(0, 100) +
+xlim(1, 12) +
+labs(title = "2019 CEOL Survival") +
+ylab("MAFA Cover (%)") +
+xlab("Month of 2019")
+  
+
+print(survival_species.2019_CEOL_scatter)
+```
+
+```{r survival_species.2019_SAAP_scatter, include=TRUE, echo=FALSE}
+
+survival_species.2019_SAAP <- survival_species.2019_all %>% 
+  filter(species == "SAAP")
+
+survival_species.2019_SAAP_scatter <- ggplot(survival_species.2019_SAAP,
+                                             aes(x=month.survival, y=cover_percent, color = alive_total)) + 
+  geom_point() +
+  scale_colour_gradient(high = "green")+
+ylim(0, 100) +
+xlim(1, 12) +
+labs(title = "2019 CEOL Survival") +
+ylab("SAAP Cover (%)") +
+xlab("Month of 2019")
+  
+
+print(survival_species.2019_SAAP_scatter) # <- multiple plots have 0% MAFA cover resulting in 12 SAAPs 
 ```

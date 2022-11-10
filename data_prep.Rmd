@@ -10,11 +10,15 @@ knitr::opts_chunk$set(echo = TRUE)
 library(here) # similar to set working directory
 library(tidyverse) # data wrangling
 library(lubridate) # dates and times
+library(readr)
 ```
 
 # MAFA percent cover
 ```{r mafa_cover, include=TRUE}
-mafa_cover <- read.csv(here("data", "mafa_cover.csv")) %>%
+mafa_cover_cont <- read_csv("data/mafa_cover.csv", 
+    col_types = cols(cover_percent = col_double()))
+
+mafa_cover <- mafa_cover_cont %>%
   # filter(plot_type == "enhancement") %>% # removed this column
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
   # rename(cover_percent = cover_.) %>% 
