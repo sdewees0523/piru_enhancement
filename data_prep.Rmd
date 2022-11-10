@@ -12,6 +12,7 @@ library(tidyverse) # data wrangling
 library(lubridate) # dates and times
 ```
 
+# MAFA percent cover
 ```{r mafa_cover, include=TRUE}
 mafa_cover <- read.csv(here("data", "mafa_cover.csv")) %>%
   # filter(plot_type == "enhancement") %>% # removed this column
@@ -23,16 +24,24 @@ mafa_cover <- read.csv(here("data", "mafa_cover.csv")) %>%
   filter(cover_type %in% c("MAFA", "MAFA alive")) 
 
 print(mafa_cover)
-
+```
+##Dates of data collection
+``` {r mafa cover dates,  include=FALSE}
 mafa_cover_dates <- mafa_cover %>% 
   group_by(year, month) %>% 
  dplyr::summarize(mafa_cover_dates = n_distinct(year))
 
-print(mafa_cover_dates)
+print(mafa_cover_dates) # lists the years and months of data collection
 # two monitoring dates: Fall 2017 and spring/summer 2019
 # each monitoring event spanned two months 
+# 
+# 2017	8		
+# 2017	9			
+# 2019	5			
+# 2019	6	
 ```
 
+# Seedling survival
 ```{r survivial, include=TRUE} 
 survival <- read.csv(here("data", "survival_data.csv")) %>% 
   select(date, plot_number, MAFA_removal, species, alive) %>% 
@@ -46,13 +55,21 @@ survival <- read.csv(here("data", "survival_data.csv")) %>%
 print(survival) # will only print the first 100 pages
 # view(survival) # full data set for 2018-2021 here
 
+
+```
+```{r seedling survival dates, include = FALSE}
 survival_dates <- survival %>% 
   group_by(year, month) %>% 
  dplyr::summarize(survival_dates = n_distinct(year))
 
-print(survival_dates)
+print(survival_dates) # lists the years and months of data collection
+#  2018 jan planted, feb, march, dec
+#  2019 jan planted, march, april, may, june, sept, nov 
+#  PAR --> 2019 jan, march, may, july, sept, nov
+#  2020 march, may, dec
+#  2021 feb, april
 ```
-
+# Seedling mortality
 ```{r mortality, include=TRUE}
 mortality <- read.csv(here("data", "survival_data.csv")) %>% 
   select(date, plot_number, MAFA_removal, species, dead) %>% 
@@ -66,14 +83,19 @@ mortality <- read.csv(here("data", "survival_data.csv")) %>%
 print(mortality)
 # mortality is the inverse of survival
 
+```
+```{r seedling mortality data collection dates, include=FALSE}
+
 mortality_dates <- mortality %>% 
   group_by(year, month) %>% 
  dplyr::summarize(mortality_dates = n_distinct(year))
 
-print(mortality_dates)
+print(mortality_dates) # lists the years and months of data collection
 # mortality_dates should be the same as survival_dates
 ```
 
+
+# PAR - sunshine
 ```{r par, include=TRUE}
 par <- read.csv(here("data", "par_data.csv")) %>% 
   select(date, plot, weeding, readingno, ambient_PAR_1, below_PAR_1) %>% 
@@ -102,15 +124,20 @@ par <- read.csv(here("data", "par_data.csv")) %>%
   select(year, month, plot_number, treatment, normalized_par) 
 
 print(par)
+```
 
+```{r par data collection dates, include=FALSE}
 par_dates <- par %>% 
   group_by(year, month) %>% 
  dplyr::summarize(par_dates = n_distinct(year))
 
-print(par_dates)
+print(par_dates) # lists the years and months of data collection
+# 2018 april
+# 2019 jan, march, may, july, sept, nov
 ```
 
 
+# TDR - soil moisture
 ```{r tdr, include=TRUE}
 tdr <- read.csv(here("data", "tdr_data.csv")) %>% 
   select(date, plot, TDR.value) %>% 
@@ -129,14 +156,22 @@ tdr <- read.csv(here("data", "tdr_data.csv")) %>%
   select(year, month, plot_number, soil_moisture)
 
 print(tdr)
-
+```
+```{r tdr dates, include=FALSE}
 tdr_dates <- tdr %>% 
   group_by(year, month) %>% 
  dplyr::summarize(tdr_dates = n_distinct(year))
 
-print(tdr_dates)
+print(tdr_dates) # lists the years and months of data collection
+# 2018 april, dec
+# 2019 march
+# 2020 march, april, may
 ```
 
+
+# Join soil moisture (TDR) to Seedling survival 
+Join by month, year, and plot number
+Purpose: soil moisture as an explainitory variable of seedling survival
 ```{r survival_soil_moisture, include=TRUE}
 survival_soil_moisture <- survival %>% 
   left_join(tdr, by = c("month", "year", "plot_number")) %>% 
@@ -145,11 +180,62 @@ survival_soil_moisture <- survival %>%
 print(survival_soil_moisture)
 ```
 
+
+# Join MAFA percent cover and PAR (sunlight)
+Join 2019 data by plot number and month 
+Purpose: MAFA cover as an explanatory variable of PAR (sunlight) experienced by the seedlings
 ```{r par_mafacover join, include=TRUE}
+mafa_cover.2019 <- mafa_cover %>% 
+  filter(year == "2019")
+
 par_mafacover <- par %>% 
   filter(year == "2019") %>% 
-  left_join(mafa_cover, by = c("plot_number")) %>% 
+  left_join(mafa_cover.2019, by = c("plot_number")) %>% 
+  rename(year.PAR = year.x) %>% 
+  rename(month.PAR = month.x) %>% 
+  rename(year.MAFAcover = year.y) %>% 
+  rename(month.MAFAcover = month.y) %>% 
+  select(year.PAR, month.PAR, plot_number, normalized_par, cover_percent) %>% 
   drop_na() 
 
 print(par_mafacover)
 ```
+
+
+# Join MAFA percent cover and seedling survival in 2018
+Join 
+Purpose: MAFA cover as an explanatory variable of seedling survival in 2018
+```{r par_mafacover join, include=TRUE}
+# join 2018 survival data with 2017 cover data
+survival_mafacover.2018 <- survival %>% 
+  filter(year == "2018") %>% 
+  left_join(mafa_cover, by = c("plot_number")) %>% 
+  filter (year.y == "2017") %>% 
+  rename(year.survival = year.x) %>% 
+  rename(month.survival = month.x) %>% 
+  rename(year.MAFAcover = year.y) %>% 
+  rename(month.MAFAcover = month.y) %>% 
+  select(year.survival, month.survival, plot_number, species, alive, cover_percent, year.MAFAcover) %>% 
+  drop_na() 
+
+print(survival_mafacover.2018)
+```
+
+Purpose: MAFA cover as an explanatory variable of seedling survival in 2019
+```{r}
+# join 2019 survival data with 2019 cover data
+
+survival_mafacover.2019 <- survival %>% 
+  filter(year == "2019") %>% 
+  left_join(mafa_cover, by = c("plot_number")) %>% 
+  filter (year.y == "2019") %>% 
+  rename(year.survival = year.x) %>% 
+  rename(month.survival = month.x) %>% 
+  rename(year.MAFAcover = year.y) %>% 
+  rename(month.MAFAcover = month.y) %>% 
+  select(year.survival, month.survival, plot_number, alive, species, cover_percent, year.MAFAcover) %>% 
+  drop_na() 
+
+print(survival_mafacover.2019)
+```
+
