@@ -15,17 +15,24 @@ library(readr)
 
 # MAFA percent cover
 ```{r mafa_cover, include=TRUE}
-mafa_cover_cont <- read_csv("data/mafa_cover.csv", 
-    col_types = cols(cover_percent = col_double()))
+cover_import <- read_csv("data/mafa_cover.csv", 
+    col_types = cols(
+      date = col_character(), 
+      plot_number = col_integer(), 
+      cover_percent = col_number(), 
+      notes = col_character()
+      )
+    )
 
-mafa_cover <- mafa_cover_cont %>%
+mafa_cover <- cover_import %>%
   # filter(plot_type == "enhancement") %>% # removed this column
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
-  # rename(cover_percent = cover_.) %>% 
+  # rename(cover_percent = cover_.) %>% # renamed csv
   mutate(date = mdy(date),
          month = month(date),
          year = year(date)) %>% 
-  filter(cover_type %in% c("MAFA", "MAFA alive")) 
+  filter(cover_type %in% c("MAFA", "MAFA alive")) %>%
+  mutate_at(vars(cover_percent), funs(round(., 0))) # rounds cover_percent to integer
 
 print(mafa_cover)
 ```
