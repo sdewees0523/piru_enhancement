@@ -16,21 +16,29 @@ library(ggplot2)
 ```{r view normalized par, include=TRUE}
 print(survival)
 ```
-Testing the normPAR dataset for normality.
+Testing the survival dataset for normality
 ```{r survival test for normality}
 survival_normality <- ggplot(survival) + geom_histogram(aes(x = alive))
 print(survival_normality)
+
 # not normally distributed
 ```
-Calculate the mean and standard errors of norm_survival by ENH treatment.
-```{r norm_survival mean and SD by treatment}
 
+Calculate the mean and standard errors of survival by ENH treatment.
+```{r norm_survival mean and SD by treatment}
 survival_meanSD <- survival %>%
-  group_by(MAFA_removal, plot_number, year, month) %>% # to graph by ENH treatment
+  group_by(treatment, year, month) %>% # to graph by ENH treatment
   summarise_at(vars(alive), funs(mean,sd)) 
  
 print(survival_meanSD)
 ```
+
+```{r 2018 survival, include=TRUE}
+
+survival_meanSD_2018 <- 
+
+```
+
 
 ```{r survival line graph by month and by treatment, include=TRUE, echo=FALSE}
 survival_line <- ggplot(data = survival_meanSD, aes(x = month, y = mean, group=MAFA_removal)) +

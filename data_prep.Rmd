@@ -28,16 +28,19 @@ mafa_cover <- cover_import %>%
   # filter(plot_type == "enhancement") %>% # removed this column
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
   # rename(cover_percent = cover_.) %>% # renamed csv
+  rename(treatment = MAFA_removal) %>% 
   mutate(date = mdy(date),
          month = month(date),
          year = year(date)) %>% 
   filter(cover_type %in% c("MAFA", "MAFA alive")) %>%
+  mutate_at(vars(cover_percent), funs(round(., 0))) %>%  # rounds cover_percent to integer
   mutate(
     cover_percent = as.integer(cover_percent),
     month = as.integer(month),
     year = as.integer(year)
-  )
-  #mutate_at(vars(cover_percent), funs(round(., 0))) # rounds cover_percent to integer
+  ) %>% 
+  select(!date) 
+  
 
 print(mafa_cover)
 ```
@@ -59,14 +62,24 @@ print(mafa_cover_dates) # lists the years and months of data collection
 
 # Seedling survival
 ```{r survivial, include=TRUE} 
+
+################ CAN WE CREATE AN IF ELSE STATEMENT TO CHANGE DATE TO NUMBER OF MONTHS POST TRANSPLANTING?????
+
 survival <- read.csv(here("data", "survival_data.csv")) %>% 
   select(date, plot_number, MAFA_removal, species, alive) %>% 
+  rename(treatment = MAFA_removal) %>% 
   mutate(date = mdy(date),
          month = month(date),
-         year = year(date)) %>% 
-  group_by(year, month, plot_number, MAFA_removal, species) %>% 
+         year = year(date),
+         treatment = str_remove(treatment, "removal")
+        ) %>% 
+  group_by(year, month, plot_number, treatment, species) %>% 
   summarise(alive = sum(alive, na.rm = TRUE)) %>% 
-    ungroup()
+  ungroup() %>% 
+  mutate(
+    month = as.integer(month),
+    year = as.integer(year)
+  )
 
 print(survival) # will only print the first 100 pages
 # view(survival) # full data set for 2018-2021 here
@@ -89,12 +102,18 @@ print(survival_dates) # lists the years and months of data collection
 ```{r mortality, include=TRUE}
 mortality <- read.csv(here("data", "survival_data.csv")) %>% 
   select(date, plot_number, MAFA_removal, species, dead) %>% 
+  rename(treatment = MAFA_removal) %>% 
   mutate(date = mdy(date),
          month = month(date),
-         year = year(date)) %>% 
-  group_by(year, month, plot_number, MAFA_removal, species) %>% 
+         year = year(date),
+         treatment = str_remove(treatment, "removal")) %>% 
+  group_by(year, month, plot_number, treatment, species) %>% 
   summarise(dead = sum(dead, na.rm = TRUE)) %>% 
-    ungroup()
+    ungroup() %>% 
+   mutate(
+    month = as.integer(month),
+    year = as.integer(year)
+  )
 
 print(mortality)
 # mortality is the inverse of survival
@@ -158,20 +177,28 @@ print(par_dates) # lists the years and months of data collection
 # TDR - soil moisture
 ```{r tdr, include=TRUE}
 tdr <- read.csv(here("data", "tdr_data.csv")) %>% 
-  select(date, plot, TDR.value) %>% 
+  select(date, plot, weeding, reading, TDR.value) %>% 
   rename(plot_number = plot,
-         soil_moisture = TDR.value) %>% 
+         soil_moisture = TDR.value,
+         treatment = weeding) %>% 
   mutate(plot_number = str_remove(plot_number, "ENH0"),
          plot_number = str_remove(plot_number, "ENH"),
          plot_number = as.numeric(plot_number),
+         treatment = str_remove(treatment, "removal"),
          date = dmy(date)) %>% 
-  group_by(date, plot_number) %>% 
+  group_by(date, plot_number, treatment) %>% 
   summarize(soil_moisture = mean(soil_moisture, na.rm = TRUE)) %>% 
   ungroup() %>% 
   mutate(month = month(date),
          year = year(date)) %>% 
   select(!date) %>% 
-  select(year, month, plot_number, soil_moisture)
+  select(year, month, plot_number, treatment, soil_moisture) %>% 
+  mutate(
+    year = as.integer(year),
+    month = as.integer(month), 
+    plot_number = as.integer(plot_number)
+    )
+  
 
 print(tdr)
 ```
@@ -213,8 +240,9 @@ par_mafacover <- par %>%
   rename(month.PAR = month.x) %>% 
   rename(year.MAFAcover = year.y) %>% 
   rename(month.MAFAcover = month.y) %>% 
-  select(year.PAR, month.PAR, plot_number, normalized_par, cover_percent) %>% 
-  drop_na() 
+  select(year.PAR, month.PAR, plot_number, normalized_par, cover_percent, treatment.y) %>% 
+  drop_na() %>% 
+  rename(treatment = treatment.y)
 
 print(par_mafacover)
 ```

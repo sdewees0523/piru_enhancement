@@ -15,20 +15,22 @@ library(ggplot2)
 
 ```{r view normalized par, include=TRUE}
 print(par)
+
 ```
 Testing the normPAR dataset for normality.
 ```{r par test for normality}
 par_normality <- ggplot(par) + geom_histogram(aes(x = normalized_par))
 par_normality
 ```
+
 Calculate the mean and standard errors of norm_PAR by ENH treatment.
 ```{r norm_PAR mean and SD by treatment}
 
-par_meanSD <- par %>%
-  group_by(treatment, month) %>% # to graph by ENH treatment
-  summarise_at(vars(normalized_par), funs(mean,sd)) 
- 
-print(par_meanSD)
+#par_meanSD <- par %>%
+#  group_by(treatment, month) %>% # to graph by ENH treatment
+#  summarise_at(vars(normalized_par), funs(mean,sd)) 
+# 
+#print(par_meanSD)
 ```
 ```{r par line graph by month and by treatment, include=TRUE, echo=FALSE}
 par_line <- ggplot(data = par_meanSD, aes(x = month, y = mean, group=treatment)) +
@@ -42,29 +44,30 @@ par_line <- ggplot(data = par_meanSD, aes(x = month, y = mean, group=treatment))
 
 print(par_line)
 ```
+Select desired data from MONTH and YEAR 
+```{r par select March and July data, include=TRUE}
+par.2019.3 <- par_mafacover %>% 
+  filter(year.PAR =="2019") %>% 
+  filter(month.PAR == "3")
 
-```{r par scatterplot by month and by mafa cover, include=TRUE}
-par.2019 <- par_mafacover %>% 
-  filter(year.x =="2019") %>%  
-  filter(year.y =="2019") 
+par.2019.7 <- par_mafacover %>% 
+  filter(year.PAR =="2019") %>% 
+  filter(month.PAR == "7")
+```
 
-par.2019.1 <- par.2019 %>% 
-  filter(month.x == "1")
-
-par.2019.7 <- par.2019 %>% 
-  filter(month.x == "7")
-
+PAR scatter plot
+``` {r par scatterplot by month and by mafa cover, include=TRUE}
 par_cover_scatter <- ggplot(
-  #data = par.2019, 
-  data = par.2019.7,
-  aes(x = cover_percent, y = normalized_par, color = month.x)) +
+  data = par.2019.3,
+  aes(x = cover_percent, y = normalized_par, color = treatment)) +
   geom_point(size=2, shape=16) +
  # scale_color_manual(values=c('#D3E3CA', '#92A587', '#2F3525', '#9F7E75', '#B9B994', '#F19B34')) +
   theme(legend.position="top") +
   theme_classic() +
-  labs(title="Normalized Photosynthetically Active Radiation (electrons/m2/s) in July 2019",x="MFAF Cover (%)", y = "Normalized PAR")
-
+  labs(title="Normalized Photosynthetically Active Radiation (electrons/m2/s) in 2019",x="MFAF Cover (%)", y = "Normalized PAR") +
+  geom_smooth()
 print(par_cover_scatter)
+
 ```
 
 
