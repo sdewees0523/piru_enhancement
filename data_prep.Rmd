@@ -32,7 +32,12 @@ mafa_cover <- cover_import %>%
          month = month(date),
          year = year(date)) %>% 
   filter(cover_type %in% c("MAFA", "MAFA alive")) %>%
-  mutate_at(vars(cover_percent), funs(round(., 0))) # rounds cover_percent to integer
+  mutate(
+    cover_percent = as.integer(cover_percent),
+    month = as.integer(month),
+    year = as.integer(year)
+  )
+  #mutate_at(vars(cover_percent), funs(round(., 0))) # rounds cover_percent to integer
 
 print(mafa_cover)
 ```
@@ -122,7 +127,7 @@ par <- read.csv(here("data", "par_data.csv")) %>%
                           TRUE ~ date),
          plot_number = str_remove(plot_number, "ENH0"),
          plot_number = str_remove(plot_number, "ENH"),
-         plot_number = as.numeric(plot_number),
+         plot_number = as.integer(plot_number),
          treatment = str_remove(treatment, "removal"),
          date = mdy(date)) %>% 
   group_by(date, plot_number, treatment) %>% 
@@ -131,7 +136,9 @@ par <- read.csv(here("data", "par_data.csv")) %>%
   ungroup() %>% 
   mutate(normalized_par = below_par/ambient_par,
          month = month(date),
-         year = year(date)) %>% 
+         year = year(date),
+         year = as.integer(year),
+         month = as.integer(month)) %>% 
   select(year, month, plot_number, treatment, normalized_par) 
 
 print(par)
