@@ -1,0 +1,114 @@
+---
+title: "TDR"
+author: "Stephanie Ma Lucero"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here) # similar to set working directory
+library(tidyverse) # data wrangling
+library(lubridate) # dates and times
+library(ggplot2)
+```
+
+```{r view tdr, include=TRUE}
+print(tdr)
+```
+Testing the TDR dataset for normality.
+```{r tdr test for normality}
+tdr_normality <- ggplot(tdr) + geom_histogram(aes(x = soil_moisture))
+tdr_normality
+
+# it's not normally distributed
+```
+
+Scatter Plot: TDR x % MAFA cover
+# Select desired data from MONTH and YEAR 
+#Join MAFA percent cover and TDR (soilmoisture)
+```{r, include=FALSE}
+# TDR 
+# 2018 april, dec
+# 2019 march
+# 2020 march, april, may
+# 
+# MAFA cover:
+# 2017	8-9
+# 2019	5-6			
+```
+
+# 2019 
+##Join 2019 march TDR data with 2019 MAFA cover data by plot number and month
+##Purpose: MAFA cover as an explanatory variable of TDR (soil moisture)
+```{r 2019 tdr_percentcover join, include=TRUE}
+mafa_cover.2019 <- mafa_cover %>% 
+  filter(year == "2019")
+
+tdr_mafacover.2019 <- tdr %>% 
+  filter(year == "2019") %>% 
+  filter(month == "3") %>% 
+  # TDR: 2019 march
+  left_join(mafa_cover.2019, by = c("plot_number")) %>% 
+  rename(year.TDR = year.x) %>% 
+  rename(month.TDR = month.x) %>% 
+  rename(year.MAFAcover = year.y) %>% 
+  rename(month.MAFAcover = month.y) %>% 
+  select(year.TDR, month.TDR, plot_number, soil_moisture, cover_percent, treatment.y) %>% 
+  drop_na() %>% 
+  rename(treatment = treatment.y)
+
+print(tdr_mafacover.2019)
+```
+
+##TDR scatter plot: March 2019
+``` {r tdr scatterplot march 2019 and by mafa cover, include=TRUE}
+tdr_cover_scatter_2019 <- ggplot(
+  data = tdr_mafacover.2019,
+  aes(x = cover_percent, y = soil_moisture, color = treatment)) +
+  geom_point(size=2, shape=16) +
+ # scale_color_manual(values=c('#D3E3CA', '#92A587', '#2F3525', '#9F7E75', '#B9B994', '#F19B34')) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="Soil Moisture by Treatment in March 2019",x="Canopy Cover (%)", y = "Soil Moisture (%)") +
+  geom_smooth()
+print(tdr_cover_scatter_2019)
+
+```
+
+# 2020
+##Join 2020 march TDR data with 2019 MAFA cover data by plot number and month
+##Purpose: MAFA cover as an explanatory variable of TDR (soil moisture)
+```{r 2020 tdr_percentcover join, include=TRUE}
+
+tdr_mafacover.2020 <- tdr %>% 
+  filter(year == "2020") %>% 
+  filter(month == "3") %>%  # <-- CHANGE MONTH
+  # 2020 march, april, may
+  left_join(mafa_cover.2019, by = c("plot_number")) %>% 
+  rename(year.TDR = year.x) %>% 
+  rename(month.TDR = month.x) %>% 
+  rename(year.MAFAcover = year.y) %>% 
+  rename(month.MAFAcover = month.y) %>% 
+  select(year.TDR, month.TDR, plot_number, soil_moisture, cover_percent, treatment.y) %>% 
+  drop_na() %>% 
+  rename(treatment = treatment.y)
+
+print(tdr_mafacover.2020)
+```
+
+##TDR scatter plot: March 2020
+``` {r tdr scatterplot march 2020 and by mafa cover, include=TRUE}
+tdr_cover_scatter_2020 <- ggplot(
+  data = tdr_mafacover.2020,
+  aes(x = cover_percent, y = soil_moisture, color = treatment)) +
+  geom_point(size=2, shape=16) +
+ # scale_color_manual(values=c('#D3E3CA', '#92A587', '#2F3525', '#9F7E75', '#B9B994', '#F19B34')) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="Soil Moisture by Treatment in March 2020",x="Canopy Cover (%)", y = "Soil Moisture (%)") +
+  geom_smooth()
+
+print(tdr_cover_scatter_2020)
+
+```
