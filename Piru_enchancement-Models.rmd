@@ -1,0 +1,63 @@
+---
+title: "Piru_enchancement-Models"
+author: "Kit Swift"
+date: "2022-12-15"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here) # similar to set working directory
+library(tidyverse) # data wrangling
+library(lubridate) # dates and times
+library(readr)
+library(plotly)
+library(dplyr)
+library(olsrr)
+library(survival)
+library(lme4)
+surv_all <- read.csv("data/processed/surv_all.csv")
+```
+
+```{r}
+#Initial! 
+#Wrong!
+
+# GRAPHDATA <- surv_all %>% 
+#     group_by(treatment, month_count, species) %>%
+#     summarise_at(vars(alive), funs(mean,sd))
+
+
+m0 <- lm(alive ~ species + soil_moisture + normalized_par, data=surv_all)
+m00 <- lm(alive ~ species + year + month, data=surv_all)
+m1 <- lm(alive ~ soil_moisture + normalized_par, data=surv_all)
+m3 <- lm(alive ~ cover_percent + soil_moisture + normalized_par + species, data=surv_all)
+m4 <- lm(alive ~ treatment + soil_moisture + normalized_par + species, data=surv_all)
+
+anova(m0)
+anova(m1)
+anova(m3)
+anova(m5)
+
+################## a) are the residuals normal? b) 
+plot(m00) # viewing residuals... i think...
+hist(m00$residuals, main = "Residual Historgram: m0") # histogram of residuals
+ols_plot_resid_hist(m00)
+boxplot(m00$residuals, main = "Residual Box Plot: m0") # box plot of residuals
+
+# Testing for normality
+# In general, if you have less than 50 observations, you should use the Shapiro-Wilk test. 
+# Otherwise, the Kolmogorov-Smirnov test is better.
+ols_test_normality(m00)
+
+
+```
+
+```{r}
+
+m_Envsitemafa <- lmer((Par, TDr, nn%) ~ MAFA treatment * site, data = surv_all)
+m_Envsitepc <- lmer((Par, TDr, nn%) ~ percent cover * site, data = surv_all)
+
+m_alive <- lmer(alive ~ myvars + year + month + site + random(1/plot), data = surv_all)
+
+```

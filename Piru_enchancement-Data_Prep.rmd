@@ -1,0 +1,216 @@
+---
+title: "data_prep_2"
+author: "Kit Swift"
+date: "2022-11-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here) # similar to set working directory
+library(tidyverse) # data wrangling
+library(lubridate) # dates and times
+library(readr)
+library(plotly)
+library(dplyr)
+library(olsrr)
+library(survival)
+library(lme4)
+```
+#Data Prep
+## MAFA percent cover
+```{r mafa_cover, include=TRUE}
+cover_import <- read_csv("data/mafa_cover.csv", 
+    col_types = cols(
+      date = col_character(), 
+      plot_number = col_integer(), 
+      cover_percent = col_number(), 
+      notes = col_character()
+      )
+    )
+mafa_cover_1 <- read.csv(here("data", "mafa_cover.csv")) %>%
+  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
+  mutate(date = mdy(date),
+         month = month(date),
+         year = year(date)) %>% 
+  filter(cover_type %in% c("MAFA alive")) %>%
+  select(plot_number, cover_percent, year, month) %>%
+  mutate(mc = 2019)
+mafa_cover_1[24, 2] <- 55
+
+mafa_cover_2 <- read.csv(here("data", "mafa_cover.csv")) %>%
+  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
+  mutate(date = mdy(date),
+         month = month(date),
+         year = year(date)) %>% 
+  filter(cover_type %in% c("MAFA")) %>%
+  select(plot_number, cover_percent, year, month) %>%
+  mutate(mc = 2017)
+```
+
+
+```{r survivial, include=TRUE} 
+
+################ CAN WE CREATE AN IF ELSE STATEMENT TO CHANGE DATE TO NUMBER OF MONTHS POST TRANSPLANTING?????
+
+survival <- read.csv(here("data", "survival_data.csv")) %>% 
+  select(date, plot_number, MAFA_removal, species, alive) %>% 
+  rename(treatment = MAFA_removal) %>% 
+  mutate(date = mdy(date),
+         month = month(date),
+         year = year(date),
+         treatment = str_remove(treatment, "removal")
+        ) %>% 
+  group_by(year, month, plot_number, treatment, species, date) %>% 
+  summarise(alive = sum(alive, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  mutate(
+    month = as.integer(month),
+    year = as.integer(year)
+  )
+
+#Setting the month to be a count up from jan 2018
+month_0 <- c("2018-01-30", "2018-02-09", "2018-02-10")
+month_1 <- c("2018-02-24", "2018-02-23", "2018-03-03")
+for (i in 1:length(survival$date)) {
+  if(grepl(month_0[1], survival$date[i])||grepl(month_0[2], survival$date[i])||grepl(month_0[3], survival$date[i])){
+    survival$month_count[i] <- 0;survival$mc[i] <- 2017}
+  else{
+    if(grepl(month_1[1], survival$date[i])||grepl(month_1[2], survival$date[i])||grepl(month_1[3], survival$date[i])){
+      survival$month_count[i] <- 1; survival$mc[i] <- 2017}
+    else{
+      if(survival$year[i] == 2018){
+      survival$month_count[i] <- survival$month[i] - 1; survival$mc[i] <- 2017}
+      else{
+        if(survival$year[i] == 2019){
+        survival$month_count[i] <- survival$month[i] + 11; survival$mc[i] <- 2019}
+        else{
+          if(survival$year[i] == 2020){
+          survival$month_count[i] <- survival$month[i] + 23; survival$mc[i] <- 2019}
+          else{
+            if(survival$year[i] == 2021){
+            survival$month_count[i] <- survival$month[i] + 35; survival$mc[i] <- 2019}
+            else{
+              survival$month_count[i] <- FALSE
+            }}}}}}}
+
+survival <- subset (survival, select = -date)
+print(survival) # will only print the first 100 pages
+# view(survival) # full data set for 2018-2021 here
+write.csv(survival, "data/processed/survival.csv")
+
+```
+
+## Seedling mortality
+```{r mortality, include=TRUE}
+mortality <- read.csv(here("data", "survival_data.csv")) %>% 
+  select(date, plot_number, MAFA_removal, species, dead) %>% 
+  rename(treatment = MAFA_removal) %>% 
+  mutate(date = mdy(date),
+         month = month(date),
+         year = year(date),
+         treatment = str_remove(treatment, "removal")) %>% 
+  group_by(year, month, plot_number, treatment, species) %>% 
+  summarise(dead = sum(dead, na.rm = TRUE)) %>% 
+    ungroup() %>% 
+   mutate(
+    month = as.integer(month),
+    year = as.integer(year)
+  )
+
+print(mortality)
+write.csv(mortality, "data/processed/mortality.csv")
+# mortality is the inverse of survival
+
+```
+
+## PAR - sunshine
+```{r par, include=TRUE}
+par <- read.csv(here("data", "par_data.csv")) %>% 
+  select(date, plot, weeding, readingno, ambient_PAR_1, below_PAR_1) %>% 
+  rename(plot_number = plot) %>% 
+  rename(treatment = weeding) %>% 
+  mutate(date = case_when(date == "Jan. 30, 2019"~"1/30/2019",
+                          date == "25-Jan-19"~"1/25/2019",
+                          date == "24-Mar-19"~"3/24/2019",
+                          date == "Nov. 16, 2019" ~ "11/16/2019",
+                          date == "9-Sep-19" ~ "9/09/2019",
+                          date == "19-Jul-19"~ "7/19/2019",
+                          date == "24-May-19" ~ "5/24/2019",
+                          TRUE ~ date),
+         plot_number = str_remove(plot_number, "ENH0"),
+         plot_number = str_remove(plot_number, "ENH"),
+         plot_number = as.integer(plot_number),
+         treatment = str_remove(treatment, "removal"),
+         date = mdy(date)) %>% 
+  group_by(date, plot_number, treatment) %>% 
+  summarize(ambient_par = mean(ambient_PAR_1),
+            below_par = mean(below_PAR_1)) %>% 
+  ungroup() %>% 
+  mutate(normalized_par = below_par/ambient_par,
+         month = month(date),
+         year = year(date),
+         year = as.integer(year),
+         month = as.integer(month)) %>% 
+  select(year, month, plot_number, treatment, normalized_par) 
+
+print(par)
+write.csv(par, "data/processed/par.csv")
+```
+
+## TDR - soil moisture
+```{r tdr, include=True}
+tdr <- read.csv(here("data", "tdr_data.csv")) %>% 
+  select(date, plot, weeding, reading, TDR.value) %>% 
+  rename(plot_number = plot,
+         soil_moisture = TDR.value,
+         treatment = weeding) %>% 
+  mutate(plot_number = str_remove(plot_number, "ENH0"),
+         plot_number = str_remove(plot_number, "ENH"),
+         plot_number = as.numeric(plot_number),
+         treatment = str_remove(treatment, "removal"),
+         date = dmy(date)) %>% 
+  group_by(date, plot_number, treatment) %>% 
+  summarize(soil_moisture = mean(soil_moisture, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  mutate(month = month(date),
+         year = year(date)) %>% 
+  select(!date) %>% 
+  select(year, month, plot_number, treatment, soil_moisture) %>% 
+  mutate(
+    year = as.integer(year),
+    month = as.integer(month), 
+    plot_number = as.integer(plot_number)
+    )
+  
+
+print(tdr)
+write.csv(tdr, "data/processed/tdr.csv")
+```
+
+## Single Doc Join
+### Making the document
+```{r main join, include=TRUE}
+
+par_1 <- select(par, plot_number, year, month, normalized_par)
+
+##MAIN SURV
+#c$ref <- paste(c$month, c$year.x, c$plot_number, sep = "-")
+surv_all <- survival %>%
+  left_join(mortality, by = c("year", "month", "plot_number", "species")) %>%
+  left_join(par_1, by = c("year", "month", "plot_number")) %>%
+  left_join(tdr, by = c("year", "month", "plot_number")) %>%
+  left_join(mafa_cover_1, by = c("plot_number", "mc")) %>%
+  left_join(mafa_cover_2, by = c("plot_number", "mc"))
+surv_all$cover_percent = surv_all$cover_percent.x
+surv_all$cover_percent[!is.na(surv_all$cover_percent.y)] = surv_all$cover_percent.y[!is.na(surv_all$cover_percent.y)]
+surv_all <- surv_all[,-c(8, 9, 12, 14, 15, 16, 17, 18, 19)]
+surv_all<- rename(surv_all, treatment = treatment.x, year = year.x, month = month.x)
+
+ write.csv(surv_all, "data/processed/surv_all.csv")
+monthcount <- unique(surv_all$month_count)
+print(monthcount)
+```
+
+
+
