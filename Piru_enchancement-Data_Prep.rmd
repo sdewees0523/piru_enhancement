@@ -21,7 +21,7 @@ library(lme4)
 #Data Prep
 
 ## MAFA percent cover
-```{r mafa_cover, include=TRUE}
+```{r mafa_cover 2017, include=TRUE}
 
 # load mafa_alive percent cover data as a .csv
 cover_import <- read_csv("data/mafa_cover.csv", 
@@ -41,8 +41,11 @@ mafa_cover_2017 <- read.csv(here("data", "mafa_cover.csv")) %>%
          year = year(date)) %>% 
   filter(year %in% c("2017")) %>%
   select(plot_number, cover_percent, year, month) %>%  
+  mutate(mc = 2017) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
-
+print(mafa_cover_2017)
+```
+```{r mafa_cover 2018, include=TRUE}
 # creating a dataset of MAFA cover in 2018
 mafa_cover_2018 <- read.csv(here("data", "mafa_cover.csv")) %>%
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
@@ -51,8 +54,11 @@ mafa_cover_2018 <- read.csv(here("data", "mafa_cover.csv")) %>%
          year = year(date)) %>% 
   filter(year %in% c("2018")) %>%
   select(plot_number, cover_percent, year, month) %>%  
+  mutate(mc = 2018) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
-
+print(mafa_cover_2018)
+```
+```{r mafa_cover 2019, include=TRUE}
 # creating a dataset of MAFA cover in 2019
 mafa_cover_2019 <- read.csv(here("data", "mafa_cover.csv")) %>%
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
@@ -61,12 +67,13 @@ mafa_cover_2019 <- read.csv(here("data", "mafa_cover.csv")) %>%
          year = year(date)) %>% 
   filter(year %in% c("2019")) %>%
   select(plot_number, cover_percent, year, month) %>%  
+  mutate(mc = 2019) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
-
+print(mafa_cover_2019)
 ```
 
 ## Total exotic percent cover
-```{r totalexotic_cover, include=TRUE}
+```{r totalexotic_cover 2017, include=TRUE}
 
 # load total_exotic percent cover data as a .csv
 cover_import <- read_csv("data/totexo_cover.csv", 
@@ -86,8 +93,12 @@ exotic_cover_2017 <- read.csv(here("data", "totexo_cover.csv")) %>%
          year = year(date)) %>% 
   filter(year %in% c("2017")) %>%
   select(plot_number, cover_percent, year, month) %>%  
+  mutate(mc = 2017) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
+print(exotic_cover_2017)
+```
 
+``` {r exotic cover 2018, include = TRUE}
 # creating a dataset of total exotic cover in 2018
 exotic_cover_2018 <- read.csv(here("data", "totexo_cover.csv")) %>%
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
@@ -96,8 +107,12 @@ exotic_cover_2018 <- read.csv(here("data", "totexo_cover.csv")) %>%
          year = year(date)) %>% 
   filter(year %in% c("2018")) %>%
   select(plot_number, cover_percent, year, month) %>%  
+  mutate(mc = 2018) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
+print(exotic_cover_2018)
+```
 
+```{r exotic cover 2019, include = TRUE}
 # creating a dataset of total exotic cover in 2019
 exotic_cover_2019 <- read.csv(here("data", "totexo_cover.csv")) %>%
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
@@ -106,16 +121,14 @@ exotic_cover_2019 <- read.csv(here("data", "totexo_cover.csv")) %>%
          year = year(date)) %>% 
   filter(year %in% c("2019")) %>%
   select(plot_number, cover_percent, year, month) %>%  
+  mutate(mc = 2019) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
-
+print(exotic_cover_2019)
 ```
 
 ## Seedling survival
 ```{r seedling survivial, include=TRUE} 
-
-################ CAN WE CREATE AN IF ELSE STATEMENT TO CHANGE DATE TO NUMBER OF MONTHS POST TRANSPLANTING?????
-
-survival <- read.csv(here("data", "survival_data.csv")) %>% 
+survival_prep <- read.csv(here("data", "survival_data.csv")) %>% 
   select(date, plot_number, MAFA_removal, species, alive) %>% 
   rename(treatment = MAFA_removal) %>% 
   mutate(date = mdy(date),
@@ -130,38 +143,51 @@ survival <- read.csv(here("data", "survival_data.csv")) %>%
     month = as.integer(month),
     year = as.integer(year)
   ) %>%  
-  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
-
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) 
+print(survival_prep)
+```
+```{r months since transplanting, include = TRUE}
 #Setting the month to be a count up from jan 2018
 month_0 <- c("2018-01-30", "2018-02-09", "2018-02-10")
 month_1 <- c("2018-02-24", "2018-02-23", "2018-03-03")
-for (i in 1:length(survival$date)) {
-  if(grepl(month_0[1], survival$date[i])||grepl(month_0[2], survival$date[i])||grepl(month_0[3], survival$date[i])){
-    survival$month_count[i] <- 0;survival$mc[i] <- 2017}
-  else{
-    if(grepl(month_1[1], survival$date[i])||grepl(month_1[2], survival$date[i])||grepl(month_1[3], survival$date[i])){
-      survival$month_count[i] <- 1; survival$mc[i] <- 2017}
-    else{
-      if(survival$year[i] == 2018){
-      survival$month_count[i] <- survival$month[i] - 1; survival$mc[i] <- 2017}
-      else{
-        if(survival$year[i] == 2019){
-        survival$month_count[i] <- survival$month[i] + 11; survival$mc[i] <- 2019}
-        else{
-          if(survival$year[i] == 2020){
-          survival$month_count[i] <- survival$month[i] + 23; survival$mc[i] <- 2019}
-          else{
-            if(survival$year[i] == 2021){
-            survival$month_count[i] <- survival$month[i] + 35; survival$mc[i] <- 2019}
-            else{
-              survival$month_count[i] <- FALSE
-            }}}}}}}
 
-survival <- subset (survival, select = -date)
+#if else statement to create months that count up from month transplanted
+for (i in 1:length(survival_prep$date)) {
+  if(grepl(month_0[1], survival_prep$date[i])||grepl(month_0[2], survival_prep$date[i])||grepl(month_0[3], survival_prep$date[i])){
+    survival_prep$month_count[i] <- 0; survival_prep$mc[i] <- 2017} 
+  else{
+    if(grepl(month_1[1], survival_prep$date[i])||grepl(month_1[2], survival_prep$date[i])||grepl(month_1[3], survival_prep$date[i])){
+      survival_prep$month_count[i] <- 1; survival_prep$mc[i] <- 2017} 
+    else{
+      if(survival_prep$year[i] == 2018){
+      survival_prep$month_count[i] <- survival_prep$month[i] - 1; survival_prep$mc[i] <- 2017}
+      else{
+        if(survival_prep$year[i] == 2019){
+        survival_prep$month_count[i] <- survival_prep$month[i] + 11; survival_prep$mc[i] <- 2019}
+        else{
+          if(survival_prep$year[i] == 2020){
+          survival_prep$month_count[i] <- survival_prep$month[i] + 23; survival_prep$mc[i] <- 2019}
+          else{
+            if(survival_prep$year[i] == 2021){
+            survival_prep$month_count[i] <- survival_prep$month[i] + 35; survival_prep$mc[i] <- 2019}
+            else{
+              survival_prep$month_count[i] <- FALSE
+            }}}}}}}
+survival <- subset( survival_prep, select = -date)
 print(survival) # will only print the first 100 pages
 # view(survival) # full data set for 2018-2021 here
 write.csv(survival, "data/processed/survival.csv")
+# ignore warning message
+```
+```{r test month count, inclued = FALSE}
+transplanted2018 <- filter(survival, month_count == 0)
+print(transplanted2018)
 
+firstmonth2018 <- filter(survival, month_count == 1)
+print(firstmonth2018)
+
+transplanted2019 <- filter(survival, month_count == 12)
+print(transplanted2019)
 ```
 
 ## Seedling mortality
@@ -194,13 +220,14 @@ par <- read.csv(here("data", "par_data.csv")) %>%
   select(date, plot, weeding, readingno, ambient_PAR_1, below_PAR_1) %>% 
   rename(plot_number = plot) %>% 
   rename(treatment = weeding) %>% 
-  mutate(date = case_when(date == "Jan. 30, 2019"~"1/30/2019",
+  mutate(date = case_when(date == "11-Sep-18" ~ "9/11/2018",
+                          date == "30-Jan-19"~"1/30/2019",
                           date == "25-Jan-19"~"1/25/2019",
                           date == "24-Mar-19"~"3/24/2019",
-                          date == "Nov. 16, 2019" ~ "11/16/2019",
-                          date == "9-Sep-19" ~ "9/09/2019",
-                          date == "19-Jul-19"~ "7/19/2019",
                           date == "24-May-19" ~ "5/24/2019",
+                          date == "19-Jul-19"~ "7/19/2019",
+                          date == "9-Sep-19" ~ "9/09/2019",
+                          date == "16-Nov-19" ~ "11/16/2019",
                           TRUE ~ date),
          plot_number = str_remove(plot_number, "ENH0"),
          plot_number = str_remove(plot_number, "ENH"),
@@ -264,8 +291,10 @@ par_1 <- select(par, site, plot_number, year, month, normalized_par)
 ##MAIN SURV
 #c$ref <- paste(c$month, c$year.x, c$plot_number, sep = "-")
 surv_all_full <- survival %>%
-  left_join(mortality, by = c("year", "month", "site", "plot_number", "species")) %>%
-  left_join(par_1, by = c("year", "month", "site", "plot_number")) %>%
+  left_join(mortality, by = c("year", "month", "site", "plot_number", "treatment", "species")) %>%
+  left_join(par_1, by = c("year", "month", "site", "plot_number")) #
+
+%>%
   left_join(tdr, by = c("year", "month", "site", "plot_number")) %>%
   left_join(mafa_cover_2017, by = c("site", "plot_number", "year")) %>% # should I create one file for mafa cover and one file for exotic cover intstead of one file for each cover type each year?
   left_join(mafa_cover_2018, by = c("site", "plot_number", "year")) %>% 
@@ -274,6 +303,7 @@ surv_all_full <- survival %>%
   left_join(exotic_cover_2018, by = c("site", "plot_number", "year")) %>% 
   left_join(exotic_cover_2019, by = c("site", "plot_number", "year")) 
 view(surv_all_full) # 27 columns
+write.csv(surv_all, "data/processed/surv_all_full.csv")
 ```
 
 ### STEPHANIE - START HERE. WHICH COLUMNS TO KEEP AND WHICH TO REMOVE? ######################
