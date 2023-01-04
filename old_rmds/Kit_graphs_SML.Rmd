@@ -1,0 +1,229 @@
+---
+title: "Kit_graphs"
+author: "Kit Swift"
+date: "2022-11-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(readr)
+library(plotly)
+```
+
+```{r callin, include = FALSE}
+surv_all <- read.csv("data/processed/surv_all.csv")
+surv_all <- surv_all[,-1]
+```
+
+```{r}
+#Replace the following with what you want
+#Y = Year to be looked at; M = month to be looked at; S = species to be looked at; plus any other filter
+#GRAPHNAME = graph name; GRAPHDATA = dataset to be used to make graph
+#GRAPHTITLE = Title on graph; XAXIS = xaxis label; YAXIS = Y axis label
+#XVARIABLE = variable to be checked on x axis; YVARIABLE = variable to be checked on y axis; SORTBY = what regression lines you want
+
+GRAPHDATA <- surv_all %>% 
+  filter(year == "Y", 
+         month == "M", 
+         species == "S"
+         ) %>%
+  #group_by() %>%
+  #summarise_at(vars(r), funs(mean,sd))
+
+
+GRAPHNAME <- ggplot(
+  data = GRAPHDATA,
+  aes(x = XVARIABLE, y = YVARIABLE, color = SORTBY)) +
+  geom_point(size=2, shape=16) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="GRAPHTITLE",x="XAXIS", y = "YAXIS") +
+  geom_smooth()
+ggplotly(GRAPHNAME)
+```
+
+# Seedling survival by treatment, 2018
+```{r survival_treatment 2019, include=TRUE}
+survival_treatment_2018 <- surv_all %>%
+   filter(year == "2018"
+  #        ,month == "M"
+  #        ,species == "S"
+  ) %>%
+  group_by(treatment, month_count) %>%
+  summarise_at(vars(alive), funs(mean,sd))
+
+
+survival_treatment_2018_G <- ggplot(
+  data = survival_treatment_2018,
+  aes(x = month_count, y = mean, color = treatment)) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd)) +
+  geom_line(aes(color = treatment, linetype = treatment)) + 
+  geom_point(size=2, shape=16) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="survival_treatment in 2018",x="Months Since Planting", y = "Amount Alive") 
+  #geom_smooth()
+ggplotly(survival_treatment_2018_G)
+```
+# Seedling survival by species, 2018
+```{r survival_species, include=TRUE} 
+survival_species_2018 <- surv_all %>%
+   filter(year == "2018"
+  #        ,month == "M"
+  #        ,species == "S"
+   ) %>%
+  group_by(species, month_count) %>%
+  summarise_at(vars(alive), funs(mean,sd))
+
+survival_species_2018_G <- ggplot(
+  data = survival_species_2018,
+  aes(x = month_count, y = mean, color = species)) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd)) +
+  geom_line(aes(color = species, linetype = species)) + 
+  geom_point(size=2, shape=16) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="survival_species in 2018",x="Months Since Planting", y = "Amount Alive") 
+  #geom_smooth()
+ggplotly(survival_species_2018_G)
+```
+
+# Seedling survival by treatment, 2019
+```{r survival_treatment 2019, include=TRUE}
+survival_treatment <- surv_all %>%
+   filter(year == "2019"
+  #        ,month == "M"
+  #        ,species == "S"
+  ) %>%
+  group_by(treatment, month_count) %>%
+  summarise_at(vars(alive), funs(mean,sd))
+
+
+survival_treatment_G <- ggplot(
+  data = survival_treatment,
+  aes(x = month_count, y = mean, color = treatment)) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd)) +
+  geom_line(aes(color = treatment, linetype = treatment)) + 
+  geom_point(size=2, shape=16) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="survival_treatment in 2019",x="Months Since Planting", y = "Amount Alive") 
+  #geom_smooth()
+ggplotly(survival_treatment_G)
+```
+# Seedling survival by species, 2019
+```{r survival_species, include=TRUE} 
+survival_species <- surv_all %>%
+   filter(year == "2019"
+         ,month == "9"
+  #        ,species == "S"
+   ) %>%
+  #group_by(species, month_count) %>%
+  group_by(species, cover_percent) %>% 
+  summarise_at(vars(alive), funs(mean,sd))
+
+survival_species_graph <- ggplot(
+  data = survival_species,
+  #aes(x = month_count, y = mean, color = species)) +
+  aes(x = cover_percent, y = mean, color = species)) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd)) +
+  geom_line(aes(color = species, linetype = species)) + 
+  geom_point(size=2, shape=16) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="Seedling Suvival by Species in 2019",x="Canopy Cover (%)", y = "Amount Alive") 
+  #geom_smooth()
+ggplotly(survival_species_graph)
+```
+
+# TDR by MAFA cover, March 2019
+```{r tdr scatterplot march 2019 and by mafa cover, test}
+surv_all.2019 <- surv_all %>% 
+  filter(year == "2019", month == "3")
+
+tdr_cover_scatter_2019 <- ggplot(
+  data = surv_all.2019,
+  aes(x = cover_percent, y = soil_moisture, color = treatment)) +
+  geom_point(size=2, shape=16) +
+ # scale_color_manual(values=c('#D3E3CA', '#92A587', '#2F3525', '#9F7E75', '#B9B994', '#F19B34')) +
+  theme(legend.position="top") +
+  theme_classic() +
+  #labs(title="Soil Moisture by Treatment in March 2019",x="Canopy Cover (%)", y = "Soil Moisture (%)") +
+  labs(title="Soil Moisture by Treatment in March 2019",x="Canopy Cover (%)", y = "Soil Moisture (%)") +
+  geom_smooth()
+ggplotly(tdr_cover_scatter_2019)
+```
+
+# TDR by MAFA cover, March 2020
+``` {r tdr scatterplot march 2020 and by mafa cover, include=TRUE}
+surv_all.2020 <- surv_all %>% 
+  filter(year == "2018", month == "4")
+
+tdr_cover_scatter_2020 <- ggplot(
+  data = surv_all.2020,
+  aes(x = cover_percent, y = soil_moisture, color = treatment)) +
+  geom_point(size=2, shape=16) +
+ # scale_color_manual(values=c('#D3E3CA', '#92A587', '#2F3525', '#9F7E75', '#B9B994', '#F19B34')) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="Soil Moisture by Treatment in March 2020",x="Canopy Cover (%)", y = "Soil Moisture (%)") +
+  geom_smooth()
+
+ggplotly(tdr_cover_scatter_2020)
+```
+
+
+Normalized photosynthetically active radiation (PAR) 
+
+# PAR by Mafa cover, 2019 - scatterplot
+```{r par scatterplot 2019 and by mafa cover, test}
+surv_all.2019 <- surv_all %>% 
+  filter(year == "2019", 
+     #    month == "9"
+         )
+
+par_cover_scatter_2019 <- ggplot(
+  data = surv_all.2019,
+   aes(x = month, y = normalized_par, color = treatment)) +
+  geom_point(size=2, shape=16) +
+ # scale_color_manual(values=c('#D3E3CA', '#92A587', '#2F3525', '#9F7E75', '#B9B994', '#F19B34')) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="Normalized PAR in 2019",x="Month", y = "Normalized PAR") +
+  geom_smooth()
+ggplotly(par_cover_scatter_2019)
+```
+# PAR by Mafa cover, 2019 - line graph
+```{r par line 2019 and by treatment, include=TRUE, echo=FALSE}
+par_line <- ggplot(data = par_meanSD, aes(x = month, y = mean, group=treatment)) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.1, 
+  position = position_dodge(0.05)) +
+  geom_line(aes(color = treatment, linetype = treatment)) +
+  geom_point()+
+  scale_color_manual(values=c('#F19B34', '#D3E3CA', '#9F7E75')) +
+  theme_classic() +
+  labs(title="Normalized Photosynthetically Active Radiation (electrons/m2/s) in July 2019",x="Month", y = "Normalized PAR")
+
+print(par_line)
+```
+
+``` {r tdr scatterplot march 2020 and by mafa cover, include=TRUE}
+surv_all.2020 <- surv_all %>% 
+  filter(year == "2020", month == "3")
+
+tdr_cover_scatter_2020 <- ggplot(
+  data = surv_all.2020,
+  aes(x = cover_percent, y = soil_moisture, color = treatment)) +
+  geom_point(size=2, shape=16) +
+ # scale_color_manual(values=c('#D3E3CA', '#92A587', '#2F3525', '#9F7E75', '#B9B994', '#F19B34')) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="Soil Moisture by Treatment in March 2020",x="Canopy Cover (%)", y = "Soil Moisture (%)") +
+  geom_smooth()
+
+ggplotly(tdr_cover_scatter_2020)
+```
