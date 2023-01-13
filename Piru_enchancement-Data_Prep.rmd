@@ -10,9 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(here) # similar to set working directory
 library(tidyverse) # data wrangling
 library(lubridate) # dates and times
-library(readr)
 library(plotly)
-library(dplyr)
 library(olsrr)
 library(survival)
 library(lme4)
@@ -33,20 +31,6 @@ cover_import <- read_csv("data/mafa_cover.csv",
       )
     )
 
-# creating a dataset of MAFA cover in 2017
-mafa_cover_2017 <- read.csv(here("data", "mafa_cover.csv")) %>%
-  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
-  mutate(date = mdy(date),
-         month = month(date),
-         year = year(date)) %>% 
-  filter(year %in% c("2017")) %>%
-  select(plot_number, cover_percent, year, month) %>%  
-  mutate(transplanted = 2018) %>% # year transplanted
-  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
-print(mafa_cover_2017)
-# 36 rows
-```
-```{r mafa_cover 2018, include=TRUE}
 # creating a dataset of MAFA cover in 2018
 mafa_cover_2018 <- read.csv(here("data", "mafa_cover.csv")) %>%
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
@@ -75,7 +59,8 @@ print(mafa_cover_2019)
 # 36 rows
 ```
 ```{r mafa cover all, include=TRUE}
-mafa_cover_all <- rbind(mafa_cover_2017, mafa_cover_2018, mafa_cover_2019)
+mafa_cover_all <- rbind(mafa_cover_2018, mafa_cover_2019) %>%
+  select("plot_number", "year", "cover_percent", "site")
 print(mafa_cover_all)
 # 36 x 3 = 108 rows
 ```
@@ -93,21 +78,6 @@ cover_import <- read_csv("data/totexo_cover.csv",
       )
     )
 
-# creating a dataset of total exotic cover in 2017
-exotic_cover_2017 <- read.csv(here("data", "totexo_cover.csv")) %>%
-  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
-  mutate(date = mdy(date),
-         month = month(date),
-         year = year(date)) %>% 
-  filter(year %in% c("2017")) %>%
-  select(plot_number, cover_percent, year, month) %>%  
-  mutate(transplanted = 2018) %>% 
-  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
-print(exotic_cover_2017)
-# 36 rows
-```
-
-``` {r exotic cover 2018, include = TRUE}
 # creating a dataset of total exotic cover in 2018
 exotic_cover_2018 <- read.csv(here("data", "totexo_cover.csv")) %>%
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
@@ -120,9 +90,7 @@ exotic_cover_2018 <- read.csv(here("data", "totexo_cover.csv")) %>%
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
 print(exotic_cover_2018)
 # 36 rows
-```
 
-```{r exotic cover 2019, include = TRUE}
 # creating a dataset of total exotic cover in 2019
 exotic_cover_2019 <- read.csv(here("data", "totexo_cover.csv")) %>%
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
@@ -135,12 +103,13 @@ exotic_cover_2019 <- read.csv(here("data", "totexo_cover.csv")) %>%
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
 print(exotic_cover_2019)
 # 36 rows
-```
-```{r exotic cover all, include=TRUE}
-exotic_cover_all <- rbind(exotic_cover_2017, exotic_cover_2018, exotic_cover_2019)
+
+exotic_cover_all <- rbind(exotic_cover_2018, exotic_cover_2019 )%>%
+  select("plot_number", "year", "cover_percent", "site")
 print(exotic_cover_all)
 # 36 x 3 = 108 rows
 ```
+
 ## Seedling survival
 ```{r seedling survivial prep, include=TRUE} 
 survival_prep <- read.csv(here("data", "survival_data.csv")) %>% 
@@ -291,10 +260,10 @@ month_1 <- c("2018-02-24", "2018-02-23", "2018-03-03")
 #if else statement to create months that count up from month transplanted
 for (i in 1:length(survmort_prep$date)) {
   if(grepl(month_0[1], survmort_prep$date[i])||grepl(month_0[2], survmort_prep$date[i])||grepl(month_0[3], survmort_prep$date[i])){
-    survmort_prep$month_count[i] <- 0; survmort_prep$transplanted[i] <- 2018}
+    survmort_prep$month_count[i] <- 0; survmort_prep$transplanted[i] <- 2018; survmort_prep$month[i] <- 1}
   else{
     if(grepl(month_1[1], survmort_prep$date[i])||grepl(month_1[2], survmort_prep$date[i])||grepl(month_1[3], survmort_prep$date[i])){
-      survmort_prep$month_count[i] <- 1; survmort_prep$transplanted[i] <- 2018}
+      survmort_prep$month_count[i] <- 1; survmort_prep$transplanted[i] <- 2018; survmort_prep$month[i] <- 2}
     else{
       if(survmort_prep$year[i] == 2018){
       survmort_prep$month_count[i] <- survmort_prep$month[i] - 1; survmort_prep$transplanted[i] <- 2018}
@@ -393,7 +362,7 @@ write.csv(tdr, "data/processed/tdr.csv")
 surv_month <- rep(1:12, each = 36, 4)
 surv_year <- rep(2018:2021, each = 432)
 surv_plot <- rep(seq(1,36, by = 1), 48)
-surv_monthc <- rep(1:48, each = 36)
+surv_monthc <- rep(0:47, each = 36)
 surv_hold <- data.frame(surv_plot, surv_year, surv_month, surv_monthc) %>%
    rename(month = surv_month,
           year = surv_year,
@@ -409,9 +378,15 @@ surv_all <- surv_hold %>%
   mutate(site = coalesce(site, site.y, site.x),
          treatment = coalesce(treatment.x, treatment.y, treatment)) %>%
   drop_na(site) %>%
-  select("plot_number", "month_count", "species", "alive", "dead", "month", "year", "normalized_par", "site"      , "treatment", "soil_moisture")
+  left_join(mafa_cover_all, by = c("plot_number", "site", "year")) %>%
+  left_join(exotic_cover_all, by = c("plot_number", "site", "year"), suffix = c(".native", ".nonnative")) %>%
+  select("year","month", "month_count", "site", "plot_number", "treatment", "species", "alive", "dead", "normalized_par", "soil_moisture", "cover_percent.native", "cover_percent.nonnative") %>%
+  rename(exotic_cover = cover_percent.nonnative,
+         native_cover = cover_percent.native)
 
 write.csv(surv_all, "data/surv_all.csv")
+surv_months <- unique(surv_all$month_count)
+surv_months
 ```
 
 
