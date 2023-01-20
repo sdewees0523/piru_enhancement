@@ -387,8 +387,8 @@ surv_all <- surv_hold %>%
   rename(exotic_cover = cover_percent.nonnative,
          native_cover = cover_percent.native)
 
-write.csv(surv_all, "data/surv_all.csv")
-surv_months <- unique(surv_all$month_count)=
+write.csv(surv_all, "data//processed/surv_all.csv")
+surv_months <- unique(surv_all$month_count)
 surv_months
 # [1]  0  1  3  4  8 11 12 14 15 16 17 18 20 22 26 27 28 33 37 39
 ```
