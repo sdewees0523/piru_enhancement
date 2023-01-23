@@ -19,6 +19,33 @@ library(lme4)
 surv_all <- read.csv("data/processed/surv_all.csv")
 ```
 
+```{r checking for normality, include = TRUE}
+# Testing for normality
+# In general, if you have less than 50 observations, you should use the Shapiro-Wilk test. 
+# Otherwise, the Kolmogorov-Smirnov test is better.
+
+m00 <- lm(treatment ~ normalized_par + exotic_cover + soil_moisture, data=surv_all)
+
+model <- lm( ~ disp + hp + wt + qsec, data = mtcars)
+ols_plot_resid_qq(model)
+
+k.test(surv_all$exotic_cover)
+pnorm
+plot(surv_all$native_cover ~ surv_all$normalized_par)
+```
+
+
+```{r checking for normality, include = TRUE}
+# Check for normality and heteroskedasticity <-- FROM AUSTEN
+par(mfrow=c(2,2)) 
+plot(model.presence.sh)
+shapiro.test(model.presence.sh$residuals)
+ggplot(data = NULL, aes(x = model.presence.sh$residuals)) + geom_density(aes(y=..scaled..))
+car::leveneTest(sh.dat.samples.pa$sh, sh.dat.samples.pa$Quadrat.Identifier, center = median)
+#https://easystats.github.io/performance/
+```
+
+
 ```{r}
 #Initial! 
 #Wrong!
@@ -26,6 +53,7 @@ surv_all <- read.csv("data/processed/surv_all.csv")
 # GRAPHDATA <- surv_all %>% 
 #     group_by(treatment, month_count, species) %>%
 #     summarise_at(vars(alive), funs(mean,sd))
+
 
 
 m0 <- lm(alive ~ species + soil_moisture + normalized_par, data=surv_all)
