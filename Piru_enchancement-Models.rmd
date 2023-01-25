@@ -16,18 +16,64 @@ library(dplyr)
 library(olsrr)
 library(survival)
 library(lme4)
-surv_all <- read.csv("data/processed/surv_all.csv")
+
+surv_all <- read.csv("data/processed/surv_all_trial.csv") # NEED TO HAVE COMPLETE df WITH NO NAs
+
 ```
 
-```{r checking for normality, include = TRUE}
+```{r checking for normality - by treatment, include = TRUE}
 # Testing for normality
 # In general, if you have less than 50 observations, you should use the Shapiro-Wilk test. 
 # Otherwise, the Kolmogorov-Smirnov test is better.
 
-m00 <- lm(treatment ~ normalized_par + exotic_cover + soil_moisture, data=surv_all)
+# TDR, PAR, and exotic cover by treatment
+model1 <- lm(soil_moisture + normalized_par + exotic_cover ~ treatment, data=surv_all)
+e <- residuals(model1, type="pearson")
+f <- fitted(model1)
+
+# qq plot
+qqnorm(e)
+qqline(e)
+
+qqnorm(f)
+qqline(f)
+```
+```{r checking for normality - by native cover, include = TRUE}
+
+# TDR, PAR, and exotic cover by native percent cover
+model2 <- lm(soil_moisture + normalized_par + exotic_cover ~ native_cover, data=surv_all)
+g <- residuals(model2, type="pearson")
+h <- fitted(model2)
+
+# qq plot
+qqnorm(g)
+qqline(g)
+
+qqnorm(h)
+qqline(h)
+```
+
+
+
+```{r , include = TRUE}
+ols_test_normality(model1)
+
+
+shapiro.test(surv_all$native_cover)
+shapiro.test(surv_all$exotic_cover)
+
+
+
+hist(surv_all$native_cover, col='steelblue')
+
+model1 <- lm(treatment ~ normalized_par, data=surv_all)
+
+
+
+
+
 
 model <- lm( ~ disp + hp + wt + qsec, data = mtcars)
-ols_plot_resid_qq(model)
 
 k.test(surv_all$exotic_cover)
 pnorm
