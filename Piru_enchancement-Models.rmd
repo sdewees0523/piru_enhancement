@@ -21,6 +21,55 @@ surv_all <- read.csv("data/processed/surv_all_trial.csv") # NEED TO HAVE COMPLET
 
 ```
 
+```{r check normality code from Robert, include=TRUE}
+## FROM ROBERT ----- START --------
+## 
+# Build linear mixed effects model
+# transect and point set as random variables
+
+lme.mod <- lmer(normalized_par + soil_moisture + exotic_cover ~ treatment + (1|site) + (1|plot_number), 
+                           data = surv_all)
+
+MOD <- lme.mod
+
+# Calculate model's residual and fitted values
+F1 <- fitted(MOD)
+E1 <- residuals(MOD, "pearson")
+
+# See residuals as a histogram, look for normal distribution
+hist(E1)
+
+# Graph residuals against a normal dsitribution, look for all points to be on 1:1 line
+qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
+qqline(E1)
+
+# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
+plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
+abline(h = 0)
+
+# Check for crazy outliers, look for lines MUCH taller than the rest of data
+plot(cooks.distance(MOD))
+
+# Plot a box plot for each factor, look for equal variance amount levels along the zero line
+boxplot(E1 ~ year, data = surv_all)
+abline(h = 0)
+
+boxplot(E1 ~ month, data = surv_all)
+abline(h = 0)
+
+boxplot(E1 ~ treatment, data = surv_all)
+abline(h = 0)
+
+# Plot each random effect in the model, look for dots along 1:1 line
+qqnorm(ranef(MOD)$transect[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$transect[,1])
+
+qqnorm(ranef(MOD)$point[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$point[,1])
+
+## FROM ROBERT ----- END --------
+```
+
 ```{r checking for normality - by treatment, include = TRUE}
 # Testing for normality
 # In general, if you have less than 50 observations, you should use the Shapiro-Wilk test. 
