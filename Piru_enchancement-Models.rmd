@@ -16,21 +16,67 @@ library(dplyr)
 library(olsrr)
 library(survival)
 library(lme4)
+library(lmerTest)
 
-surv_all <- read.csv("data/processed/surv_all_trial.csv") # NEED TO HAVE COMPLETE df WITH NO NAs
+
+#mafa_cover_all = MAFA % cover 2018 and 2019
+#exotic_cover_all = exotic % cover 2018 and 2019
+
 
 ```
 
-```{r check normality code from Robert, include=TRUE}
-## FROM ROBERT ----- START --------
-## 
-# Build linear mixed effects model
-# transect and point set as random variables
+# Question 1: How do environmental conditions change by a) canopy treatment and b) canopy cover?
+Is canopy treatment or canopy cover a stronger predictor of the environmental conditions below the shrub canopy? 
 
-lme.mod <- lmer(normalized_par + soil_moisture + exotic_cover ~ treatment + (1|site) + (1|plot_number), 
-                           data = surv_all)
+- Load data
+```{r load data, include=TRUE}
 
-MOD <- lme.mod
+# response variable: PAR
+# explanatory variables: treatment, MAFA % cover, site
+# data frame: combine par and mafa_cover_all
+
+# Formula : a two-sided linear formula object describing both the fixed-effects and random effects part of the model,
+# with the response on the left of a ~ operator and the terms, separated by + operators, on the right. 
+# Random-effects terms are distinguished by vertical bars (|) separating expressions for design matrices from
+# grouping factors. Two vertical bars (||) can be used to specify multiple uncorrelated random effects for the same
+# grouping variable. (Because of the way it is implemented, the ||-syntax works only for design matrices containing
+# numeric (continuous) predictors; to fit models with independent categorical effects, see dummy or the lmer_alt
+# function from the afex package.)
+
+# PAR
+parmod <- par %>%
+  left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
+  rename(mafacover = cover_percent)
+print(parmod)
+write.csv(parmod, "data/processed/par_model.csv")
+
+# TDR
+tdrmod <- tdr %>% 
+  left_join(mafa_cover_all, by = c("site", "plot_number"), na.rm = F) %>% 
+  rename(year_tdr = year.x,
+         year_mafacover = year.y,
+         mafacover = cover_percent)
+print(tdrmod)
+write.csv(tdrmod, "data/processed/tdr_model.csv")
+
+# NN COVER
+nnmod <- exotic_cover_all %>% 
+  left_join(mafa_cover_all, by = c("site", "plot_number"), na.rm = F) %>% 
+  rename(year_nncover = year.x,
+         year_mafacover = year.y,
+         nncover = cover_percent.x,
+         mafacover = cover_percent.y)
+print(nnmod)
+write.csv(nnmod, "data/processed/nn_model.csv")
+  
+```
+
+```{r par model lme, include = TRUE}
+
+lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
+                   data = parmod)
+
+MOD <- lme.parmod
 
 # Calculate model's residual and fitted values
 F1 <- fitted(MOD)
@@ -39,35 +85,176 @@ E1 <- residuals(MOD, "pearson")
 # See residuals as a histogram, look for normal distribution
 hist(E1)
 
-# Graph residuals against a normal dsitribution, look for all points to be on 1:1 line
+# Graph residuals against a normal distribution, look for all points to be on 1:1 line
+#need to call next two lines together
 qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
 qqline(E1)
 
 # Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
+# run together 2 lines
 plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
-abline(h = 0)
+abline(h = 0) # looking for random scatter
 
 # Check for crazy outliers, look for lines MUCH taller than the rest of data
 plot(cooks.distance(MOD))
 
 # Plot a box plot for each factor, look for equal variance amount levels along the zero line
-boxplot(E1 ~ year, data = surv_all)
+# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
+# Random effects need the qqline just like normality. 
+# So, only site and treatment get box plots. 
+# MAFA cover is a covariate (continuous variable).
+boxplot(E1 ~ treatment, data = parmod)
 abline(h = 0)
 
-boxplot(E1 ~ month, data = surv_all)
+boxplot(E1 ~ site, data = parmod)
 abline(h = 0)
 
-boxplot(E1 ~ treatment, data = surv_all)
+# Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
+qqnorm(ranef(MOD)$date[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$date[,1]) # unique dates
+
+qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$plot_number[,1]) # unique plots
+
+# print 
+print(lme.parmod)
+summary(lme.parmod)
+anova(lme.parmod)
+
+
+parmodTest <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
+                   data = parmod)
+# get Satterthwaite-approximated degrees of freedom
+coefs$df.Satt <- coef(summary(parmodTest))[, 3]
+# get approximate p-values
+coefs$p.Satt <- coef(summary(parmodTest))[, 5]
+coefs
+```
+
+```{r tdrmodel lme, include = TRUE}
+
+lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
+                   data = parmod)
+
+MOD <- lme.parmod
+
+# Calculate model's residual and fitted values
+F1 <- fitted(MOD)
+E1 <- residuals(MOD, "pearson")
+
+# See residuals as a histogram, look for normal distribution
+hist(E1)
+
+# Graph residuals against a normal distribution, look for all points to be on 1:1 line
+#need to call next two lines together
+qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
+qqline(E1)
+
+# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
+# run together 2 lines
+plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
+abline(h = 0) # looking for random scatter
+
+# Check for crazy outliers, look for lines MUCH taller than the rest of data
+plot(cooks.distance(MOD))
+
+# Plot a box plot for each factor, look for equal variance amount levels along the zero line
+# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
+# Random effects need the qqline just like normality. 
+# So, only site and treatment get box plots. 
+# MAFA cover is a covariate (continuous variable).
+boxplot(E1 ~ treatment, data = parmod)
+abline(h = 0)
+
+boxplot(E1 ~ mafacover, data = parmod)
+abline(h = 0)
+
+boxplot(E1 ~ site, data = parmod)
 abline(h = 0)
 
 # Plot each random effect in the model, look for dots along 1:1 line
-qqnorm(ranef(MOD)$transect[,1], main = "Plot Residuals")
-qqline(ranef(MOD)$transect[,1])
+qqnorm(ranef(MOD)$date[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$date[,1])
 
-qqnorm(ranef(MOD)$point[,1], main = "Plot Residuals")
-qqline(ranef(MOD)$point[,1])
+qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$plot_number[,1])
 
-## FROM ROBERT ----- END --------
+# print 
+print(lme.parmod)
+summary(lme.parmod)
+anova(lme.parmod)
+
+
+parmodTest <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
+                   data = parmod)
+# get Satterthwaite-approximated degrees of freedom
+coefs$df.Satt <- coef(summary(parmodTest))[, 3]
+# get approximate p-values
+coefs$p.Satt <- coef(summary(parmodTest))[, 5]
+coefs
+```
+
+```{r non-native cover model lme, include = TRUE}
+
+lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
+                   data = parmod)
+
+MOD <- lme.parmod
+
+# Calculate model's residual and fitted values
+F1 <- fitted(MOD)
+E1 <- residuals(MOD, "pearson")
+
+# See residuals as a histogram, look for normal distribution
+hist(E1)
+
+# Graph residuals against a normal distribution, look for all points to be on 1:1 line
+#need to call next two lines together
+qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
+qqline(E1)
+
+# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
+# run together 2 lines
+plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
+abline(h = 0) # looking for random scatter
+
+# Check for crazy outliers, look for lines MUCH taller than the rest of data
+plot(cooks.distance(MOD))
+
+# Plot a box plot for each factor, look for equal variance amount levels along the zero line
+# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
+# Random effects need the qqline just like normality. 
+# So, only site and treatment get box plots. 
+# MAFA cover is a covariate (continuous variable).
+boxplot(E1 ~ treatment, data = parmod)
+abline(h = 0)
+
+boxplot(E1 ~ mafacover, data = parmod)
+abline(h = 0)
+
+boxplot(E1 ~ site, data = parmod)
+abline(h = 0)
+
+# Plot each random effect in the model, look for dots along 1:1 line
+qqnorm(ranef(MOD)$date[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$date[,1])
+
+qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$plot_number[,1])
+
+# print 
+print(lme.parmod)
+summary(lme.parmod)
+anova(lme.parmod)
+
+
+parmodTest <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
+                   data = parmod)
+# get Satterthwaite-approximated degrees of freedom
+coefs$df.Satt <- coef(summary(parmodTest))[, 3]
+# get approximate p-values
+coefs$p.Satt <- coef(summary(parmodTest))[, 5]
+coefs
 ```
 
 ```{r checking for normality - by treatment, include = TRUE}
