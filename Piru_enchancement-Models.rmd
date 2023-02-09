@@ -28,20 +28,17 @@ library(lmerTest)
 #Question 1: How do environmental conditions change by a) canopy treatment and b) canopy cover?
 Is canopy treatment or canopy cover a stronger predictor of the environmental conditions below the shrub canopy? 
 
-- Load PAR, TDR, and non-native percent cover data.
-- Save as a csv in the "Processed" data folder.
-```{r load data, include=TRUE}
-# response variable: PAR
-# explanatory variables: treatment, MAFA % cover, site
-# data frame: combine par and mafa_cover_all
+Notes:
+* __response variable__: The variable you want to test. (e.g.,. PAR, TDR, nncover)
+* __explanatory variables__: The variables that can explain the outcome. (e.g., treatment, mafacover, site)
+* __data frame__: Include all the data you'll be working with. (e.g., combine par and mafa_cover_all)
+* __formula__: a formula is a two-sided linear formula object describing both the _fixed-effects_ and _random effects_ part of the model, with the response on the left of a ~ operator and the terms, separated by + operators, on the right. 
+* __random effects__: Random-effects terms are distinguished by vertical bars __(|)__ separating expressions for design matrices from grouping factors. Two vertical bars __(||)__ can be used to specify multiple uncorrelated random effects for the same grouping variable. 
+  + Because of the way it is implemented, the ||-syntax works only for design matrices containing numeric (continuous) predictors; to fit models with independent categorical effects, see dummy or the lmer_alt function from the afex package.)
 
-# Formula : a two-sided linear formula object describing both the fixed-effects and random effects part of the model,
-# with the response on the left of a ~ operator and the terms, separated by + operators, on the right. 
-# Random-effects terms are distinguished by vertical bars (|) separating expressions for design matrices from
-# grouping factors. Two vertical bars (||) can be used to specify multiple uncorrelated random effects for the same
-# grouping variable. (Because of the way it is implemented, the ||-syntax works only for design matrices containing
-# numeric (continuous) predictors; to fit models with independent categorical effects, see dummy or the lmer_alt
-# function from the afex package.)
+### Load PAR, TDR, and non-native percent cover data.
+### Save as a csv in the "Processed" data folder.
+```{r load data, include=TRUE}
 
 # PAR
 parmod <- par %>%
@@ -70,9 +67,9 @@ write.csv(nnmod, "data/processed/nn_model.csv")
   
 ```
 
-#PAR linear mixed-effects model
-- lmer
-- testing the residuals for normality
+##PAR linear mixed-effects model
+1. lmer
+2. testing the residuals for normality
 ```{r par model - normality, include = TRUE}
 
 lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
@@ -118,14 +115,14 @@ qqline(ranef(MOD)$date[,1]) # unique dates
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1]) # unique plots
 ```
-- statistics
+3. statistics
 ```{r par model - stats, include = TRUE}
 # print 
 print(lme.parmod)
 summary(lme.parmod) # p-values
 anova(lme.parmod) # fixed level effects, pvalues, etc.
 ```
-- figures
+4. figures
 ```{r par model - figures, include=TRUE}
 
 # scatterplot: par x mafacover
@@ -155,9 +152,9 @@ TukeyHSD(parmod_treatment)
 plot(TukeyHSD(parmod_treatment))
 ```
 
-#TDR linear mixed-effects model
-- lmer
-- testing the residuals for normality
+##TDR linear mixed-effects model
+1. lmer
+2. testing the residuals for normality
 ```{r tdrmod - normality, include = TRUE}
 
 lme.tdrmod <- lmer(soil_moisture ~ treatment + mafacover + site + (1|date) +(1|plot_number),
@@ -206,7 +203,7 @@ qqline(ranef(MOD)$date[,1])
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1])
 ```
-- statistics
+3. statistics
 ```{r tdrmod - stats, include = TRUE}
 # print 
 print(lme.tdrmod)
@@ -219,7 +216,7 @@ anova(tdrmod_site)
 TukeyHSD(tdrmod_site)
 plot(TukeyHSD(tdrmod_site))
 ```
-- figures
+4. figures
 ```{r tdrmod - figures, include = TRUE}
 
 # boxplot: TDR by treatment by site
@@ -232,20 +229,21 @@ ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
   theme_bw() 
 ```
 
-#Non-native cover linear mixed-effects model
-- lmer
-- testing the residuals for normality
+##Non-native cover linear mixed-effects model
+1. lmer
+2. testing the residuals for normality
 ```{r nnmod - normality, include = TRUE}
 
 #need to convert df to a tibble
-names(nnmod)
-print(nnmod)
-str(nnmod)
-lme.nnmod <- lmer(nnmod ~ treatment + mafacover + site + (1|date) + (1|plot_number),
+#as_tibble(nnmod)
+#print(nn)
+#names(nnmod)
+#print(nnmod)
+#str(nnmod)
+lme.nnmod <- lmer(nncover ~ treatment + mafacover + site + (1|date) + (1|plot_number),
                    data = nnmod)
 
-
-MOD <- lme.parmod
+MOD <- lme.nnmod
 
 # Calculate model's residual and fitted values
 F1 <- fitted(MOD)
@@ -275,9 +273,6 @@ plot(cooks.distance(MOD))
 boxplot(E1 ~ treatment, data = nnmod)
 abline(h = 0)
 
-boxplot(E1 ~ treatment, data = nnmod)
-abline(h = 0)
-
 boxplot(E1 ~ mafacover, data = nnmod)
 abline(h = 0)
 
@@ -291,27 +286,57 @@ qqline(ranef(MOD)$date[,1])
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1])
 ```
-```{r nnmod - dataprep, include=FALSE}
-
-nnmod %>% 
-  group_by(year, site, treatment) %>% 
- dplyr::summarize(readings = n_distinct(nncover))
-```
-
-- statistics
-```{r nnmod - stats, include = TRUE}
+3. statistics
+```{r nnmod - stats, include=FALSE}
 # print 
-print(lme.parmod)
-summary(lme.parmod)
-anova(lme.parmod)
+print(lme.nnmod)
+summary(lme.nnmod)
+anova(lme.nnmod) # A significant p-value indicates that one or more significant differences exist between group means.
+
+# non-native cover by treatment
+nnmod_treat <- aov(nncover ~ treatment, data = nnmod) 
+anova(nnmod_treat)
+TukeyHSD(nnmod_treat)
+plot(TukeyHSD(nnmod_treat))
+
+# non-native cover by treatment and site
+nnmod_treat_site <- aov(nncover ~ treatment*site, data = nnmod) 
+anova(nnmod_treat_site)
+TukeyHSD(nnmod_treat_site)
+plot(TukeyHSD(nnmod_treat_site))
+
 ```
-- figures
+
+4. figures
 ```{r nnmod - figures, include=TRUE}
 
+# boxplot: nncover x treatment x site
+ggplot(data = nnmod, aes(x = treatment, y = nncover)) + 
+  geom_boxplot(aes(fill = site)) +
+  geom_smooth(method="lm")+
+  theme_bw()
 
+
+# boxplot: mafacover x site x treatment
+ggplot(data = nnmod, aes(x = site, y = nncover)) + 
+  geom_boxplot(aes(fill = treatment)) +
+  geom_smooth(method="lm")+
+  theme_bw()
+
+
+
+parmod_treatment <- aov(normalized_par ~ treatment, data = parmod) 
+TukeyHSD(parmod_treatment)
+plot(TukeyHSD(parmod_treatment))
 
 
 ```
+
+
+
+
+# END OF CODE
+
 
 
 ```{r checking for normality - by treatment, include = FALSE}
