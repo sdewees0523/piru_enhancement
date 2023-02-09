@@ -25,12 +25,12 @@ library(lmerTest)
 
 ```
 
-# Question 1: How do environmental conditions change by a) canopy treatment and b) canopy cover?
+#Question 1: How do environmental conditions change by a) canopy treatment and b) canopy cover?
 Is canopy treatment or canopy cover a stronger predictor of the environmental conditions below the shrub canopy? 
 
-- Load data
+- Load PAR, TDR, and non-native percent cover data.
+- Save as a csv in the "Processed" data folder.
 ```{r load data, include=TRUE}
-
 # response variable: PAR
 # explanatory variables: treatment, MAFA % cover, site
 # data frame: combine par and mafa_cover_all
@@ -52,26 +52,28 @@ write.csv(parmod, "data/processed/par_model.csv")
 
 # TDR
 tdrmod <- tdr %>% 
-  left_join(mafa_cover_all, by = c("site", "plot_number"), na.rm = F) %>% 
-  rename(year_tdr = year.x,
-         year_mafacover = year.y,
-         mafacover = cover_percent)
+  left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
+  rename(mafacover = cover_percent) %>% 
+  filter(year <= 2019)
 print(tdrmod)
 write.csv(tdrmod, "data/processed/tdr_model.csv")
 
 # NN COVER
 nnmod <- exotic_cover_all %>% 
-  left_join(mafa_cover_all, by = c("site", "plot_number"), na.rm = F) %>% 
-  rename(year_nncover = year.x,
-         year_mafacover = year.y,
-         nncover = cover_percent.x,
-         mafacover = cover_percent.y)
+   left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
+  rename(nncover = cover_percent.x,
+         mafacover = cover_percent.y, 
+         treatment = MAFA_removal) %>% 
+  select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
 print(nnmod)
 write.csv(nnmod, "data/processed/nn_model.csv")
   
 ```
 
-```{r par model lme, include = TRUE}
+#PAR linear mixed-effects model
+- lmer
+- testing the residuals for normality
+```{r par model - normality, include = TRUE}
 
 lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
                    data = parmod)
@@ -115,26 +117,128 @@ qqline(ranef(MOD)$date[,1]) # unique dates
 
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1]) # unique plots
-
+```
+- statistics
+```{r par model - stats, include = TRUE}
 # print 
 print(lme.parmod)
-summary(lme.parmod)
-anova(lme.parmod)
+summary(lme.parmod) # p-values
+anova(lme.parmod) # fixed level effects, pvalues, etc.
+```
+- figures
+```{r par model - figures, include=TRUE}
 
+# scatterplot: par x mafacover
+ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
+  geom_point() +
+  geom_smooth(method="lm")+
+  theme_bw()
 
-parmodTest <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
-                   data = parmod)
-# get Satterthwaite-approximated degrees of freedom
-coefs$df.Satt <- coef(summary(parmodTest))[, 3]
-# get approximate p-values
-coefs$p.Satt <- coef(summary(parmodTest))[, 5]
-coefs
+# scatterplot: par x site
+ggplot(data = parmod, aes(x = site, y = normalized_par)) + 
+  geom_boxplot(aes(fill = site)) +
+  theme_bw()
+
+# scatterplot: mafacover x par x treatment
+ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
+  geom_point(aes(color = treatment)) +
+  theme_bw()
+
+# boxplot: mafacover x site
+ggplot(data = parmod, aes(x = site, y = normalized_par)) +
+  geom_boxplot(aes(fill = site)) +
+  theme_bw() + 
+  theme(legend.position = "none")
+
+parmod_treatment <- aov(normalized_par ~ treatment, data = parmod) 
+TukeyHSD(parmod_treatment)
+plot(TukeyHSD(parmod_treatment))
 ```
 
-```{r tdrmodel lme, include = TRUE}
+#TDR linear mixed-effects model
+- lmer
+- testing the residuals for normality
+```{r tdrmod - normality, include = TRUE}
 
-lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
-                   data = parmod)
+lme.tdrmod <- lmer(soil_moisture ~ treatment + mafacover + site + (1|date) +(1|plot_number),
+                   data = tdrmod)
+
+MOD <- lme.tdrmod
+
+# Calculate model's residual and fitted values
+F1 <- fitted(MOD)
+E1 <- residuals(MOD, "pearson")
+
+# See residuals as a histogram, look for normal distribution
+hist(E1)
+
+# Graph residuals against a normal distribution, look for all points to be on 1:1 line
+#need to call next two lines together
+qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
+qqline(E1)
+
+# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
+# run together 2 lines
+plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
+abline(h = 0) # looking for random scatter
+
+# Check for crazy outliers, look for lines MUCH taller than the rest of data
+plot(cooks.distance(MOD))
+
+# Plot a box plot for each factor, look for equal variance amount levels along the zero line
+# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
+# Random effects need the qqline just like normality. 
+# So, only site and treatment get box plots. 
+# MAFA cover is a covariate (continuous variable).
+boxplot(E1 ~ treatment, data = tdrmod)
+abline(h = 0)
+
+boxplot(E1 ~ mafacover, data = tdrmod)
+abline(h = 0)
+
+boxplot(E1 ~ site, data = tdrmod)
+abline(h = 0)
+
+# Plot each random effect in the model, look for dots along 1:1 line
+qqnorm(ranef(MOD)$date[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$date[,1])
+
+qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$plot_number[,1])
+```
+- statistics
+```{r tdrmod - stats, include = TRUE}
+# print 
+print(lme.tdrmod)
+summary(lme.tdrmod)
+anova(lme.tdrmod) # A significant p-value indicates that 
+# one or more significant differences exist between group means.
+
+tdrmod_site <- aov(soil_moisture ~ site*treatment, data = tdrmod) 
+anova(tdrmod_site)
+TukeyHSD(tdrmod_site)
+plot(TukeyHSD(tdrmod_site))
+```
+- figures
+```{r tdrmod - figures, include = TRUE}
+
+# boxplot: TDR by treatment by site
+ggplot(data = tdrmod, aes(x = treatment, y = soil_moisture)) +
+  geom_boxplot(aes(fill = site)) +
+  theme_bw() 
+# boxplot: TDR by site by treatment
+ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
+  geom_boxplot(aes(fill = treatment)) +
+  theme_bw() 
+```
+
+#Non-native cover linear mixed-effects model
+- lmer
+- testing the residuals for normality
+```{r nnmod - normality, include = TRUE}
+
+lme.nnmod <- lmer(nnmod ~ treatment + mafacover + site + (1|date) + (1|plot_number),
+                   data = nnmod)
 
 MOD <- lme.parmod
 
@@ -163,76 +267,16 @@ plot(cooks.distance(MOD))
 # Random effects need the qqline just like normality. 
 # So, only site and treatment get box plots. 
 # MAFA cover is a covariate (continuous variable).
-boxplot(E1 ~ treatment, data = parmod)
+boxplot(E1 ~ treatment, data = nnmod)
 abline(h = 0)
 
-boxplot(E1 ~ mafacover, data = parmod)
+boxplot(E1 ~ treatment, data = nnmod)
 abline(h = 0)
 
-boxplot(E1 ~ site, data = parmod)
+boxplot(E1 ~ mafacover, data = nnmod)
 abline(h = 0)
 
-# Plot each random effect in the model, look for dots along 1:1 line
-qqnorm(ranef(MOD)$date[,1], main = "Plot Residuals")
-qqline(ranef(MOD)$date[,1])
-
-qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
-qqline(ranef(MOD)$plot_number[,1])
-
-# print 
-print(lme.parmod)
-summary(lme.parmod)
-anova(lme.parmod)
-
-
-parmodTest <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
-                   data = parmod)
-# get Satterthwaite-approximated degrees of freedom
-coefs$df.Satt <- coef(summary(parmodTest))[, 3]
-# get approximate p-values
-coefs$p.Satt <- coef(summary(parmodTest))[, 5]
-coefs
-```
-
-```{r non-native cover model lme, include = TRUE}
-
-lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
-                   data = parmod)
-
-MOD <- lme.parmod
-
-# Calculate model's residual and fitted values
-F1 <- fitted(MOD)
-E1 <- residuals(MOD, "pearson")
-
-# See residuals as a histogram, look for normal distribution
-hist(E1)
-
-# Graph residuals against a normal distribution, look for all points to be on 1:1 line
-#need to call next two lines together
-qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
-qqline(E1)
-
-# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
-# run together 2 lines
-plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
-abline(h = 0) # looking for random scatter
-
-# Check for crazy outliers, look for lines MUCH taller than the rest of data
-plot(cooks.distance(MOD))
-
-# Plot a box plot for each factor, look for equal variance amount levels along the zero line
-# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
-# Random effects need the qqline just like normality. 
-# So, only site and treatment get box plots. 
-# MAFA cover is a covariate (continuous variable).
-boxplot(E1 ~ treatment, data = parmod)
-abline(h = 0)
-
-boxplot(E1 ~ mafacover, data = parmod)
-abline(h = 0)
-
-boxplot(E1 ~ site, data = parmod)
+boxplot(E1 ~ site, data = nnmod)
 abline(h = 0)
 
 # Plot each random effect in the model, look for dots along 1:1 line
@@ -241,23 +285,31 @@ qqline(ranef(MOD)$date[,1])
 
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1])
+```
+```{r nnmod - dataprep, include=FALSE}
 
+nnmod %>% 
+  group_by(year, site, treatment) %>% 
+ dplyr::summarize(readings = n_distinct(nncover))
+```
+
+- statistics
+```{r nnmod - stats, include = TRUE}
 # print 
 print(lme.parmod)
 summary(lme.parmod)
 anova(lme.parmod)
+```
+- figures
+```{r nnmod - figures, include=TRUE}
 
 
-parmodTest <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
-                   data = parmod)
-# get Satterthwaite-approximated degrees of freedom
-coefs$df.Satt <- coef(summary(parmodTest))[, 3]
-# get approximate p-values
-coefs$p.Satt <- coef(summary(parmodTest))[, 5]
-coefs
+
+
 ```
 
-```{r checking for normality - by treatment, include = TRUE}
+
+```{r checking for normality - by treatment, include = FALSE}
 # Testing for normality
 # In general, if you have less than 50 observations, you should use the Shapiro-Wilk test. 
 # Otherwise, the Kolmogorov-Smirnov test is better.
@@ -274,7 +326,7 @@ qqline(e)
 qqnorm(f)
 qqline(f)
 ```
-```{r checking for normality - by native cover, include = TRUE}
+```{r checking for normality - by native cover, include = FALSE}
 
 # TDR, PAR, and exotic cover by native percent cover
 model2 <- lm(soil_moisture + normalized_par + exotic_cover ~ native_cover, data=surv_all)
@@ -291,7 +343,7 @@ qqline(h)
 
 
 
-```{r , include = TRUE}
+```{r first code 1, include = FALSE}
 ols_test_normality(model1)
 
 
@@ -317,7 +369,7 @@ plot(surv_all$native_cover ~ surv_all$normalized_par)
 ```
 
 
-```{r checking for normality, include = TRUE}
+```{r first code 2 - checking for normality, include = FALSE}
 # Check for normality and heteroskedasticity <-- FROM AUSTEN
 par(mfrow=c(2,2)) 
 plot(model.presence.sh)
@@ -328,7 +380,7 @@ car::leveneTest(sh.dat.samples.pa$sh, sh.dat.samples.pa$Quadrat.Identifier, cent
 ```
 
 
-```{r}
+```{r first code 3, include=FALSE}
 #Initial! 
 #Wrong!
 
@@ -363,7 +415,7 @@ ols_test_normality(m00)
 
 ```
 
-```{r}
+```{r first code 4, include=FALSE}
 
 m_Envsitemafa <- lmer((Par, TDr, nn%) ~ MAFA treatment * site, data = surv_all)
 m_Envsitepc <- lmer((Par, TDr, nn%) ~ percent cover * site, data = surv_all)
