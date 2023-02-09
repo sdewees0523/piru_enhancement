@@ -237,8 +237,13 @@ ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
 - testing the residuals for normality
 ```{r nnmod - normality, include = TRUE}
 
+#need to convert df to a tibble
+names(nnmod)
+print(nnmod)
+str(nnmod)
 lme.nnmod <- lmer(nnmod ~ treatment + mafacover + site + (1|date) + (1|plot_number),
                    data = nnmod)
+
 
 MOD <- lme.parmod
 
