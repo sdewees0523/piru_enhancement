@@ -21,7 +21,7 @@ library(lme4)
 ## MAFA percent cover
 ```{r mafa_cover prep, include=TRUE}
 # load mafa_alive percent cover data as a .csv
-cover_import <- read_csv("data/mafa_cover.csv", 
+cover_import_prep <- read_csv("data/mafa_cover.csv", 
     col_types = cols(
       date = col_character(), 
       plot_number = col_integer(), 
@@ -29,6 +29,7 @@ cover_import <- read_csv("data/mafa_cover.csv",
       notes = col_character()
       )
     )
+
 ```
 ```{r mafa_cover_2018, include=TRUE}
 # creating a dataset of MAFA cover in 2018
@@ -40,9 +41,10 @@ mafa_cover_2018 <- read.csv(here("data", "mafa_cover.csv")) %>%
   filter(year %in% c("2018")) %>%
   select(plot_number, cover_percent, year, month) %>%  
   mutate(transplanted = 2018) %>% 
-  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) 
 print(mafa_cover_2018)
 # 36 rows
+# names(mafa_cover_2018)
 ```
 ```{r mafa_cover_2019, include=TRUE}
 # creating a dataset of MAFA cover in 2019
@@ -86,7 +88,7 @@ exotic_cover_2018 <- read.csv(here("data", "totexo_cover.csv")) %>%
          month = month(date),
          year = year(date)) %>% 
   filter(year %in% c("2018")) %>%
-  select(plot_number, cover_percent, year, month) %>%  
+  select(date, plot_number, MAFA_removal, cover_percent, year, month) %>%  
   mutate(transplanted = 2018) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
 print(exotic_cover_2018)
@@ -98,9 +100,10 @@ exotic_cover_2019 <- read.csv(here("data", "totexo_cover.csv")) %>%
   select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
   mutate(date = mdy(date),
          month = month(date),
-         year = year(date)) %>% 
+         year = year(date), 
+         treatment = MAFA_removal) %>% 
   filter(year %in% c("2019")) %>%
-  select(plot_number, cover_percent, year, month) %>%  
+  select(date, plot_number, cover_percent, year, month, MAFA_removal) %>%  
   mutate(transplanted = 2019) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
 print(exotic_cover_2019)
@@ -108,7 +111,7 @@ print(exotic_cover_2019)
 ```
 ```{r totalexotic_cover all, include=TRUE}
 exotic_cover_all <- rbind(exotic_cover_2018, exotic_cover_2019 )%>%
-  select("plot_number", "year", "cover_percent", "site")
+  select("date", "year", "site", "plot_number", "MAFA_removal", "cover_percent")
 print(exotic_cover_all)
 # 36 x 2 = 72 rows
 ```
@@ -346,8 +349,8 @@ tdr <- read.csv(here("data", "tdr_data.csv")) %>%
   ungroup() %>%
   mutate(month = month(date),
          year = year(date)) %>%
-  select(!date) %>%
-  select(year, month, site, plot_number, treatment, soil_moisture) %>%
+  #select(!date) %>%
+  select(date, year, month, site, plot_number, treatment, soil_moisture) %>%
   mutate(
     year = as.integer(year),
     month = as.integer(month),
