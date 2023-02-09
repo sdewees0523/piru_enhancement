@@ -36,6 +36,9 @@ cal_palette(name = "desert", n = 3, type = "continuous") # [1] "#F6EECF", "#B091
 
 
 ```
+# Helpful code
+* __names(df)__ will give you the column names in the df
+
 
 #Question 1: How do environmental conditions change by a) canopy treatment and b) canopy cover?
 Is canopy treatment or canopy cover a stronger predictor of the environmental conditions below the shrub canopy? 
@@ -235,10 +238,19 @@ plot(TukeyHSD(tdrmod_site))
 ggplot(data = tdrmod, aes(x = treatment, y = soil_moisture)) +
   geom_boxplot(aes(fill = site)) +
   theme_bw() 
+
 # boxplot: TDR by site by treatment
 ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
   geom_boxplot(aes(fill = treatment)) +
+  scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
+  labs(title = "Soil Moisture by Site and Treatment", x = "Site", y = "PAR") +
   theme_bw() 
+
+# scatterplot: tdr x mafacover
+ggplot(data = tdrmod, aes(x = mafacover, y = soil_moisture)) + 
+  geom_point() +
+  geom_smooth(method="lm")+
+  theme_bw()
 ```
 
 ##Non-native cover linear mixed-effects model
@@ -331,7 +343,6 @@ ggplot(data = nnmod, aes(x = treatment, y = nncover)) +
   # scale_fill_manual(values = c('#D3E3CA', '#92A587')) +
   theme_bw()
 
-
 # boxplot: mafacover x site x treatment
 ggplot(data = nnmod, aes(x = site, y = nncover)) + 
   geom_boxplot(aes(fill = treatment)) +
@@ -341,8 +352,19 @@ ggplot(data = nnmod, aes(x = site, y = nncover)) +
   geom_smooth(method="lm") +
   theme_bw()
 
+# scatterplot: nncover x mafacover
+ggplot(data = nnmod, aes(x = mafacover, y = nncover)) + 
+  geom_point() +
+  geom_smooth(method="lm")+
+  theme_bw()
+
 ```
 
+## Take aways
+1. 
+
+#Question 2: How does seedling survival change by PAR, TDR, and mafacover?
+Is canopy treatment or canopy cover a stronger predictor of the environmental conditions below the shrub canopy? 
 
 
 
