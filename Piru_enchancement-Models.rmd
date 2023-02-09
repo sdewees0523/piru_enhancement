@@ -18,6 +18,18 @@ library(survival)
 library(lme4)
 library(lmerTest)
 
+devtools::install_github("an-bui/calecopal")
+
+library(calecopal)
+# all palettes
+names(cal_palettes)
+
+# Site: 1, 2
+cal_palette(name = "chaparral1", n = 2, type = "continuous") # [1] "#DCC27A" "#F19B34"
+
+# Treatment: Full, half, none
+cal_palette(name = "chaparral3", n = 3, type = "continuous") # [1] "#D3E3CA", "#92A587", "#2F3525"
+cal_palette(name = "desert", n = 3, type = "continuous") # [1] "#F6EECF", "#B09175", "#291611"
 
 #mafa_cover_all = MAFA % cover 2018 and 2019
 #exotic_cover_all = exotic % cover 2018 and 2019
@@ -313,22 +325,21 @@ plot(TukeyHSD(nnmod_treat_site))
 # boxplot: nncover x treatment x site
 ggplot(data = nnmod, aes(x = treatment, y = nncover)) + 
   geom_boxplot(aes(fill = site)) +
-  geom_smooth(method="lm")+
+  geom_smooth(method="lm") +
+  labs(title = "Non-native cover by Treatment and Site", x = "Treatment", y = "Non-native cover (%)") +
+  scale_fill_manual(values = c( "#DCC27A", "#F19B34")) +
+  # scale_fill_manual(values = c('#D3E3CA', '#92A587')) +
   theme_bw()
 
 
 # boxplot: mafacover x site x treatment
 ggplot(data = nnmod, aes(x = site, y = nncover)) + 
   geom_boxplot(aes(fill = treatment)) +
-  geom_smooth(method="lm")+
+ # scale_fill_manual(values = c('#F19B34', '#9F7E75', '#92A587')) +
+  scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
+  labs(title = "Non-native cover by Site and Treatment", x = "Site", y = "Non-native cover (%)") +
+  geom_smooth(method="lm") +
   theme_bw()
-
-
-
-parmod_treatment <- aov(normalized_par ~ treatment, data = parmod) 
-TukeyHSD(parmod_treatment)
-plot(TukeyHSD(parmod_treatment))
-
 
 ```
 
