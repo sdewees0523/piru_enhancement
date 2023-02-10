@@ -372,8 +372,8 @@ Is canopy treatment or canopy cover a stronger predictor of the environmental co
 
 
 
-```{r checking for normality - by treatment, include = FALSE}
-# Testing for normality
+```{r extra code, include = FALSE}
+# Testing for normality - by treatment
 # In general, if you have less than 50 observations, you should use the Shapiro-Wilk test. 
 # Otherwise, the Kolmogorov-Smirnov test is better.
 
@@ -388,8 +388,11 @@ qqline(e)
 
 qqnorm(f)
 qqline(f)
-```
-```{r checking for normality - by native cover, include = FALSE}
+
+
+#############################
+
+# r checking for normality - by native cover, include = FALSE
 
 # TDR, PAR, and exotic cover by native percent cover
 model2 <- lm(soil_moisture + normalized_par + exotic_cover ~ native_cover, data=surv_all)
@@ -402,11 +405,11 @@ qqline(g)
 
 qqnorm(h)
 qqline(h)
-```
 
 
+#############################
 
-```{r first code 1, include = FALSE}
+# r first code 1, include = FALSE
 ols_test_normality(model1)
 
 
@@ -429,10 +432,11 @@ model <- lm( ~ disp + hp + wt + qsec, data = mtcars)
 k.test(surv_all$exotic_cover)
 pnorm
 plot(surv_all$native_cover ~ surv_all$normalized_par)
-```
 
 
-```{r first code 2 - checking for normality, include = FALSE}
+#############################
+
+# r first code 2 - checking for normality, include = FALSE
 # Check for normality and heteroskedasticity <-- FROM AUSTEN
 par(mfrow=c(2,2)) 
 plot(model.presence.sh)
@@ -440,10 +444,11 @@ shapiro.test(model.presence.sh$residuals)
 ggplot(data = NULL, aes(x = model.presence.sh$residuals)) + geom_density(aes(y=..scaled..))
 car::leveneTest(sh.dat.samples.pa$sh, sh.dat.samples.pa$Quadrat.Identifier, center = median)
 #https://easystats.github.io/performance/
-```
 
 
-```{r first code 3, include=FALSE}
+#############################
+
+# r first code 3, include=FALSE
 #Initial! 
 #Wrong!
 
@@ -476,9 +481,9 @@ boxplot(m00$residuals, main = "Residual Box Plot: m0") # box plot of residuals
 ols_test_normality(m00)
 
 
-```
+#############################
 
-```{r first code 4, include=FALSE}
+# r first code 4, include=FALSE
 
 m_Envsitemafa <- lmer((Par, TDr, nn%) ~ MAFA treatment * site, data = surv_all)
 m_Envsitepc <- lmer((Par, TDr, nn%) ~ percent cover * site, data = surv_all)
