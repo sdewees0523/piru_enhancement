@@ -11,12 +11,15 @@ library(here) # similar to set working directory
 library(tidyverse) # data wrangling
 library(lubridate) # dates and times
 library(readr)
+library(ggthemes)
 library(plotly)
 library(dplyr)
 library(olsrr)
 library(survival)
 library(lme4)
 library(lmerTest)
+library(multcomp)
+library(multcompView)
 
 devtools::install_github("an-bui/calecopal")
 
@@ -24,10 +27,10 @@ library(calecopal)
 # all palettes
 names(cal_palettes)
 
-# Site: 1, 2
+# Site colors: 1, 2 
 cal_palette(name = "chaparral1", n = 2, type = "continuous") # [1] "#DCC27A" "#F19B34"
 
-# Treatment: Full, half, none
+# Treatment colors: Full, half, none 
 cal_palette(name = "chaparral3", n = 3, type = "continuous") # [1] "#D3E3CA", "#92A587", "#2F3525"
 cal_palette(name = "desert", n = 3, type = "continuous") # [1] "#F6EECF", "#B09175", "#291611"
 
@@ -36,11 +39,9 @@ cal_palette(name = "desert", n = 3, type = "continuous") # [1] "#F6EECF", "#B091
 
 
 ```
-# Helpful code
-* __names(df)__ will give you the column names in the df
 
 
-#Question 1: How do environmental conditions change by a) canopy treatment and b) canopy cover?
+# Question 1: How do environmental conditions change by a) canopy treatment and b) canopy cover?
 Is canopy treatment or canopy cover a stronger predictor of the environmental conditions below the shrub canopy? 
 
 Notes:
@@ -53,7 +54,16 @@ Notes:
 
 ### Load PAR, TDR, and non-native percent cover data.
 ### Save as a csv in the "Processed" data folder.
-```{r load data, include=TRUE}
+```{r load data, include=FALSE}
+
+mafa_cover_all <- read_csv("data/processed/mafa_cover_all.csv")
+par <- read_csv("data/processed/par.csv")
+tdr <- read_csv("data/processed/tdr.csv")
+exotic_cover_all <- read_csv("data/processed/exotic_cover_all.csv")
+survmort <- read_csv("data/processed/survmort.csv")
+# names(survmort)
+# [1] "...1"         "year"         "month"        "plot_number"  "treatment"    "species"     
+# [7] "alive"        "dead"         "site"         "month_count"  "transplanted"
 
 # PAR
 parmod <- par %>%
@@ -61,6 +71,8 @@ parmod <- par %>%
   rename(mafacover = cover_percent)
 print(parmod)
 write.csv(parmod, "data/processed/par_model.csv")
+par1 <- filter(parmod, site == "1")
+par2 <- filter(parmod, site == "2")
 
 # TDR
 tdrmod <- tdr %>% 
@@ -69,6 +81,8 @@ tdrmod <- tdr %>%
   filter(year <= 2019)
 print(tdrmod)
 write.csv(tdrmod, "data/processed/tdr_model.csv")
+tdr1 <- filter(tdrmod, site == "1")
+tdr2 <- filter(tdrmod, site == "2")
 
 # NN COVER
 nnmod <- exotic_cover_all %>% 
@@ -79,15 +93,21 @@ nnmod <- exotic_cover_all %>%
   select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
 print(nnmod)
 write.csv(nnmod, "data/processed/nn_model.csv")
-  
+nnmod1 <- filter(nnmod, site == "1")
+nnmod2 <- filter(nnmod, site == "2")
 ```
 
-##PAR linear mixed-effects model
+***
+
+## PAR linear mixed-effects model
+
 1. lmer
+
 2. testing the residuals for normality
+
 ```{r par model - normality, include = TRUE}
 
-lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + (1|date) +(1|plot_number),
+lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|date) +(1|plot_number) + (1|year),
                    data = parmod)
 
 MOD <- lme.parmod
@@ -120,6 +140,9 @@ plot(cooks.distance(MOD))
 boxplot(E1 ~ treatment, data = parmod)
 abline(h = 0)
 
+boxplot(E1 ~ month, data = parmod)
+abline(h = 0)
+
 boxplot(E1 ~ site, data = parmod)
 abline(h = 0)
 
@@ -130,44 +153,67 @@ qqline(ranef(MOD)$date[,1]) # unique dates
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1]) # unique plots
 ```
+
 3. statistics
+
 ```{r par model - stats, include = TRUE}
 # print 
 print(lme.parmod)
 summary(lme.parmod) # p-values
 anova(lme.parmod) # fixed level effects, pvalues, etc.
 ```
+
 4. figures
+
 ```{r par model - figures, include=TRUE}
 
-# scatterplot: par x mafacover
+# scatterplot: PAR x mafacover (%)
 ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point() +
+labs(title = "Normalized PAR by MAFA cover (%)", x = "MAFA canopy cover (%)", y = "PAR") +
   geom_smooth(method="lm")+
   theme_bw()
 
-# scatterplot: par x site
-ggplot(data = parmod, aes(x = site, y = normalized_par)) + 
-  geom_boxplot(aes(fill = site)) +
-  theme_bw()
-
-# scatterplot: mafacover x par x treatment
+# scatterplot: PAR x mafacover x treatment
 ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = treatment)) +
+  labs(title = "Normalized PAR by MAFA cover (%) and Treatment", x = "MAFA canopy cover (%)", y = "PAR") +
   theme_bw()
 
-# boxplot: mafacover x site
-ggplot(data = parmod, aes(x = site, y = normalized_par)) +
-  geom_boxplot(aes(fill = site)) +
-  theme_bw() + 
-  theme(legend.position = "none")
+# scatterplot: PAR x mafacover x site
+ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
+  geom_point(aes(color = site)) +
+  labs(title = "Normalized PAR by MAFA cover (%) and Site", x = "MAFA canopy cover (%)", y = "PAR") +
+  theme_bw() 
 
-parmod_treatment <- aov(normalized_par ~ treatment, data = parmod) 
-TukeyHSD(parmod_treatment)
-plot(TukeyHSD(parmod_treatment))
 ```
 
-##TDR linear mixed-effects model
+```{r par model - additional figures, include=TRUE}
+
+# scatterplot: PAR x month
+ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
+  geom_point(aes(color = site)) +
+  labs(title = "Normalized PAR over time", x = "MAFA canopy cover (%)", y = "Date") +
+  theme_bw() 
+
+# boxplot: PAR by month <---- KIT - can you make a figure that shows a boxplot of normPAR for each month? <-- need to change YEAR, MONTH, SITE, to character. 
+#ggplot(data = parmod, aes(x = month, y = normalized_par)) +
+#  geom_boxplot() +
+#  theme_bw() 
+
+# boxplot: PAR by site x treatment
+ggplot(data = parmod, aes(x = treatment, y = normalized_par)) +
+  geom_boxplot(aes(color = site)) +
+  labs(title = "Normalized PAR over time", x = "MAFA canopy cover (%)", y = "Date") +
+  theme_bw() 
+
+
+```
+
+
+***
+
+## TDR linear mixed-effects model
 1. lmer
 2. testing the residuals for normality
 ```{r tdrmod - normality, include = TRUE}
@@ -205,9 +251,6 @@ plot(cooks.distance(MOD))
 boxplot(E1 ~ treatment, data = tdrmod)
 abline(h = 0)
 
-boxplot(E1 ~ mafacover, data = tdrmod)
-abline(h = 0)
-
 boxplot(E1 ~ site, data = tdrmod)
 abline(h = 0)
 
@@ -226,10 +269,19 @@ summary(lme.tdrmod)
 anova(lme.tdrmod) # A significant p-value indicates that 
 # one or more significant differences exist between group means.
 
-tdrmod_site <- aov(soil_moisture ~ site*treatment, data = tdrmod) 
+# TDR by Site and Treatment
+tdrmod_site_treat <- aov(soil_moisture ~ site*treatment, data = tdrmod) 
+anova(tdrmod_site_treat)
+TukeyHSD(tdrmod_site_treat)
+#plot(TukeyHSD(tdrmod_site_treat))
+
+# TDR by Site
+tdrmod_site <- aov(soil_moisture ~ site, data = tdrmod) 
 anova(tdrmod_site)
 TukeyHSD(tdrmod_site)
 plot(TukeyHSD(tdrmod_site))
+
+
 ```
 4. figures
 ```{r tdrmod - figures, include = TRUE}
@@ -253,7 +305,9 @@ ggplot(data = tdrmod, aes(x = mafacover, y = soil_moisture)) +
   theme_bw()
 ```
 
-##Non-native cover linear mixed-effects model
+***
+
+## Non-native cover linear mixed-effects model
 1. lmer
 2. testing the residuals for normality
 ```{r nnmod - normality, include = TRUE}
@@ -297,9 +351,6 @@ plot(cooks.distance(MOD))
 boxplot(E1 ~ treatment, data = nnmod)
 abline(h = 0)
 
-boxplot(E1 ~ mafacover, data = nnmod)
-abline(h = 0)
-
 boxplot(E1 ~ site, data = nnmod)
 abline(h = 0)
 
@@ -328,7 +379,6 @@ nnmod_treat_site <- aov(nncover ~ treatment*site, data = nnmod)
 anova(nnmod_treat_site)
 TukeyHSD(nnmod_treat_site)
 plot(TukeyHSD(nnmod_treat_site))
-
 ```
 
 4. figures
@@ -357,137 +407,46 @@ ggplot(data = nnmod, aes(x = mafacover, y = nncover)) +
   geom_point() +
   geom_smooth(method="lm")+
   theme_bw()
-
 ```
 
-## Take aways
-1. 
+***
 
-#Question 2: How does seedling survival change by PAR, TDR, and mafacover?
+# Question 1: Take aways
+
+### PAR
+
+### TDR 
+* Soil moisture is greater at Site 1 than at Site 2
+
+
+### Non-native cover
+1. For TDR and nn cover, the significant plots may explain results we see later, but the fact that there are 2-3 plots that are significantly different from each other doesn't tell us the sites or treatments are significantly different from each other. 
+
+
+
+# Question 2: How does seedling survival change by PAR, TDR, and mafacover?
 Is canopy treatment or canopy cover a stronger predictor of the environmental conditions below the shrub canopy? 
 
+***
 
+# Glossary
 
-# END OF CODE
+_df exploration_
+* __names(df)__ will give you the column names in the df
 
+_statistics_
+* lmer: Fit Linear Mixed-Effects Models
+  + Fit a linear mixed-effects model (LMM) to data, via REML or maximum likelihood.
+* letters
+  + https://statdoe.com/cld-customisation/
+* ANOVA
+  + result <- aov(response_variable ~ explanitory_variable, data = df) 
+    TukeyHSD(parmod_treatment)
+    plot(TukeyHSD(parmod_treatment))
+* t-test: compare the means of two groups 
+  + with data from two dfs --> t.test(par1$response_variable, par2(dollarsign)response_variable)
+  + with data from one df --> t.test(normalized_par ~ year, data = parmod)
+  
+  
+_end of code_
 
-
-```{r extra code, include = FALSE}
-# Testing for normality - by treatment
-# In general, if you have less than 50 observations, you should use the Shapiro-Wilk test. 
-# Otherwise, the Kolmogorov-Smirnov test is better.
-
-# TDR, PAR, and exotic cover by treatment
-model1 <- lm(soil_moisture + normalized_par + exotic_cover ~ treatment, data=surv_all)
-e <- residuals(model1, type="pearson")
-f <- fitted(model1)
-
-# qq plot
-qqnorm(e)
-qqline(e)
-
-qqnorm(f)
-qqline(f)
-
-
-#############################
-
-# r checking for normality - by native cover, include = FALSE
-
-# TDR, PAR, and exotic cover by native percent cover
-model2 <- lm(soil_moisture + normalized_par + exotic_cover ~ native_cover, data=surv_all)
-g <- residuals(model2, type="pearson")
-h <- fitted(model2)
-
-# qq plot
-qqnorm(g)
-qqline(g)
-
-qqnorm(h)
-qqline(h)
-
-
-#############################
-
-# r first code 1, include = FALSE
-ols_test_normality(model1)
-
-
-shapiro.test(surv_all$native_cover)
-shapiro.test(surv_all$exotic_cover)
-
-
-
-hist(surv_all$native_cover, col='steelblue')
-
-model1 <- lm(treatment ~ normalized_par, data=surv_all)
-
-
-
-
-
-
-model <- lm( ~ disp + hp + wt + qsec, data = mtcars)
-
-k.test(surv_all$exotic_cover)
-pnorm
-plot(surv_all$native_cover ~ surv_all$normalized_par)
-
-
-#############################
-
-# r first code 2 - checking for normality, include = FALSE
-# Check for normality and heteroskedasticity <-- FROM AUSTEN
-par(mfrow=c(2,2)) 
-plot(model.presence.sh)
-shapiro.test(model.presence.sh$residuals)
-ggplot(data = NULL, aes(x = model.presence.sh$residuals)) + geom_density(aes(y=..scaled..))
-car::leveneTest(sh.dat.samples.pa$sh, sh.dat.samples.pa$Quadrat.Identifier, center = median)
-#https://easystats.github.io/performance/
-
-
-#############################
-
-# r first code 3, include=FALSE
-#Initial! 
-#Wrong!
-
-# GRAPHDATA <- surv_all %>% 
-#     group_by(treatment, month_count, species) %>%
-#     summarise_at(vars(alive), funs(mean,sd))
-
-
-
-m0 <- lm(alive ~ species + soil_moisture + normalized_par, data=surv_all)
-m00 <- lm(alive ~ species + year + month, data=surv_all)
-m1 <- lm(alive ~ soil_moisture + normalized_par, data=surv_all)
-m3 <- lm(alive ~ cover_percent + soil_moisture + normalized_par + species, data=surv_all)
-m4 <- lm(alive ~ treatment + soil_moisture + normalized_par + species, data=surv_all)
-
-anova(m0)
-anova(m1)
-anova(m3)
-anova(m5)
-
-################## a) are the residuals normal? b) 
-plot(m00) # viewing residuals... i think...
-hist(m00$residuals, main = "Residual Historgram: m0") # histogram of residuals
-ols_plot_resid_hist(m00)
-boxplot(m00$residuals, main = "Residual Box Plot: m0") # box plot of residuals
-
-# Testing for normality
-# In general, if you have less than 50 observations, you should use the Shapiro-Wilk test. 
-# Otherwise, the Kolmogorov-Smirnov test is better.
-ols_test_normality(m00)
-
-
-#############################
-
-# r first code 4, include=FALSE
-
-m_Envsitemafa <- lmer((Par, TDr, nn%) ~ MAFA treatment * site, data = surv_all)
-m_Envsitepc <- lmer((Par, TDr, nn%) ~ percent cover * site, data = surv_all)
-
-m_alive <- lmer(alive ~ myvars + year + month + site + random(1/plot), data = surv_all)
-
-```

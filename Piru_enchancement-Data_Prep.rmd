@@ -64,6 +64,8 @@ print(mafa_cover_2019)
 mafa_cover_all <- rbind(mafa_cover_2018, mafa_cover_2019) %>%
   select("plot_number", "year", "cover_percent", "site")
 print(mafa_cover_all)
+write.csv(mafa_cover_all, "data/processed/mafa_cover_all.csv")
+
 # 36 x 3 = 108 rows
 ```
 
@@ -113,6 +115,7 @@ print(exotic_cover_2019)
 exotic_cover_all <- rbind(exotic_cover_2018, exotic_cover_2019 )%>%
   select("date", "year", "site", "plot_number", "MAFA_removal", "cover_percent")
 print(exotic_cover_all)
+write.csv(exotic_cover_all, "data/processed/exotic_cover_all.csv")
 # 36 x 2 = 72 rows
 ```
 
