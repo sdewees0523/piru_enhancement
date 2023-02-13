@@ -11,58 +11,60 @@ library(here) # similar to set working directory
 library(tidyverse) # data wrangling
 library(lubridate) # dates and times
 library(plotly)
-library(olsrr)
 library(survival)
 library(lme4)
 ```
 
-#Data Prep
+# Data Prep
 
 ## MAFA percent cover
 ```{r mafa_cover prep, include=TRUE}
+
 # load mafa_alive percent cover data as a .csv
 cover_import_prep <- read_csv("data/mafa_cover.csv", 
     col_types = cols(
       date = col_character(), 
+      year = col_integer(),
       plot_number = col_integer(), 
+      MAFA_removal = col_character(),
+      cover_type = col_character(),
       cover_percent = col_number(), # question for SHANE - Percent cover as number or integer?
       notes = col_character()
       )
     )
 
-```
-```{r mafa_cover_2018, include=TRUE}
-# creating a dataset of MAFA cover in 2018
-mafa_cover_2018 <- read.csv(here("data", "mafa_cover.csv")) %>%
-  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
+
+# 2018
+mafa_cover_2018 <- cover_import_prep %>% 
+  dplyr::select('date', 'plot_number', 'MAFA_removal', 'cover_type', 'cover_percent') %>% 
   mutate(date = mdy(date),
          month = month(date),
          year = year(date)) %>% 
   filter(year %in% c("2018")) %>%
-  select(plot_number, cover_percent, year, month) %>%  
+  dplyr::select('plot_number', 'cover_percent', 'year', 'month') %>%  
   mutate(transplanted = 2018) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) 
 print(mafa_cover_2018)
 # 36 rows
 # names(mafa_cover_2018)
-```
-```{r mafa_cover_2019, include=TRUE}
-# creating a dataset of MAFA cover in 2019
+
+
+# 2019
 mafa_cover_2019 <- read.csv(here("data", "mafa_cover.csv")) %>%
-  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
+    dplyr::select('date', 'plot_number', 'MAFA_removal', 'cover_type', 'cover_percent') %>% 
   mutate(date = mdy(date),
          month = month(date),
          year = year(date)) %>% 
   filter(year %in% c("2019")) %>%
-  select(plot_number, cover_percent, year, month) %>%  
+ dplyr::select('plot_number', 'cover_percent', 'year', 'month') %>%  
   mutate(transplanted = 2019) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
 print(mafa_cover_2019)
 # 36 rows
-```
-```{r mafa cover all, include=TRUE}
+
+# all 
 mafa_cover_all <- rbind(mafa_cover_2018, mafa_cover_2019) %>%
-  select("plot_number", "year", "cover_percent", "site")
+  dplyr::select("plot_number", "year", "cover_percent", "site")
 print(mafa_cover_all)
 write.csv(mafa_cover_all, "data/processed/mafa_cover_all.csv")
 
@@ -73,47 +75,45 @@ write.csv(mafa_cover_all, "data/processed/mafa_cover_all.csv")
 ```{r totalexotic_cover prep, include=TRUE}
 
 # load total_exotic percent cover data as a .csv
-cover_import <- read_csv("data/totexo_cover.csv", 
+exoticcover_import <- read_csv("data/totexo_cover.csv", 
     col_types = cols(
       date = col_character(), 
+      year = col_character(),
       plot_number = col_integer(), 
       cover_percent = col_number(), # question for SHANE - Percent cover as number or integer?
       notes = col_character()
       )
     )
-```
-```{r totalexotic_cover 2018, include=TRUE}
-# creating a dataset of total exotic cover in 2018
-exotic_cover_2018 <- read.csv(here("data", "totexo_cover.csv")) %>%
-  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
+
+#  2018
+exotic_cover_2018 <- exoticcover_import %>% 
+  dplyr::select('date', 'plot_number', 'MAFA_removal', 'cover_type', 'cover_percent') %>% 
   mutate(date = mdy(date),
          month = month(date),
          year = year(date)) %>% 
   filter(year %in% c("2018")) %>%
-  select(date, plot_number, MAFA_removal, cover_percent, year, month) %>%  
+  dplyr::select('date', 'plot_number', 'MAFA_removal', 'cover_percent', 'year', 'month') %>%  
   mutate(transplanted = 2018) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
 print(exotic_cover_2018)
 # 36 rows
-```
-```{r totalexotic_cover 2019, include=TRUE}
-# creating a dataset of total exotic cover in 2019
-exotic_cover_2019 <- read.csv(here("data", "totexo_cover.csv")) %>%
-  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% 
+
+# 2019
+exotic_cover_2019 <- exoticcover_import %>% 
+  dplyr::select('date', 'plot_number', 'MAFA_removal', 'cover_type', 'cover_percent') %>% 
   mutate(date = mdy(date),
          month = month(date),
-         year = year(date), 
-         treatment = MAFA_removal) %>% 
+         year = year(date)) %>% 
   filter(year %in% c("2019")) %>%
-  select(date, plot_number, cover_percent, year, month, MAFA_removal) %>%  
+  dplyr::select('date', 'plot_number', 'MAFA_removal', 'cover_percent', 'year', 'month') %>%  
   mutate(transplanted = 2019) %>% 
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
 print(exotic_cover_2019)
 # 36 rows
-```
-```{r totalexotic_cover all, include=TRUE}
+
+# all 
 exotic_cover_all <- rbind(exotic_cover_2018, exotic_cover_2019 )%>%
-  select("date", "year", "site", "plot_number", "MAFA_removal", "cover_percent")
+  dplyr::select("date", "year", "site", "plot_number", "MAFA_removal", "cover_percent")
 print(exotic_cover_all)
 write.csv(exotic_cover_all, "data/processed/exotic_cover_all.csv")
 # 36 x 2 = 72 rows
@@ -298,7 +298,10 @@ write.csv(survmort, "data/processed/survmort.csv")
 ```
 ## PAR - sunshine
 ```{r par, include=TRUE}
-par <- read.csv(here("data", "par_data.csv")) %>% 
+par_load <- read.csv(here("data", "par_data.csv")) 
+
+par <- par_load 
+%>% 
   select(date, plot, weeding, readingno, ambient_PAR_1, below_PAR_1) %>% 
   rename(plot_number = plot) %>% 
   rename(treatment = weeding) %>% 
@@ -310,7 +313,8 @@ par <- read.csv(here("data", "par_data.csv")) %>%
                           date == "19-Jul-19"~ "7/19/2019",
                           date == "9-Sep-19" ~ "9/09/2019",
                           date == "16-Nov-19" ~ "11/16/2019",
-                          TRUE ~ date),
+                          TRUE ~ date))
+         ,
          plot_number = str_remove(plot_number, "ENH0"),
          plot_number = str_remove(plot_number, "ENH"),
          plot_number = as.integer(plot_number),
