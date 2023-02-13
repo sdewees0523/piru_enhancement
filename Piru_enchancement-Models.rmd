@@ -90,6 +90,8 @@ nnmod <- exotic_cover_all %>%
   rename(nncover = cover_percent.x,
          mafacover = cover_percent.y, 
          treatment = MAFA_removal) %>% 
+   col_types = cols(
+      year = col_character()) %>% 
   select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
 print(nnmod)
 write.csv(nnmod, "data/processed/nn_model.csv")
@@ -196,7 +198,7 @@ ggplot(data = parmod, aes(x = date, y = normalized_par)) +
   labs(title = "Normalized PAR over time", x = "MAFA canopy cover (%)", y = "Date") +
   theme_bw() 
 
-# boxplot: PAR by month <---- KIT - can you make a figure that shows a boxplot of normPAR for each month? <-- need to change YEAR, MONTH, SITE, to character. 
+# boxplot: PAR by month <---- KIT - can you make a figure that shows a boxplot of normPAR for each month? <-- need to change YEAR, MONTH, SITE, to character. 3
 #ggplot(data = parmod, aes(x = month, y = normalized_par)) +
 #  geom_boxplot() +
 #  theme_bw() 
@@ -432,6 +434,7 @@ Is canopy treatment or canopy cover a stronger predictor of the environmental co
 # Glossary
 
 _df exploration_
+* str(df) gives you the structure of your dataframe
 * __names(df)__ will give you the column names in the df
 
 _statistics_
@@ -447,6 +450,9 @@ _statistics_
   + with data from two dfs --> t.test(par1$response_variable, par2(dollarsign)response_variable)
   + with data from one df --> t.test(normalized_par ~ year, data = parmod)
   
+# Tips
+* if things start to break, run the code from the beginning. The environment may need to be cleared and reset.
+* DO NOT fix data in EXCEL. Use R. Once you "finalize" your raw data, don't touch it or re-save it. Doing that can change the column formatting, which can break your importing code.
   
 _end of code_
 
