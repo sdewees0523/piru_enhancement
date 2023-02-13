@@ -17,6 +17,16 @@ library(lme4)
 
 # Data Prep
 
+## Data structure
+* date: character or date
+* year: number
+* month: number
+* plot number: character
+* treatment: ordinal ("none", "half", "full") or character
+* percent cover: double
+* PAR: double
+* TDR: double
+
 ## MAFA percent cover
 ```{r mafa_cover prep, include=TRUE}
 
@@ -122,7 +132,7 @@ write.csv(exotic_cover_all, "data/processed/exotic_cover_all.csv")
 ## Seedling survival
 ```{r seedling survivial prep, include=TRUE} 
 survival_prep <- read.csv(here("data", "survival_data.csv")) %>% 
-  select(date, plot_number, MAFA_removal, species, alive) %>% 
+  dplyr::select(date, plot_number, MAFA_removal, species, alive) %>% 
   rename(treatment = MAFA_removal) %>% 
   mutate(date = mdy(date),
          month = month(date),
@@ -189,7 +199,7 @@ write.csv(survival, "data/processed/survival.csv")
 ## Seedling mortality
 ```{r seedling mortality prep, include=TRUE}
 mortality_prep <- read.csv(here("data", "survival_data.csv")) %>% 
-  select(date, plot_number, MAFA_removal, species, dead) %>% 
+  dplyr::select(date, plot_number, MAFA_removal, species, dead) %>% 
   rename(treatment = MAFA_removal) %>% 
   mutate(date = mdy(date),
          month = month(date),
@@ -243,7 +253,7 @@ write.csv(mortality, "data/processed/mortality.csv")
 ## Seedling survival + mortality in one simple package
 ```{r seedling survivial and mortality prep, include=TRUE} 
 survmort_prep <- read.csv(here("data", "survival_data.csv")) %>%
-  select(date, plot_number, MAFA_removal, species, alive, dead) %>%
+  dplyr::select(date, plot_number, MAFA_removal, species, alive, dead) %>%
   rename(treatment = MAFA_removal) %>%
   mutate(date = mdy(date),
          month = month(date),
@@ -300,9 +310,8 @@ write.csv(survmort, "data/processed/survmort.csv")
 ```{r par, include=TRUE}
 par_load <- read.csv(here("data", "par_data.csv")) 
 
-par <- par_load 
-%>% 
-  select(date, plot, weeding, readingno, ambient_PAR_1, below_PAR_1) %>% 
+par <- par_load %>% 
+  dplyr::select(date, plot, weeding, readingno, ambient_PAR_1, below_PAR_1) %>% 
   rename(plot_number = plot) %>% 
   rename(treatment = weeding) %>% 
   mutate(date = case_when(date == "11-Sep-18" ~ "9/11/2018",
@@ -313,8 +322,7 @@ par <- par_load
                           date == "19-Jul-19"~ "7/19/2019",
                           date == "9-Sep-19" ~ "9/09/2019",
                           date == "16-Nov-19" ~ "11/16/2019",
-                          TRUE ~ date))
-         ,
+                          TRUE ~ date),
          plot_number = str_remove(plot_number, "ENH0"),
          plot_number = str_remove(plot_number, "ENH"),
          plot_number = as.integer(plot_number),
@@ -330,7 +338,7 @@ par <- par_load
          year = year(date),
          year = as.integer(year),
          month = as.integer(month)) %>% 
-  select(date, year, month, site, plot_number, treatment, normalized_par)
+  dplyr::select(date, year, month, site, plot_number, treatment, normalized_par)
 
 print(par)
 write.csv(par, "data/processed/par.csv")
@@ -340,7 +348,7 @@ write.csv(par, "data/processed/par.csv")
 ## TDR - soil moisture
 ```{r tdr, include=True}
 tdr <- read.csv(here("data", "tdr_data.csv")) %>%
-  select(date, plot, weeding, reading, TDR.value) %>%
+  dplyr::select(date, plot, weeding, reading, TDR.value) %>%
   rename(plot_number = plot,
          soil_moisture = TDR.value,
          treatment = weeding) %>%
@@ -357,7 +365,7 @@ tdr <- read.csv(here("data", "tdr_data.csv")) %>%
   mutate(month = month(date),
          year = year(date)) %>%
   #select(!date) %>%
-  select(date, year, month, site, plot_number, treatment, soil_moisture) %>%
+  dplyr::select(date, year, month, site, plot_number, treatment, soil_moisture) %>%
   mutate(
     year = as.integer(year),
     month = as.integer(month),
@@ -381,7 +389,8 @@ surv_hold <- data.frame(surv_plot, surv_year, surv_month, surv_monthc) %>%
    rename(month = surv_month,
           year = surv_year,
           plot_number = surv_plot,
-          month_count = surv_monthc)
+          month_count = surv_monthc) %>% 
+  mutate(year = as.integer(year))
 
 surv_all <- surv_hold %>%
   left_join(survmort, by = c("month_count", "plot_number"), na.rm = F)  %>%
@@ -394,7 +403,7 @@ surv_all <- surv_hold %>%
   drop_na(site) %>%
   left_join(mafa_cover_all, by = c("plot_number", "site", "year")) %>%
   left_join(exotic_cover_all, by = c("plot_number", "site", "year"), suffix = c(".native", ".nonnative")) %>%
-  select("year","month", "month_count", "site", "plot_number", "treatment", "species", "alive", "dead", "normalized_par", "soil_moisture", "cover_percent.native", "cover_percent.nonnative") %>%
+  dplyr::select("year","month", "month_count", "site", "plot_number", "treatment", "species", "alive", "dead", "normalized_par", "soil_moisture", "cover_percent.native", "cover_percent.nonnative") %>%
   rename(exotic_cover = cover_percent.nonnative,
          native_cover = cover_percent.native)
 
