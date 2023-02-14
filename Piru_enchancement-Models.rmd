@@ -2,9 +2,7 @@
 title: "Piru_enchancement-Models"
 author: "Kit Swift"
 date: "2022-12-15"
-output: html_document:
-  toc: true
-  toc_float: true
+output: html_documents
 ---
 
 # Load libraries
@@ -69,8 +67,7 @@ Notes:
 
 ### Load PAR, TDR, and non-native percent cover data.
 ### Save as a csv in the "Processed" data folder.
-```{r load data, include=FALSE}
-
+```{r load data, include=TRUE}
 mafa_cover_all <- read_csv("data/processed/mafa_cover_all.csv",
   col_types = cols(
     plot_number = col_character(),
