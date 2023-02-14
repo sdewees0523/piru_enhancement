@@ -9,7 +9,7 @@ output: html_document:
 
 # Load libraries
 
-```{r setup, include=TRUE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(here) # similar to set working directory
 library(tidyverse) # data wrangling
