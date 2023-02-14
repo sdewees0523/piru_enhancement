@@ -2,10 +2,14 @@
 title: "Piru_enchancement-Models"
 author: "Kit Swift"
 date: "2022-12-15"
-output: html_document
+output: html_document:
+  toc: true
+  toc_float: true
 ---
 
-```{r setup, include=FALSE}
+# Load libraries
+
+```{r setup, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 library(here) # similar to set working directory
 library(tidyverse) # data wrangling
@@ -21,6 +25,14 @@ library(lmerTest)
 library(multcomp)
 library(multcompView)
 
+#mafa_cover_all = MAFA % cover 2018 and 2019
+#exotic_cover_all = exotic % cover 2018 and 2019
+
+```
+
+# Load colors for graphs
+
+```{r colors, include=TRUE}
 devtools::install_github("an-bui/calecopal")
 
 library(calecopal)
@@ -28,15 +40,18 @@ library(calecopal)
 names(cal_palettes)
 
 # Site colors: 1, 2 
-cal_palette(name = "chaparral1", n = 2, type = "continuous") # [1] "#DCC27A" "#F19B34"
+cal_palette(name = "chaparral1", n = 5, type = "continuous") # [1] "#DCC27A" "#F19B34"
+site1color <- "#DCC27A"
+site2color <- "#F19B34"
+sitecolors <- c(site1color, site2color)
 
 # Treatment colors: Full, half, none 
-cal_palette(name = "chaparral3", n = 3, type = "continuous") # [1] "#D3E3CA", "#92A587", "#2F3525"
-cal_palette(name = "desert", n = 3, type = "continuous") # [1] "#F6EECF", "#B09175", "#291611"
-
-#mafa_cover_all = MAFA % cover 2018 and 2019
-#exotic_cover_all = exotic % cover 2018 and 2019
-
+cal_palette(name = "chaparral3", n = 5, type = "continuous") # [1] "#D3E3CA", "#92A587", "#2F3525"
+cal_palette(name = "desert", n = 5, type = "continuous") # [1] "#F6EECF", "#B09175", "#291611"
+treatment1color <- "#F6EECF"
+treatment2color <- "#B09175"
+treatment3color <- "#291611"
+treatmentcolors <- c(treatment1color, treatment2color, treatment3color)
 
 ```
 
@@ -56,9 +71,37 @@ Notes:
 ### Save as a csv in the "Processed" data folder.
 ```{r load data, include=FALSE}
 
-mafa_cover_all <- read_csv("data/processed/mafa_cover_all.csv")
-par <- read_csv("data/processed/par.csv")
-tdr <- read_csv("data/processed/tdr.csv")
+mafa_cover_all <- read_csv("data/processed/mafa_cover_all.csv",
+  col_types = cols(
+    plot_number = col_character(),
+    year = col_integer(),
+    cover_percent = col_double(),
+    site = col_integer()
+    )
+  )
+
+par <- read_csv("data/processed/par.csv",
+  col_types = cols(
+    plot_number = col_character(),
+    treatment = col_character(),
+    year = col_integer(),
+    month = col_integer(),
+    site = col_integer(),
+    normalized_par = col_double()
+    )
+  )
+
+tdr <- read_csv("data/processed/tdr.csv",
+  col_types = cols(
+    plot_number = col_character(),
+    treatment = col_character(),
+    year = col_integer(),
+    month = col_integer(),
+    site = col_integer(),
+    soil_moisture = col_double()
+    )
+  )
+
 exotic_cover_all <- read_csv("data/processed/exotic_cover_all.csv")
 survmort <- read_csv("data/processed/survmort.csv")
 # names(survmort)
@@ -154,6 +197,9 @@ qqline(ranef(MOD)$date[,1]) # unique dates
 
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1]) # unique plots
+
+#qqnorm(ranef(MOD)$year[,1], main = "Plot Residuals") # year doesn't run becuase only 2 numbers
+#qqline(ranef(MOD)$year[,1]) # unique plots
 ```
 
 3. statistics
@@ -163,6 +209,7 @@ qqline(ranef(MOD)$plot_number[,1]) # unique plots
 print(lme.parmod)
 summary(lme.parmod) # p-values
 anova(lme.parmod) # fixed level effects, pvalues, etc.
+# mafa cover is significantly different
 ```
 
 4. figures
@@ -176,36 +223,41 @@ labs(title = "Normalized PAR by MAFA cover (%)", x = "MAFA canopy cover (%)", y 
   geom_smooth(method="lm")+
   theme_bw()
 
-# scatterplot: PAR x mafacover x treatment
+# scatterplot: PAR x mafacover x treatment <-- use treatmentcolor instead of default
 ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = treatment)) +
   labs(title = "Normalized PAR by MAFA cover (%) and Treatment", x = "MAFA canopy cover (%)", y = "PAR") +
   theme_bw()
 
-# scatterplot: PAR x mafacover x site
+# scatterplot: PAR x mafacover x site <-- make site not continuous & use sitecolor instead of default
 ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = site)) +
   labs(title = "Normalized PAR by MAFA cover (%) and Site", x = "MAFA canopy cover (%)", y = "PAR") +
   theme_bw() 
 
+#ggplot(crab_data, aes(x = size)) +
+#   geom_histogram(binwidth = 1, aes(fill = site)) +
+#   scale_fill_manual(values = cal_palette("superbloom")
 ```
 
 ```{r par model - additional figures, include=TRUE}
 
-# scatterplot: PAR x month
+# scatterplot: PAR x month <-- make site not continuous
 ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
   geom_point(aes(color = site)) +
-  labs(title = "Normalized PAR over time", x = "MAFA canopy cover (%)", y = "Date") +
+  labs(title = "Normalized PAR over time", x = "Date", y = "Normalized PAR") +
   theme_bw() 
 
 # boxplot: PAR by month <---- KIT - can you make a figure that shows a boxplot of normPAR for each month? <-- need to change YEAR, MONTH, SITE, to character. 3
-#ggplot(data = parmod, aes(x = month, y = normalized_par)) +
-#  geom_boxplot() +
-#  theme_bw() 
+ggplot(data = parmod, 
+       aes(x = month, y = normalized_par)) +
+  labs(title = "Normalized PAR over time", x = "Month", y = "Normalized PAR") +
+  geom_boxplot() +
+  theme_bw() 
 
-# boxplot: PAR by site x treatment
+# boxplot: PAR by site x treatment <-- broken and
 ggplot(data = parmod, aes(x = treatment, y = normalized_par)) +
-  geom_boxplot(aes(color = site)) +
+  geom_boxplot(aes(color = sitecolor)) +
   labs(title = "Normalized PAR over time", x = "MAFA canopy cover (%)", y = "Date") +
   theme_bw() 
 
@@ -220,7 +272,7 @@ ggplot(data = parmod, aes(x = treatment, y = normalized_par)) +
 2. testing the residuals for normality
 ```{r tdrmod - normality, include = TRUE}
 
-lme.tdrmod <- lmer(soil_moisture ~ treatment + mafacover + site + (1|date) +(1|plot_number),
+lme.tdrmod <- lmer(soil_moisture ~ treatment + mafacover + site + year + month + (1|date) +(1|plot_number),
                    data = tdrmod)
 
 MOD <- lme.tdrmod
@@ -256,6 +308,12 @@ abline(h = 0)
 boxplot(E1 ~ site, data = tdrmod)
 abline(h = 0)
 
+boxplot(E1 ~ year, data = tdrmod)
+abline(h = 0)
+
+boxplot(E1 ~ month, data = tdrmod)
+abline(h = 0)
+
 # Plot each random effect in the model, look for dots along 1:1 line
 qqnorm(ranef(MOD)$date[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$date[,1])
@@ -268,41 +326,46 @@ qqline(ranef(MOD)$plot_number[,1])
 # print 
 print(lme.tdrmod)
 summary(lme.tdrmod)
-anova(lme.tdrmod) # A significant p-value indicates that 
-# one or more significant differences exist between group means.
-
+anova(lme.tdrmod) # A significant p-value indicates that one or more significant differences exist between group means.
+# site and treatment are significant. mafacover, year, month are not significant.
+```
+```{r tdrmod - additional stats, include=TRUE}
 # TDR by Site and Treatment
+# tdrmod$site  <- as.factor(tdrmod$site) # to make site a factor
 tdrmod_site_treat <- aov(soil_moisture ~ site*treatment, data = tdrmod) 
 anova(tdrmod_site_treat)
 TukeyHSD(tdrmod_site_treat)
-#plot(TukeyHSD(tdrmod_site_treat))
+plot(TukeyHSD(tdrmod_site_treat))
+# 2:none-1:full -6.4912037 -12.944263 -0.03814456 0.0477765
 
-# TDR by Site
+# TDR by Site <-- why does this say site is sig when it wasn't before?
 tdrmod_site <- aov(soil_moisture ~ site, data = tdrmod) 
 anova(tdrmod_site)
-TukeyHSD(tdrmod_site)
-plot(TukeyHSD(tdrmod_site))
+# site        1  344.6  344.57  7.7869 0.006242 **
 
-
+tdrmod_treat <- aov(soil_moisture ~ treatment, data = tdrmod) 
+anova(tdrmod_treat)
+# treatment   2  154.9  77.446  1.6663 0.1939
+ 
+# For TDR and nn cover, the significant plots may explain results we see later, but the fact that there are 2-3 plots that are significantly different from each other doesn't tell us the sites or treatments are significantly different from each other. 
 ```
-4. figures
-```{r tdrmod - figures, include = TRUE}
 
-# boxplot: TDR by treatment by site
-ggplot(data = tdrmod, aes(x = treatment, y = soil_moisture)) +
-  geom_boxplot(aes(fill = site)) +
-  theme_bw() 
+4. figures
+
+```{r tdrmod - figures, include = TRUE}
 
 # boxplot: TDR by site by treatment
 ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
   geom_boxplot(aes(fill = treatment)) +
   scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
-  labs(title = "Soil Moisture by Site and Treatment", x = "Site", y = "PAR") +
+  labs(title = "Soil Moisture by Site and Treatment", x = "Site", y = "Soil Moisture (%)") +
   theme_bw() 
 
 # scatterplot: tdr x mafacover
 ggplot(data = tdrmod, aes(x = mafacover, y = soil_moisture)) + 
-  geom_point() +
+  geom_point(aes(color = site)) +
+  scale_color_manual(values=c(sitecolors)) +
+  labs(title = "Soil Moisture by Site and Treatment", x = "Site", y = "Soil Moisture (%)") +
   geom_smooth(method="lm")+
   theme_bw()
 ```
@@ -320,8 +383,8 @@ ggplot(data = tdrmod, aes(x = mafacover, y = soil_moisture)) +
 #names(nnmod)
 #print(nnmod)
 #str(nnmod)
-lme.nnmod <- lmer(nncover ~ treatment + mafacover + site + (1|date) + (1|plot_number),
-                   data = nnmod)
+lme.nnmod <- lmer(nncover ~ treatment + mafacover + site + year + (1|date) + (1|plot_number), # no month variable
+                   data = nnmod) 
 
 MOD <- lme.nnmod
 
@@ -356,6 +419,9 @@ abline(h = 0)
 boxplot(E1 ~ site, data = nnmod)
 abline(h = 0)
 
+boxplot(E1 ~ year, data = nnmod)
+abline(h = 0)
+
 # Plot each random effect in the model, look for dots along 1:1 line
 qqnorm(ranef(MOD)$date[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$date[,1])
@@ -363,13 +429,18 @@ qqline(ranef(MOD)$date[,1])
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1])
 ```
+
 3. statistics
-```{r nnmod - stats, include=FALSE}
+
+```{r nnmod - stats, include=TRUE}
 # print 
 print(lme.nnmod)
 summary(lme.nnmod)
 anova(lme.nnmod) # A significant p-value indicates that one or more significant differences exist between group means.
-
+# non-native cover is not correlated with mafa cover, treatment, site, or year.
+# year may be ecologically interesting (p = 0.065)
+```
+```{r nnmod - additional stats, include=TRUE}
 # non-native cover by treatment
 nnmod_treat <- aov(nncover ~ treatment, data = nnmod) 
 anova(nnmod_treat)
@@ -381,21 +452,15 @@ nnmod_treat_site <- aov(nncover ~ treatment*site, data = nnmod)
 anova(nnmod_treat_site)
 TukeyHSD(nnmod_treat_site)
 plot(TukeyHSD(nnmod_treat_site))
+
+# For TDR and nn cover, the significant plots may explain results we see later, but the fact that there are 2-3 plots that are significantly different from each other doesn't tell us the sites or treatments are significantly different from each other. 
 ```
 
 4. figures
 ```{r nnmod - figures, include=TRUE}
 
-# boxplot: nncover x treatment x site
-ggplot(data = nnmod, aes(x = treatment, y = nncover)) + 
-  geom_boxplot(aes(fill = site)) +
-  geom_smooth(method="lm") +
-  labs(title = "Non-native cover by Treatment and Site", x = "Treatment", y = "Non-native cover (%)") +
-  scale_fill_manual(values = c( "#DCC27A", "#F19B34")) +
-  # scale_fill_manual(values = c('#D3E3CA', '#92A587')) +
-  theme_bw()
-
-# boxplot: mafacover x site x treatment
+# boxplot: nncover x site x treatment (no correlation)
+nnmod$site = as.factor(nnmod$site)
 ggplot(data = nnmod, aes(x = site, y = nncover)) + 
   geom_boxplot(aes(fill = treatment)) +
  # scale_fill_manual(values = c('#F19B34', '#9F7E75', '#92A587')) +
@@ -404,7 +469,16 @@ ggplot(data = nnmod, aes(x = site, y = nncover)) +
   geom_smooth(method="lm") +
   theme_bw()
 
-# scatterplot: nncover x mafacover
+# boxplot: mafacover x treatment x site (no correlation)
+ggplot(data = nnmod, aes(x = treatment, y = nncover)) + 
+  geom_boxplot(aes(fill = site)) +
+  geom_smooth(method="lm") +
+  labs(title = "Non-native cover by Treatment and Site", x = "Treatment", y = "Non-native cover (%)") +
+  scale_fill_manual(values = c(sitecolors)) +
+  # scale_fill_manual(values = c('#D3E3CA', '#92A587')) +
+  theme_bw()
+
+# scatterplot: nncover x mafacover (no correlation)
 ggplot(data = nnmod, aes(x = mafacover, y = nncover)) + 
   geom_point() +
   geom_smooth(method="lm")+
@@ -416,13 +490,22 @@ ggplot(data = nnmod, aes(x = mafacover, y = nncover)) +
 # Question 1: Take aways
 
 ### PAR
+* PAR is significantly correlated with MAFA cover.
+* PAR is not correlated with treatment, site, or month.
+* More canopy cover does mean more shade, and less canopy cover means more sun.
+* No influence of month is expected since we normalized PAR values. 
+
 
 ### TDR 
-* Soil moisture is greater at Site 1 than at Site 2
+* soil moisture is significantly correlated with site and treatment
+* There are no effects of MAFA canopy cover, year, or month on soil moisture.
+* Soil moisture is greater at Site 1 than at Site 2 by treatment (e.g., full removal at Site 1 has more soil moisture than full removal at Site 2)
 
 
 ### Non-native cover
-1. For TDR and nn cover, the significant plots may explain results we see later, but the fact that there are 2-3 plots that are significantly different from each other doesn't tell us the sites or treatments are significantly different from each other. 
+* Non-native cover is not correlated with Treatment, Site, MAFA cover (%), or year.
+* This could be because we measured non-native cover once a year at peak biomass/peak growth in May-June
+
 
 
 
