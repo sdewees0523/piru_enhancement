@@ -1,0 +1,57 @@
+---
+title: "Piru_enhancement_seedlingsurvival"
+author: "Stephanie Ma Lucero"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Load libraries
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE)
+library(here) # similar to set working directory
+library(tidyverse) # data wrangling
+```
+
+# Load colors for graphs
+
+```{r colors, include=TRUE}
+devtools::install_github("an-bui/calecopal")
+
+library(calecopal)
+# all palettes
+names(cal_palettes)
+
+# Site colors: 1, 2 
+cal_palette(name = "chaparral1", n = 5, type = "continuous") # [1] "#DCC27A" "#F19B34"
+site1color <- "#DCC27A"
+site2color <- "#F19B34"
+sitecolors <- c(site1color, site2color)
+
+# Treatment colors: Full, half, none 
+cal_palette(name = "chaparral3", n = 5, type = "continuous") # [1] "#D3E3CA", "#92A587", "#2F3525"
+cal_palette(name = "desert", n = 5, type = "continuous") # [1] "#F6EECF", "#B09175", "#291611"
+treatment1color <- "#F6EECF"
+treatment2color <- "#B09175"
+treatment3color <- "#291611"
+treatmentcolors <- c(treatment1color, treatment2color, treatment3color)
+
+```
+
+# Question 2: How does seedling survival change with PAR, TDR, % MAFA cover, and species?
+
+Notes:
+* __response variable__: The variable you want to test. (e.g.,. PAR, TDR, nncover)
+* __explanatory variables__: The variables that can explain the outcome. (e.g., treatment, mafacover, site)
+* __data frame__: Include all the data you'll be working with. (e.g., combine par and mafa_cover_all)
+* __formula__: a formula is a two-sided linear formula object describing both the _fixed-effects_ and _random effects_ part of the model, with the response on the left of a ~ operator and the terms, separated by + operators, on the right. 
+* __random effects__: Random-effects terms are distinguished by vertical bars __(|)__ separating expressions for design matrices from grouping factors. Two vertical bars __(||)__ can be used to specify multiple uncorrelated random effects for the same grouping variable. 
+  + Because of the way it is implemented, the ||-syntax works only for design matrices containing numeric (continuous) predictors; to fit models with independent categorical effects, see dummy or the lmer_alt function from the afex package.)
+  
+  
+  
+  
+  
+  
+  
