@@ -65,7 +65,7 @@ Notes: - **response variable**: The variable you want to test. (e.g.,. PAR, TDR,
 
 ### Load PAR, TDR, and non-native percent cover data.
 
-### Save as a csv in the "Processed" data folder.
+### Saved as a csv in the "Processed" data folder.
 
 ```{r load data, include=TRUE}
 mafa_cover_all <- read_csv("data/processed/mafa_cover_all.csv",
@@ -101,7 +101,8 @@ tdr <- read_csv("data/processed/tdr.csv",
 
 exotic_cover_all <- read_csv("data/processed/exotic_cover_all.csv")
 survmort <- read_csv("data/processed/survmort.csv")
-
+```
+```{r left join to mafa_cover_all, include=TRUE}
 # PAR
 parmod <- par %>%
   left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
