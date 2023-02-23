@@ -5,11 +5,14 @@ date: "`r Sys.Date()`"
 output: html_document
 ---
 
-# Load libraries
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load libraries
+
+```{r libraries, message=FALSE}
 library(here) # similar to set working directory
 library(tidyverse) # data wrangling
 ```
@@ -39,7 +42,7 @@ treatmentcolors <- c(treatment1color, treatment2color, treatment3color)
 
 ```
 
-# Question 2: How does seedling survival change with PAR, TDR, % MAFA cover, and species?
+# Question 2: How does seedling survival change with PAR, TDR, % nn cover, and species?
 
 Notes:
 * __response variable__: The variable you want to test. (e.g.,. PAR, TDR, nncover)
@@ -50,8 +53,82 @@ Notes:
   + Because of the way it is implemented, the ||-syntax works only for design matrices containing numeric (continuous) predictors; to fit models with independent categorical effects, see dummy or the lmer_alt function from the afex package.)
   
   
+
+### Load PAR, TDR, and non-native percent cover data.
+
+### Saved as a csv in the "Processed" data folder.
+```{r load data, include=TRUE}
+
+survmort_ <- read_csv("data/processed/survmort.csv")
+
+par <- read_csv("data/processed/par.csv",
+  col_types = cols(
+    plot_number = col_character(),
+    treatment = col_character(),
+    year = col_integer(),
+    month = col_integer(),
+    site = col_integer(),
+    normalized_par = col_double()
+    )
+)
+
+tdr <- read_csv("data/processed/tdr.csv",
+  col_types = cols(
+    plot_number = col_character(),
+    treatment = col_character(),
+    year = col_integer(),
+    month = col_integer(),
+    site = col_integer(),
+    soil_moisture = col_double()
+    )
+  )
+
+exotic_cover_all <- read_csv("data/processed/exotic_cover_all.csv")
+
+mafa_cover_all <- read_csv("data/processed/mafa_cover_all.csv",
+  col_types = cols(
+    plot_number = col_character(),
+    year = col_integer(),
+    cover_percent = col_double(),
+    site = col_integer()
+    )
+  )
+
+```
   
-  
-  
+```{r left join to survmort, include=TRUE}
+# PAR
+parmod <- par %>%
+  left_join(survmort, by = c("year", "site", "plot_number"), na.rm = F) %>% 
+  rename(mafacover = cover_percent)
+print(parmod)
+write.csv(parmod, "data/processed/par_model.csv")
+par1 <- filter(parmod, site == "1")
+par2 <- filter(parmod, site == "2")
+
+# TDR
+tdrmod <- tdr %>% 
+  left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
+  rename(mafacover = cover_percent) %>% 
+  filter(year <= 2019)
+print(tdrmod)
+write.csv(tdrmod, "data/processed/tdr_model.csv")
+tdr1 <- filter(tdrmod, site == "1")
+tdr2 <- filter(tdrmod, site == "2")
+
+# NN COVER
+nnmod <- exotic_cover_all %>% 
+   left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
+  rename(nncover = cover_percent.x,
+         mafacover = cover_percent.y, 
+         treatment = MAFA_removal) %>% 
+   col_types = cols(
+      year = col_character()) %>% 
+  select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
+print(nnmod)
+write.csv(nnmod, "data/processed/nn_model.csv")
+nnmod1 <- filter(nnmod, site == "1")
+nnmod2 <- filter(nnmod, site == "2")
+```
   
   
