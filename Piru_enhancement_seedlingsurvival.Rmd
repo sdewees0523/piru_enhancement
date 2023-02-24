@@ -141,21 +141,24 @@ exotic_cover_all <- exotic_cover_all_load %>%
 print(exotic_cover_all)
 
 
-mafa_cover_all_load <- read_csv("data/processed/mafa_cover_all.csv",
-  col_types = cols(
-    plot_number = col_character(),
-    year = col_integer(),
-    cover_percent = col_double(),
-    site = col_integer()
-    )
-  )
-mafa_cover_all <- mafa_cover_all_load %>% 
-  select(plot_number, year, cover_percent, site) 
-print(mafa_cover_all)
+#mafa_cover_all_load <- read_csv("data/processed/mafa_cover_all.csv",
+#  col_types = cols(
+#    plot_number = col_character(),
+#    year = col_integer(),
+#    cover_percent = col_double(),
+#    site = col_integer()
+#    )
+#  )
+#mafa_cover_all <- mafa_cover_all_load %>% 
+#  select(plot_number, year, cover_percent, site) 
+#print(mafa_cover_all)
 
 ```
   
-```{r subset and join data - MAY 2018, include=TRUE}
+
+# May 2018   
+  
+```{r MAY 2018 - join data, include=TRUE}
 
 # subsetting data for May 2018 survival
 # survmortnospp = may 2018
@@ -166,37 +169,108 @@ survmortnospp_may2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="
 par_april2018 <- dplyr::filter(par, year == "2018" & month =="4")
 tdr_april2018 <- tdr %>% 
   dplyr::filter(year == "2018" & month =="4")
-nncover_may2018 <- dplyr::filter(nncover, year == "2018")
+nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018")
 
-#left join par
-survmortnospp_may2018_par <- survmortnospp_may2018 %>% 
-  dplyr::left_join(par_april2018, by = c("year", "site", "plot_number", "treatment"), na.rm = F) %>% 
+# left join data for May 2018 survival
+survmortnospp_may2018_mod <- survmortnospp_may2018 %>% 
+  dplyr::left_join(par_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%    #left join par
+  select(!treatment.x) %>% 
+   rename(month_survival = month.x, 
+         month_par = month.y, 
+         treatment = treatment.y) %>% 
+  select(!date) %>% 
+  select(transplanted, year, month_survival, month_count, site, plot_number, treatment, normalized_par, month_par, totalsurvival, totalmortality) %>% 
+  dplyr::left_join(tdr_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join tdr
+  rename(treatment = treatment.x, 
+         month_tdr = month) %>% 
+  select(!treatment.y) %>% 
+   dplyr::left_join(nncover_may2018, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join exotic percent cover
+  rename(exotic_percentcover = cover_percent) %>% 
+  select(!treatment.y) %>% 
+  select(!date) %>% 
+  rename(treatment = treatment.x)
+view(survmortnospp_may2018_mod)
+```
+
+- testing if the residuals are normally distributed
+
+```{r MAY 2018 - normality, include =TRUE}
+
+lme.may2018 <- lmer(totalsurvival ~ normalized_par + soil_moisture + exotic_percentcover + site + (1|treatment),
+                         data = survmortnospp_may2018_mod)
+
+MOD <- lme.may2018
+
+# Calculate model's residual and fitted values
+F1 <- fitted(MOD)
+E1 <- residuals(MOD, "pearson")
+
+# See residuals as a histogram, look for normal distribution
+hist(E1)
+
+# Graph residuals against a normal distribution, look for all points to be on 1:1 line
+#need to call next two lines together
+qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
+qqline(E1)
+
+# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
+# run together 2 lines
+plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
+abline(h = 0) # looking for random scatter
+
+# Check for crazy outliers, look for lines MUCH taller than the rest of data
+plot(cooks.distance(MOD))
+
+# Plot a box plot for each factor, look for equal variance amount levels along the zero line
+# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
+# Random effects need the qqline just like normality. 
+# So, only site and treatment get box plots. 
+# MAFA cover is a covariate (continuous variable).
+
+boxplot(E1 ~ site, data = parmod)
+abline(h = 0)
+
+# Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
+qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$treatment[,1]) # unique dates
+
+```
+
+
+# May 2019
+```{r MAY 2019 - join data, include=TRUE}
+
+# subsetting data for May 2019 survival
+# survmortnospp = may 2018
+# par = april 2018
+# tdr = april 2018
+# nncover = may 2018
+survmortnospp_may2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="5")
+par_april2018 <- dplyr::filter(par, year == "2018" & month =="4")
+tdr_april2018 <- tdr %>% 
+  dplyr::filter(year == "2018" & month =="4")
+nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018")
+
+# left join data for May 2018 survival
+survmortnospp_may2018_mod <- survmortnospp_may2018 %>% 
+  dplyr::left_join(par_april2018, by = c("year", "site", "plot_number", "treatment"), na.rm = F) %>%    #left join par
   rename(month_survival = month.x, 
          month_par = month.y) %>% 
+  select(!date) %>% 
+  dplyr::left_join(tdr_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join tdr
+  rename(treatment = treatment.x, 
+         month_tdr = month) %>% 
+  select(!treatment.y) %>% 
+   dplyr::left_join(nncover_may2018, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join exotic percent cover
+  rename(exotic_percentcover = cover_percent) %>% 
+  select(!treatment.y) %>% 
   select(!date)
+view(survmortnospp_may2018_mod)
 
-# left join tdr
-survmortnospp_may2018_partdr <- survmortnospp_may2018_par %>% 
-  dplyr::left_join(tdr_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>% 
-  rename(treatment = treatment.x) %>% 
-  select(!treatment.y)
+```
 
-# left join exotic percent cover
-# 
-# START HERE!!!!! and join exotic percent cover to the above left join. yayayayayayay!!!!!!
-# 
-# 
-# 
-# 
-parmod <- par %>%
-  left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
-  rename(mafacover = cover_percent)
-print(parmod)
-write.csv(parmod, "data/processed/par_model.csv")
 
-lme.april2018_surv <- lmer(survival ~ normalized_par + tdr + nncover + site  + (1|date) +(1|plot_number),
-                   data = may2019survival_mod)
-
+```{r}
 may2019survival <- dplyr::filter(survmortnospp, year == "2019" & month =="5")
 sept2019survival <- dplyr::filter(survmortnospp, year == "2019" & month =="9")
 nov2019survival <- dplyr::filter(survmortnospp, year == "2019" & month =="11")
