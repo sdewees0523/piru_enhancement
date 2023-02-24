@@ -258,29 +258,23 @@ avgmay2018surv <- survmortnospp_may2018_join %>%
 ```{r MAY 2018 - figures, include=TRUE}
 
 # boxplot: average survival by site
+may2018boxplot <- survmortnospp_may2018_join %>% 
+
 ggplot(data = survmortnospp_may2018_join, aes(x = site, y = totalsurvival)) +
-   geom_boxplot(aes(fill = site)) +
-    scale_fill_manual(values = c('red', 'orange')) + 
-   labs(title = "Average seedling survival in May 2018", x = "Site", y = "Average seedling survival (n)") + # <-- not working
+   geom_boxplot(aes(group = site)) +# <-- How change site from col_integer to col_character here? 
+   labs(title = "Average seedling survival in May 2018", x = "Site", y = "Average seedling survival (n)") + 
     theme_bw() 
-# error message 
-# Continuous x aesthetic
-#ℹ did you forget `aes(group = ...)`? 
-#2: The following aesthetics were dropped during statistical transformation: fill  
-
-
-  geom_boxplot(aes(fill = treatment)) +
-  scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
- 
-  theme_bw() 
-
 
 ```
 
 
 
-# May 2019
+# May 2019 Seedling survival 
+
 ```{r MAY 2019 - join data, include=TRUE}
+
+# START HERE!!!!!!!!!!
+
 
 # subsetting data for May 2019 survival
 # survmortnospp = may 2018
