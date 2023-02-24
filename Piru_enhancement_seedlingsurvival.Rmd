@@ -57,12 +57,40 @@ Notes:
 ### Load PAR, TDR, and non-native percent cover data.
 
 ### Saved as a csv in the "Processed" data folder.
-```{r load data, include=TRUE}
+```{r load data csvs, include=TRUE}
 
-survmort_ <- read_csv("data/processed/survmort.csv")
+# survival and mortality data
+survmort_load <- read_csv("data/processed/survmort.csv",
+                      col_types = cols(
+                        year = col_integer(),
+                        month = col_integer(), 
+                        site = col_integer(),
+                        plot_number = col_character(), 
+                        treatment = col_character(),
+                        species = col_character(), 
+                        alive = col_integer(),
+                        dead = col_integer(), 
+                        month_count = col_integer(),
+                        transplanted = col_integer()
+                      )
+                        )
+# survival and mortality data WITH species
+survmort <- survmort_load %>% 
+  select(year, month, plot_number, treatment, species, alive, dead, site, month_count, transplanted)
+print(survmort)
+# survival and mortality data WITHOUT species
+survmortnospp <- survmort_load %>% 
+  select(year, month, plot_number, treatment, alive, dead, site, month_count, transplanted) %>% 
+  group_by(year, month, site, plot_number, treatment, month_count, transplanted) %>% 
+  summarize(totalsurvival = sum(alive), 
+            totalmortality = sum(dead)) %>% 
+  ungroup()
+print(survmortnospp) # 
 
-par <- read_csv("data/processed/par.csv",
+# PAR data
+par_load <- read_csv("data/processed/par.csv",
   col_types = cols(
+    date = col_date(format = ""),
     plot_number = col_character(),
     treatment = col_character(),
     year = col_integer(),
@@ -72,7 +100,12 @@ par <- read_csv("data/processed/par.csv",
     )
 )
 
-tdr <- read_csv("data/processed/tdr.csv",
+par <- par_load %>% 
+  select(date, year, month, site, plot_number, treatment, normalized_par)
+print(par)
+
+# TDR data
+tdr_load <- read_csv("data/processed/tdr.csv",
   col_types = cols(
     plot_number = col_character(),
     treatment = col_character(),
@@ -83,9 +116,29 @@ tdr <- read_csv("data/processed/tdr.csv",
     )
   )
 
-exotic_cover_all <- read_csv("data/processed/exotic_cover_all.csv")
+tdr <- tdr_load %>% 
+   select(date, year, month, site, plot_number, treatment, soil_moisture)
+print(tdr)  
 
-mafa_cover_all <- read_csv("data/processed/mafa_cover_all.csv",
+# exotic percent cover
+exotic_cover_all_load <- read_csv("data/processed/exotic_cover_all.csv",
+  col_types = cols(
+    date = col_date(),
+    year = col_integer(),
+    site = col_integer(),
+    plot_number = col_character(),
+    MAFA_removal = col_character(),
+    cover_percent = col_double()
+  )
+)
+
+exotic_cover_all <- exotic_cover_all_load %>% 
+  select(date, year, site, plot_number, MAFA_removal, cover_percent) %>% 
+  rename(treatment = MAFA_removal)
+print(exotic_cover_all)
+
+
+mafa_cover_all_load <- read_csv("data/processed/mafa_cover_all.csv",
   col_types = cols(
     plot_number = col_character(),
     year = col_integer(),
@@ -93,13 +146,61 @@ mafa_cover_all <- read_csv("data/processed/mafa_cover_all.csv",
     site = col_integer()
     )
   )
+mafa_cover_all <- mafa_cover_all_load %>% 
+  select(plot_number, year, cover_percent, site) 
+print(mafa_cover_all)
 
 ```
   
-```{r left join to survmort, include=TRUE}
-# PAR
+```{r subsetting data by year and month, include=TRUE}
+
+# subsetting data for May 2018 survival
+# survmortnospp = may 2018
+# par = april 2018
+# tdr = april 2018
+# nncover = may 2018
+survmortnospp_may2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="5")
+par_april2018 <- dplyr::filter(par, year == "2018" & month =="4")
+tdr_april2018 <- dplyr::filter(tdr, year == "2018" & month =="4")
+nncover_may2018 <- dplyr::filter(nncover, year == "2018")
+
+survmortnospp_may2018_par <- survmortnospp_may2018 %>% 
+  dplyr::left_join(par_april2018, by = c("year", "site", "plot_number", "treatment"), na.rm = F) %>% 
+  rename(month_survival = month.x, 
+         month_par = month.y)
+survmortnospp_may2018_partdr <- survmortnospp_may2018_par %>% 
+  dplyr::left_join(tdr_april2018, by = c("year", "site", "plot_number", "treatment"), na.rm = F) 
+
+
+%>% 
+  rename(month_survmort = month.x, 
+         month_tdr = month.y)
+
+print(survmortnospp_may2018_mod)
+
 parmod <- par %>%
-  left_join(survmort, by = c("year", "site", "plot_number"), na.rm = F) %>% 
+  left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
+  rename(mafacover = cover_percent)
+print(parmod)
+write.csv(parmod, "data/processed/par_model.csv")
+
+lme.april2018_surv <- lmer(survival ~ normalized_par + tdr + nncover + site  + (1|date) +(1|plot_number),
+                   data = may2019survival_mod)
+
+may2019survival <- dplyr::filter(survmortnospp, year == "2019" & month =="5")
+sept2019survival <- dplyr::filter(survmortnospp, year == "2019" & month =="9")
+nov2019survival <- dplyr::filter(survmortnospp, year == "2019" & month =="11")
+
+
+
+april
+
+
+```
+```{r left join, include=TRUE}
+  left_join(par, by = c("year", "site", "plot_number"), na.rm = F) 
+  
+  
   rename(mafacover = cover_percent)
 print(parmod)
 write.csv(parmod, "data/processed/par_model.csv")
@@ -118,7 +219,7 @@ tdr2 <- filter(tdrmod, site == "2")
 
 # NN COVER
 nnmod <- exotic_cover_all %>% 
-   left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
+   left_join(mafa_cover_all, by = c("year", "month", "site", "plot_number"), na.rm = F) %>% 
   rename(nncover = cover_percent.x,
          mafacover = cover_percent.y, 
          treatment = MAFA_removal) %>% 
