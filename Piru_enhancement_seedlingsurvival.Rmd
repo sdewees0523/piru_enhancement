@@ -76,7 +76,10 @@ survmort_load <- read_csv("data/processed/survmort.csv",
                         )
 # survival and mortality data WITH species
 survmort <- survmort_load %>% 
-  select(year, month, plot_number, treatment, species, alive, dead, site, month_count, transplanted)
+  select(year, month, plot_number, treatment, species, alive, dead, site, month_count, transplanted) %>% 
+  mutate(treatment = case_when(treatment == "no" ~ "none")) # <----------- HOW DO YOU RENAME "NO" TO "NONE"? Stephanie's fix - omit "treatment" in left-join
+
+
 print(survmort)
 # survival and mortality data WITHOUT species
 survmortnospp <- survmort_load %>% 
@@ -85,7 +88,7 @@ survmortnospp <- survmort_load %>%
   summarize(totalsurvival = sum(alive), 
             totalmortality = sum(dead)) %>% 
   ungroup()
-print(survmortnospp) # 
+print(survmortnospp) # :) yay! it worked!
 
 # PAR data
 par_load <- read_csv("data/processed/par.csv",
@@ -101,7 +104,7 @@ par_load <- read_csv("data/processed/par.csv",
 )
 
 par <- par_load %>% 
-  select(date, year, month, site, plot_number, treatment, normalized_par)
+  select(year, month, site, plot_number, treatment, normalized_par)
 print(par)
 
 # TDR data
@@ -117,7 +120,7 @@ tdr_load <- read_csv("data/processed/tdr.csv",
   )
 
 tdr <- tdr_load %>% 
-   select(date, year, month, site, plot_number, treatment, soil_moisture)
+   select(year, month, site, plot_number, treatment, soil_moisture)
 print(tdr)  
 
 # exotic percent cover
@@ -152,7 +155,7 @@ print(mafa_cover_all)
 
 ```
   
-```{r subsetting data by year and month, include=TRUE}
+```{r subset and join data - MAY 2018, include=TRUE}
 
 # subsetting data for May 2018 survival
 # survmortnospp = may 2018
@@ -161,23 +164,30 @@ print(mafa_cover_all)
 # nncover = may 2018
 survmortnospp_may2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="5")
 par_april2018 <- dplyr::filter(par, year == "2018" & month =="4")
-tdr_april2018 <- dplyr::filter(tdr, year == "2018" & month =="4")
+tdr_april2018 <- tdr %>% 
+  dplyr::filter(year == "2018" & month =="4")
 nncover_may2018 <- dplyr::filter(nncover, year == "2018")
 
+#left join par
 survmortnospp_may2018_par <- survmortnospp_may2018 %>% 
   dplyr::left_join(par_april2018, by = c("year", "site", "plot_number", "treatment"), na.rm = F) %>% 
   rename(month_survival = month.x, 
-         month_par = month.y)
+         month_par = month.y) %>% 
+  select(!date)
+
+# left join tdr
 survmortnospp_may2018_partdr <- survmortnospp_may2018_par %>% 
-  dplyr::left_join(tdr_april2018, by = c("year", "site", "plot_number", "treatment"), na.rm = F) 
+  dplyr::left_join(tdr_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>% 
+  rename(treatment = treatment.x) %>% 
+  select(!treatment.y)
 
-
-%>% 
-  rename(month_survmort = month.x, 
-         month_tdr = month.y)
-
-print(survmortnospp_may2018_mod)
-
+# left join exotic percent cover
+# 
+# START HERE!!!!! and join exotic percent cover to the above left join. yayayayayayay!!!!!!
+# 
+# 
+# 
+# 
 parmod <- par %>%
   left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
   rename(mafacover = cover_percent)
