@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r libraries, message=FALSE}
 library(here) # similar to set working directory
 library(tidyverse) # data wrangling
+library(emmeans)
 ```
 
 # Load colors for graphs
@@ -68,8 +69,8 @@ survmort_load <- read_csv("data/processed/survmort.csv",
                         plot_number = col_character(), 
                         treatment = col_character(),
                         species = col_character(), 
-                        alive = col_integer(),
-                        dead = col_integer(), 
+                        alive = col_double(),
+                        dead = col_double(), 
                         month_count = col_integer(),
                         transplanted = col_integer()
                       )
@@ -156,7 +157,7 @@ print(exotic_cover_all)
 ```
   
 
-# May 2018   
+# May 2018 
   
 ```{r MAY 2018 - join data, include=TRUE}
 
@@ -172,13 +173,13 @@ tdr_april2018 <- tdr %>%
 nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018")
 
 # left join data for May 2018 survival
-survmortnospp_may2018_mod <- survmortnospp_may2018 %>% 
+survmortnospp_may2018_join <- survmortnospp_may2018 %>% 
   dplyr::left_join(par_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%    #left join par
   select(!treatment.x) %>% 
    rename(month_survival = month.x, 
          month_par = month.y, 
          treatment = treatment.y) %>% 
-  select(!date) %>% 
+  #select(!date) %>% 
   select(transplanted, year, month_survival, month_count, site, plot_number, treatment, normalized_par, month_par, totalsurvival, totalmortality) %>% 
   dplyr::left_join(tdr_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join tdr
   rename(treatment = treatment.x, 
@@ -189,17 +190,17 @@ survmortnospp_may2018_mod <- survmortnospp_may2018 %>%
   select(!treatment.y) %>% 
   select(!date) %>% 
   rename(treatment = treatment.x)
-view(survmortnospp_may2018_mod)
+view(survmortnospp_may2018_join)
 ```
 
 - testing if the residuals are normally distributed
 
 ```{r MAY 2018 - normality, include =TRUE}
 
-lme.may2018 <- lmer(totalsurvival ~ normalized_par + soil_moisture + exotic_percentcover + site + (1|treatment),
-                         data = survmortnospp_may2018_mod)
+lme.may2018.mod <- lmer(totalsurvival ~ normalized_par + soil_moisture + exotic_percentcover + site + (1|treatment), # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG?
+                         data = survmortnospp_may2018_join)
 
-MOD <- lme.may2018
+MOD <- lme.may2018.mod
 
 # Calculate model's residual and fitted values
 F1 <- fitted(MOD)
@@ -227,7 +228,7 @@ plot(cooks.distance(MOD))
 # So, only site and treatment get box plots. 
 # MAFA cover is a covariate (continuous variable).
 
-boxplot(E1 ~ site, data = parmod)
+boxplot(E1 ~ site, data = survmortnospp_may2018_join) # <---- make sure to change to df, not the lme
 abline(h = 0)
 
 # Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
@@ -235,6 +236,47 @@ qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$treatment[,1]) # unique dates
 
 ```
+
+- statistics
+
+```{r MAY 2018 - stats, include=TRUE}
+
+print(lme.may2018.mod)
+summary(lme.may2018.mod)
+anova(lme.may2018.mod) # A significant p-value indicates that one or more significant differences exist between group means.
+# seedling survival is not correlated with par, tdr, exotic percent cover, or site.
+# site may be ecologically interesting (p = 0.0843)
+
+# calculate mean survival at Site 1 and Site 2
+avgmay2018surv <- survmortnospp_may2018_join %>% 
+  group_by(site) %>% 
+  summarise(mean_survival=mean(totalsurvival, na.rm = TRUE),
+            sd_survival=sd(totalsurvival, na.rm = TRUE))
+```
+
+- figures
+```{r MAY 2018 - figures, include=TRUE}
+
+# boxplot: average survival by site
+ggplot(data = survmortnospp_may2018_join, aes(x = site, y = totalsurvival)) +
+   geom_boxplot(aes(fill = site)) +
+    scale_fill_manual(values = c('red', 'orange')) + 
+   labs(title = "Average seedling survival in May 2018", x = "Site", y = "Average seedling survival (n)") + # <-- not working
+    theme_bw() 
+# error message 
+# Continuous x aesthetic
+#ℹ did you forget `aes(group = ...)`? 
+#2: The following aesthetics were dropped during statistical transformation: fill  
+
+
+  geom_boxplot(aes(fill = treatment)) +
+  scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
+ 
+  theme_bw() 
+
+
+```
+
 
 
 # May 2019
