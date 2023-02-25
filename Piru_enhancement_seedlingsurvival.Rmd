@@ -63,28 +63,27 @@ Notes:
 # survival and mortality data
 survmort_load <- read_csv("data/processed/survmort.csv",
                       col_types = cols(
-                        year = col_integer(),
+                        year = col_character(),
                         month = col_integer(), 
-                        site = col_integer(),
+                        site = col_character(),
                         plot_number = col_character(), 
                         treatment = col_character(),
                         species = col_character(), 
-                        alive = col_double(),
-                        dead = col_double(), 
+                        alive = col_integer(),
+                        dead = col_integer(), 
                         month_count = col_integer(),
-                        transplanted = col_integer()
+                        transplanted = col_character()
                       )
                         )
 # survival and mortality data WITH species
 survmort <- survmort_load %>% 
   select(year, month, plot_number, treatment, species, alive, dead, site, month_count, transplanted) %>% 
-  mutate(treatment = case_when(treatment == "no" ~ "none")) # <----------- HOW DO YOU RENAME "NO" TO "NONE"? Stephanie's fix - omit "treatment" in left-join
+  mutate(treatment = recode(treatment, no = "none"))
 
-
-print(survmort)
 # survival and mortality data WITHOUT species
 survmortnospp <- survmort_load %>% 
   select(year, month, plot_number, treatment, alive, dead, site, month_count, transplanted) %>% 
+  mutate(treatment = recode(treatment, no = "none")) %>% 
   group_by(year, month, site, plot_number, treatment, month_count, transplanted) %>% 
   summarize(totalsurvival = sum(alive), 
             totalmortality = sum(dead)) %>% 
@@ -166,11 +165,28 @@ print(exotic_cover_all)
 # par = april 2018
 # tdr = april 2018
 # nncover = may 2018
+
+survmortnospp_2018 <- survmortnospp %>% 
+  dplyr::filter(year == "2018") %>% 
+  select(!totalmortality) %>% 
+  select(!month_count)
+survmortnospp_2018_wider <- survmortnospp_2018 %>%
+  pivot_wider(names_from = month, values_from = totalsurvival)
+  
+view(survmortnospp_2018_wider)
+
+
+####### ended here on Feb 24. 2023. Plot 5 needs to be renamed as HALF. 
+
+survmortnospp_jan2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="1")
 survmortnospp_may2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="5")
+
 par_april2018 <- dplyr::filter(par, year == "2018" & month =="4")
 tdr_april2018 <- tdr %>% 
   dplyr::filter(year == "2018" & month =="4")
 nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018")
+
+print(survmortnospp_jan2018)
 
 # left join data for May 2018 survival
 survmortnospp_may2018_join <- survmortnospp_may2018 %>% 
@@ -269,39 +285,72 @@ ggplot(data = survmortnospp_may2018_join, aes(x = site, y = totalsurvival)) +
 
 
 
-# May 2019 Seedling survival 
+# March 2019 Seedling survival 
 
-```{r MAY 2019 - join data, include=TRUE}
+```{r march 2019 - join data, include=TRUE}
 
-# START HERE!!!!!!!!!!
+survmortnospp_t1 <- dplyr::filter(survmortnospp, year == "2019" & month =="3")
+par_t1 <- dplyr::filter(par, year == "2019" & month =="3")
+tdr_t1 <- tdr %>% 
+  dplyr::filter(year == "2019" & month =="3")
+nncover_t1 <- dplyr::filter(exotic_cover_all, year == "2019")
+
+print(nncover_t1) # each df should have 36 rows of data
 
 
-# subsetting data for May 2019 survival
-# survmortnospp = may 2018
-# par = april 2018
-# tdr = april 2018
-# nncover = may 2018
-survmortnospp_may2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="5")
-par_april2018 <- dplyr::filter(par, year == "2018" & month =="4")
-tdr_april2018 <- tdr %>% 
-  dplyr::filter(year == "2018" & month =="4")
-nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018")
-
-# left join data for May 2018 survival
-survmortnospp_may2018_mod <- survmortnospp_may2018 %>% 
-  dplyr::left_join(par_april2018, by = c("year", "site", "plot_number", "treatment"), na.rm = F) %>%    #left join par
+# left join data for Jan-March 2019 (t1) survival
+survmortnospp_t2_mod <- survmortnospp_t2 %>% 
+  dplyr::left_join(par_t2, by = c("year", "site", "plot_number", "treatment"), na.rm = F) %>%    #left join par
   rename(month_survival = month.x, 
          month_par = month.y) %>% 
   select(!date) %>% 
-  dplyr::left_join(tdr_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join tdr
+  dplyr::left_join(tdr_t2, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join tdr
   rename(treatment = treatment.x, 
          month_tdr = month) %>% 
   select(!treatment.y) %>% 
-   dplyr::left_join(nncover_may2018, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join exotic percent cover
+   dplyr::left_join(nncover_t2, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join exotic percent cover
   rename(exotic_percentcover = cover_percent) %>% 
   select(!treatment.y) %>% 
   select(!date)
-view(survmortnospp_may2018_mod)
+view(survmortnospp_t2_mod)
+
+
+```
+
+
+```{r MAY 2019 - join data, include=TRUE}
+
+# subsetting data for May 2019 survival
+# survmortnospp = may 2019
+# par = may 2019
+# tdr = march 2019
+# nncover = may 2019
+# t1 = jan 2019- march 2019
+# t2 = march 2018 - may 2019
+# t3 = may 2019 - sept 2019
+# t4 = sept 2019 - nov 2019
+survmortnospp_t2 <- dplyr::filter(survmortnospp, month_count =="16") # <-- missing data for plots 1-6, 13, etc.
+view(survmortnospp_t2)
+par_t2 <- dplyr::filter(par, year == "2019" & month =="5")
+tdr_t2 <- tdr %>% 
+  dplyr::filter(year == "2019" & month =="3")
+nncover_t2 <- dplyr::filter(exotic_cover_all, year == "2019")
+
+# left join data for Jan-May 2019 (t2) survival
+survmortnospp_t2_mod <- survmortnospp_t2 %>% 
+  dplyr::left_join(par_t2, by = c("year", "site", "plot_number", "treatment"), na.rm = F) %>%    #left join par
+  rename(month_survival = month.x, 
+         month_par = month.y) %>% 
+  select(!date) %>% 
+  dplyr::left_join(tdr_t2, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join tdr
+  rename(treatment = treatment.x, 
+         month_tdr = month) %>% 
+  select(!treatment.y) %>% 
+   dplyr::left_join(nncover_t2, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join exotic percent cover
+  rename(exotic_percentcover = cover_percent) %>% 
+  select(!treatment.y) %>% 
+  select(!date)
+view(survmortnospp_t2_mod)
 
 ```
 
