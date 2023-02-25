@@ -35,24 +35,24 @@
 2/24/18,1,none,left,RHOV,blue,1.35,2.44,2.1,,1,,
 2/24/18,1,none,left,SAAP,green,2,0.5,0.44,,1,,
 2/24/18,1,none,left,SAAP,blue,0.2,1.65,0.2,,1,,"crispy, top was broken by soil clod"
-5/26/18,1,no removal,left,SAAP,green,,,,,,1,
-5/26/18,1,no removal,left,SAAP,blue,,,,,,1,
-5/26/18,1,no removal,left,RHOV,green,,,,,,1,
-5/26/18,1,no removal,left,RHOV,blue,1.15,2.97,0.71,,1,,
-5/26/18,1,no removal,left,CEOL,green,,,,,,1,
-5/26/18,1,no removal,left,CEOL,blue,,,,,,1,
-5/26/18,1,no removal,left,HEAR,s,,,,,,1,
-5/26/18,1,no removal,left,HEAR,c,,,,,,1,
-5/26/18,1,no removal,left,HEAR,r,,,,,,1,
-5/26/18,1,no removal,right,SAAP,green,,,,,,1,
-5/26/18,1,no removal,right,SAAP,blue,0.53,0.924,0.1,,1,,half crisp
-5/26/18,1,no removal,right,RHOV,green,2.75,1.48,0.39,,1,,half okay
-5/26/18,1,no removal,right,RHOV,blue,,,,,,1,
-5/26/18,1,no removal,right,CEOL,green,1.173,1.563,0.8,,1,,
-5/26/18,1,no removal,right,CEOL,blue,1.64,1.58,0.87,,1,,
-5/26/18,1,no removal,right,HEAR,s,,,,,,1,
-5/26/18,1,no removal,right,HEAR,c,,,,,,1,
-5/26/18,1,no removal,right,HEAR,r,,,,,,1,
+5/26/18,1,none,left,SAAP,green,,,,,,1,
+5/26/18,1,none,left,SAAP,blue,,,,,,1,
+5/26/18,1,none,left,RHOV,green,,,,,,1,
+5/26/18,1,none,left,RHOV,blue,1.15,2.97,0.71,,1,,
+5/26/18,1,none,left,CEOL,green,,,,,,1,
+5/26/18,1,none,left,CEOL,blue,,,,,,1,
+5/26/18,1,none,left,HEAR,s,,,,,,1,
+5/26/18,1,none,left,HEAR,c,,,,,,1,
+5/26/18,1,none,left,HEAR,r,,,,,,1,
+5/26/18,1,none,right,SAAP,green,,,,,,1,
+5/26/18,1,none,right,SAAP,blue,0.53,0.924,0.1,,1,,half crisp
+5/26/18,1,none,right,RHOV,green,2.75,1.48,0.39,,1,,half okay
+5/26/18,1,none,right,RHOV,blue,,,,,,1,
+5/26/18,1,none,right,CEOL,green,1.173,1.563,0.8,,1,,
+5/26/18,1,none,right,CEOL,blue,1.64,1.58,0.87,,1,,
+5/26/18,1,none,right,HEAR,s,,,,,,1,
+5/26/18,1,none,right,HEAR,c,,,,,,1,
+5/26/18,1,none,right,HEAR,r,,,,,,1,
 12/12/18,1,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,1,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,1,none,right,HEAR,S,,,,,,1,"dead, no seedlings present"
@@ -763,24 +763,24 @@
 2/24/18,5,half removal,left,RHOV,blue,1.61,3.3,3.02,,1,,wilty
 2/24/18,5,half removal,left,SAAP,green,1.44,1.43,0.67,,1,,crispy at bottom; width 1 prior (2.29)
 2/24/18,5,half removal,left,SAAP,blue,1.1,2.13,1.56,,1,,very crispy
-5/26/18,5,no removal,left,SAAP,green,,,,,,1,
-5/26/18,5,no removal,left,SAAP,blue,,,,,,1,
-5/26/18,5,no removal,left,RHOV,green,,,,,,1,
-5/26/18,5,no removal,left,RHOV,blue,,,,,,1,
-5/26/18,5,no removal,left,CEOL,green,1.89,1.46,1.61,,1,,50/50 on alive
-5/26/18,5,no removal,left,CEOL,blue,2.456,2.13,1.18,,1,,okay
-5/26/18,5,no removal,left,HEAR,s,3.94,3.657,4.28,,,1,prob dead
-5/26/18,5,no removal,left,HEAR,c,6.98,8.23,6.48,,,1,"crispy af, prob dead"
-5/26/18,5,no removal,left,HEAR,r,5.28,11.34,10.48,,1,,
-5/26/18,5,no removal,right,SAAP,green,4.21,4.39,0.34,,1,,
-5/26/18,5,no removal,right,SAAP,blue,2.72,4.4,1.64,,1,,
-5/26/18,5,no removal,right,RHOV,green,,,,,,1,
-5/26/18,5,no removal,right,RHOV,blue,,,,,,1,
-5/26/18,5,no removal,right,CEOL,green,,,,,,1,
-5/26/18,5,no removal,right,CEOL,blue,1.33,1.31,0.983,,1,,green
-5/26/18,5,no removal,right,HEAR,s,10.28,4.11,0.53,,,1,prob dead
-5/26/18,5,no removal,right,HEAR,c,9.58,4.06,1.82,,,1,prob dead
-5/26/18,5,no removal,right,HEAR,r,6.35,3.09,0.54,,1,,stressed
+5/26/18,5,half removal,left,SAAP,green,,,,,,1,
+5/26/18,5,half removal,left,SAAP,blue,,,,,,1,
+5/26/18,5,half removal,left,RHOV,green,,,,,,1,
+5/26/18,5,half removal,left,RHOV,blue,,,,,,1,
+5/26/18,5,half removal,left,CEOL,green,1.89,1.46,1.61,,1,,50/50 on alive
+5/26/18,5,half removal,left,CEOL,blue,2.456,2.13,1.18,,1,,okay
+5/26/18,5,half removal,left,HEAR,s,3.94,3.657,4.28,,,1,prob dead
+5/26/18,5,half removal,left,HEAR,c,6.98,8.23,6.48,,,1,"crispy af, prob dead"
+5/26/18,5,half removal,left,HEAR,r,5.28,11.34,10.48,,1,,
+5/26/18,5,half removal,right,SAAP,green,4.21,4.39,0.34,,1,,
+5/26/18,5,half removal,right,SAAP,blue,2.72,4.4,1.64,,1,,
+5/26/18,5,half removal,right,RHOV,green,,,,,,1,
+5/26/18,5,half removal,right,RHOV,blue,,,,,,1,
+5/26/18,5,half removal,right,CEOL,green,,,,,,1,
+5/26/18,5,half removal,right,CEOL,blue,1.33,1.31,0.983,,1,,green
+5/26/18,5,half removal,right,HEAR,s,10.28,4.11,0.53,,,1,prob dead
+5/26/18,5,half removal,right,HEAR,c,9.58,4.06,1.82,,,1,prob dead
+5/26/18,5,half removal,right,HEAR,r,6.35,3.09,0.54,,1,,stressed
 12/12/18,5,half removal,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,5,half removal,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,5,half removal,right,HEAR,S,,,,,,1,"dead, no seedlings present"
@@ -945,24 +945,24 @@
 2/24/18,6,none,left,RHOV,blue,2.12,3.28,3.12,,,1,"red, water stressed, cripsy"
 2/24/18,6,none,left,SAAP,green,0.53,1.156,1.08,,,1,"dead, crispy"
 2/24/18,6,none,left,SAAP,blue,3.56,0.1,0.1,,,1,"dead, no leaves (stick)"
-5/26/18,6,no removal,left,SAAP,green,,,,,,1,
-5/26/18,6,no removal,left,SAAP,blue,,,,,,1,
-5/26/18,6,no removal,left,RHOV,green,2.16,1.57,0.71,,,1,most likely dead
-5/26/18,6,no removal,left,RHOV,blue,1.67,1.7,0.85,,,1,most likely dead
-5/26/18,6,no removal,left,CEOL,green,,,,,,1,
-5/26/18,6,no removal,left,CEOL,blue,,,,,,1,
-5/26/18,6,no removal,left,HEAR,s,11.8,5.7,5.15,,1,,burnt
-5/26/18,6,no removal,left,HEAR,c,4.356,5.88,4.13,,1,,burnt af
-5/26/18,6,no removal,left,HEAR,r,3.52,9.02,6.06,,1,,
-5/26/18,6,no removal,right,SAAP,green,,,,,,1,
-5/26/18,6,no removal,right,SAAP,blue,,,,,,1,
-5/26/18,6,no removal,right,RHOV,green,0.79,2.66,0.81,,1,,crispy
-5/26/18,6,no removal,right,RHOV,blue,1.26,2.18,1.18,,1,,crispy
-5/26/18,6,no removal,right,CEOL,green,,,,,,1,
-5/26/18,6,no removal,right,CEOL,blue,,,,,,1,
-5/26/18,6,no removal,right,HEAR,s,5.58,5.96,3.29,,1,,
-5/26/18,6,no removal,right,HEAR,c,2.13,4.93,4.95,,1,,
-5/26/18,6,no removal,right,HEAR,r,,,,,,1,
+5/26/18,6,none,left,SAAP,green,,,,,,1,
+5/26/18,6,none,left,SAAP,blue,,,,,,1,
+5/26/18,6,none,left,RHOV,green,2.16,1.57,0.71,,,1,most likely dead
+5/26/18,6,none,left,RHOV,blue,1.67,1.7,0.85,,,1,most likely dead
+5/26/18,6,none,left,CEOL,green,,,,,,1,
+5/26/18,6,none,left,CEOL,blue,,,,,,1,
+5/26/18,6,none,left,HEAR,s,11.8,5.7,5.15,,1,,burnt
+5/26/18,6,none,left,HEAR,c,4.356,5.88,4.13,,1,,burnt af
+5/26/18,6,none,left,HEAR,r,3.52,9.02,6.06,,1,,
+5/26/18,6,none,right,SAAP,green,,,,,,1,
+5/26/18,6,none,right,SAAP,blue,,,,,,1,
+5/26/18,6,none,right,RHOV,green,0.79,2.66,0.81,,1,,crispy
+5/26/18,6,none,right,RHOV,blue,1.26,2.18,1.18,,1,,crispy
+5/26/18,6,none,right,CEOL,green,,,,,,1,
+5/26/18,6,none,right,CEOL,blue,,,,,,1,
+5/26/18,6,none,right,HEAR,s,5.58,5.96,3.29,,1,,
+5/26/18,6,none,right,HEAR,c,2.13,4.93,4.95,,1,,
+5/26/18,6,none,right,HEAR,r,,,,,,1,
 12/12/18,6,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,6,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,6,none,right,HEAR,S,,,,,,1,"dead, no seedlings present"
@@ -1127,24 +1127,24 @@
 2/24/18,7,none,left,RHOV,blue,1.11,2.09,1.09,,1,,wilted
 2/24/18,7,none,left,SAAP,green,0.68,1.11,0.37,,,1,dead
 2/24/18,7,none,left,SAAP,blue,,,,,,1,missing
-5/26/18,7,no removal,left,SAAP,green,,,,,,1,
-5/26/18,7,no removal,left,SAAP,blue,,,,,,1,
-5/26/18,7,no removal,left,RHOV,green,1.218,3.42,2,,1,,stressed
-5/26/18,7,no removal,left,RHOV,blue,,,,,,1,
-5/26/18,7,no removal,left,CEOL,green,0.53,1.81,0.36,,1,,
-5/26/18,7,no removal,left,CEOL,blue,,,,,,1,
-5/26/18,7,no removal,left,HEAR,s,,,,,,1,
-5/26/18,7,no removal,left,HEAR,c,5.25,1.86,0.34,,1,,dry stem
-5/26/18,7,no removal,left,HEAR,r,,,,,,1,
-5/26/18,7,no removal,right,SAAP,green,,,,,,1,
-5/26/18,7,no removal,right,SAAP,blue,1.54,1.79,1.28,,1,,
-5/26/18,7,no removal,right,RHOV,green,1.07,1.96,0.2,,1,,stressed
-5/26/18,7,no removal,right,RHOV,blue,,,,,,1,
-5/26/18,7,no removal,right,CEOL,green,,,,,,1,
-5/26/18,7,no removal,right,CEOL,blue,,,,,,1,
-5/26/18,7,no removal,right,HEAR,s,2.28,8.74,3.34,,1,,extremely stressed
-5/26/18,7,no removal,right,HEAR,c,3.72,7.25,3.92,,,1,dead?
-5/26/18,7,no removal,right,HEAR,r,,,,,,1,
+5/26/18,7,none,left,SAAP,green,,,,,,1,
+5/26/18,7,none,left,SAAP,blue,,,,,,1,
+5/26/18,7,none,left,RHOV,green,1.218,3.42,2,,1,,stressed
+5/26/18,7,none,left,RHOV,blue,,,,,,1,
+5/26/18,7,none,left,CEOL,green,0.53,1.81,0.36,,1,,
+5/26/18,7,none,left,CEOL,blue,,,,,,1,
+5/26/18,7,none,left,HEAR,s,,,,,,1,
+5/26/18,7,none,left,HEAR,c,5.25,1.86,0.34,,1,,dry stem
+5/26/18,7,none,left,HEAR,r,,,,,,1,
+5/26/18,7,none,right,SAAP,green,,,,,,1,
+5/26/18,7,none,right,SAAP,blue,1.54,1.79,1.28,,1,,
+5/26/18,7,none,right,RHOV,green,1.07,1.96,0.2,,1,,stressed
+5/26/18,7,none,right,RHOV,blue,,,,,,1,
+5/26/18,7,none,right,CEOL,green,,,,,,1,
+5/26/18,7,none,right,CEOL,blue,,,,,,1,
+5/26/18,7,none,right,HEAR,s,2.28,8.74,3.34,,1,,extremely stressed
+5/26/18,7,none,right,HEAR,c,3.72,7.25,3.92,,,1,dead?
+5/26/18,7,none,right,HEAR,r,,,,,,1,
 12/12/18,7,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,7,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,7,none,right,HEAR,S,,,,,,1,"dead, no seedlings present"
@@ -1855,24 +1855,24 @@
 2/24/18,11,none,left,RHOV,blue,2.321,3.17,1.19,,1,,crispy
 2/24/18,11,none,left,SAAP,green,2.54,5.32,3.39,,1,,ok; was covered with soil
 2/24/18,11,none,left,SAAP,blue,3.09,3.19,3.72,,1,,
-5/26/18,11,no removal,left,SAAP,green,0.64,0.73,0.61,,1,,green
-5/26/18,11,no removal,left,SAAP,blue,,,,,,1,
-5/26/18,11,no removal,left,RHOV,green,,,,,,1,
-5/26/18,11,no removal,left,RHOV,blue,,,,,,1,
-5/26/18,11,no removal,left,CEOL,green,,,,,,1,
-5/26/18,11,no removal,left,CEOL,blue,,,,,,1,
-5/26/18,11,no removal,left,HEAR,s,,,,,,1,
-5/26/18,11,no removal,left,HEAR,c,0.31,0.634,0.238,,1,,green
-5/26/18,11,no removal,left,HEAR,r,,,,,,1,
-5/26/18,11,no removal,right,SAAP,green,1,0.59,0.4,,1,,stressed
-5/26/18,11,no removal,right,SAAP,blue,,,,,,1,
-5/26/18,11,no removal,right,RHOV,green,1.804,3.67,2.47,,1,,stressed
-5/26/18,11,no removal,right,RHOV,blue,,,,,,1,
-5/26/18,11,no removal,right,CEOL,green,,,,,,1,
-5/26/18,11,no removal,right,CEOL,blue,,,,,,1,
-5/26/18,11,no removal,right,HEAR,s,,,,,,1,
-5/26/18,11,no removal,right,HEAR,c,,,,,,1,
-5/26/18,11,no removal,right,HEAR,r,,,,,,1,
+5/26/18,11,none,left,SAAP,green,0.64,0.73,0.61,,1,,green
+5/26/18,11,none,left,SAAP,blue,,,,,,1,
+5/26/18,11,none,left,RHOV,green,,,,,,1,
+5/26/18,11,none,left,RHOV,blue,,,,,,1,
+5/26/18,11,none,left,CEOL,green,,,,,,1,
+5/26/18,11,none,left,CEOL,blue,,,,,,1,
+5/26/18,11,none,left,HEAR,s,,,,,,1,
+5/26/18,11,none,left,HEAR,c,0.31,0.634,0.238,,1,,green
+5/26/18,11,none,left,HEAR,r,,,,,,1,
+5/26/18,11,none,right,SAAP,green,1,0.59,0.4,,1,,stressed
+5/26/18,11,none,right,SAAP,blue,,,,,,1,
+5/26/18,11,none,right,RHOV,green,1.804,3.67,2.47,,1,,stressed
+5/26/18,11,none,right,RHOV,blue,,,,,,1,
+5/26/18,11,none,right,CEOL,green,,,,,,1,
+5/26/18,11,none,right,CEOL,blue,,,,,,1,
+5/26/18,11,none,right,HEAR,s,,,,,,1,
+5/26/18,11,none,right,HEAR,c,,,,,,1,
+5/26/18,11,none,right,HEAR,r,,,,,,1,
 12/12/18,11,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,11,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,11,none,right,HEAR,S,,,,,,1,"dead, no seedlings present"
@@ -2401,24 +2401,24 @@
 2/23/18,14,none,left,RHOV,blue,2.9,2.88,2.71,,1,,water stressed
 2/23/18,14,none,left,SAAP,green (old),6.5,8.85,6.68,,1,,water stressed
 2/23/18,14,none,left,SAAP,blue (old),2.7,6.39,5.01,,1,,
-5/26/18,14,no removal,left,SAAP,green 2016,1.905,1.476,0.523,,1,,seedling germinated in 2016 = older seedling
-5/26/18,14,no removal,left,SAAP,blue,,,,,,1,
-5/26/18,14,no removal,left,RHOV,green,,,,,,1,
-5/26/18,14,no removal,left,RHOV,blue,,,,,,1,
-5/26/18,14,no removal,left,CEOL,green,,,,,,1,
-5/26/18,14,no removal,left,CEOL,blue,3.31,3.27,0.65,,1,,
-5/26/18,14,no removal,left,HEAR,s,,,,,,1,
-5/26/18,14,no removal,left,HEAR,c,,,,,,1,
-5/26/18,14,no removal,left,HEAR,r,,,,,,1,
-5/26/18,14,no removal,right,SAAP,green,,,,,,1,
-5/26/18,14,no removal,right,SAAP,blue,,,,,,1,
-5/26/18,14,no removal,right,RHOV,green,,,,,,1,
-5/26/18,14,no removal,right,RHOV,blue,,,,,,1,
-5/26/18,14,no removal,right,CEOL,green,,,,,,1,
-5/26/18,14,no removal,right,CEOL,blue,,,,,,1,
-5/26/18,14,no removal,right,HEAR,s,1.47,1.34,1.4,,1,,
-5/26/18,14,no removal,right,HEAR,c,,,,,,1,
-5/26/18,14,no removal,right,HEAR,r,,,,,,1,
+5/26/18,14,none,left,SAAP,green 2016,1.905,1.476,0.523,,1,,seedling germinated in 2016 = older seedling
+5/26/18,14,none,left,SAAP,blue,,,,,,1,
+5/26/18,14,none,left,RHOV,green,,,,,,1,
+5/26/18,14,none,left,RHOV,blue,,,,,,1,
+5/26/18,14,none,left,CEOL,green,,,,,,1,
+5/26/18,14,none,left,CEOL,blue,3.31,3.27,0.65,,1,,
+5/26/18,14,none,left,HEAR,s,,,,,,1,
+5/26/18,14,none,left,HEAR,c,,,,,,1,
+5/26/18,14,none,left,HEAR,r,,,,,,1,
+5/26/18,14,none,right,SAAP,green,,,,,,1,
+5/26/18,14,none,right,SAAP,blue,,,,,,1,
+5/26/18,14,none,right,RHOV,green,,,,,,1,
+5/26/18,14,none,right,RHOV,blue,,,,,,1,
+5/26/18,14,none,right,CEOL,green,,,,,,1,
+5/26/18,14,none,right,CEOL,blue,,,,,,1,
+5/26/18,14,none,right,HEAR,s,1.47,1.34,1.4,,1,,
+5/26/18,14,none,right,HEAR,c,,,,,,1,
+5/26/18,14,none,right,HEAR,r,,,,,,1,
 12/12/18,14,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,14,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,14,none,right,HEAR,S,,,,,,1,"dead, no seedlings present"
@@ -3129,24 +3129,24 @@
 2/23/18,18,none,left,RHOV,blue,0.8,5.94,1.04,,,1,dead; decapitated -herbivory
 2/23/18,18,none,left,SAAP,green,2.3,3.91,3.61,,1,,stressed
 2/23/18,18,none,left,SAAP,blue,0.2,0.1,0.1,,,1,dead; stump
-5/26/18,18,no removal,left,SAAP,green,,,,,,1,
-5/26/18,18,no removal,left,SAAP,blue,,,,,,1,
-5/26/18,18,no removal,left,RHOV,green,,,,,,1,
-5/26/18,18,no removal,left,RHOV,blue,,,,,,1,
-5/26/18,18,no removal,left,CEOL,green,,,,,,1,
-5/26/18,18,no removal,left,CEOL,blue,0.58,0.61,0.48,,1,,
-5/26/18,18,no removal,left,HEAR,s,,,,,,1,
-5/26/18,18,no removal,left,HEAR,c,,,,,,1,
-5/26/18,18,no removal,left,HEAR,r,1.97,3.66,1.92,,1,,
-5/26/18,18,no removal,right,SAAP,green,,,,,,1,
-5/26/18,18,no removal,right,SAAP,blue,,,,,,1,
-5/26/18,18,no removal,right,RHOV,green,,,,,,1,
-5/26/18,18,no removal,right,RHOV,blue,,,,,,1,
-5/26/18,18,no removal,right,CEOL,green,,,,,,1,
-5/26/18,18,no removal,right,CEOL,blue,,,,,,1,
-5/26/18,18,no removal,right,HEAR,s,,,,,,1,
-5/26/18,18,no removal,right,HEAR,c,,,,,,1,
-5/26/18,18,no removal,right,HEAR,r,,,,,,1,
+5/26/18,18,none,left,SAAP,green,,,,,,1,
+5/26/18,18,none,left,SAAP,blue,,,,,,1,
+5/26/18,18,none,left,RHOV,green,,,,,,1,
+5/26/18,18,none,left,RHOV,blue,,,,,,1,
+5/26/18,18,none,left,CEOL,green,,,,,,1,
+5/26/18,18,none,left,CEOL,blue,0.58,0.61,0.48,,1,,
+5/26/18,18,none,left,HEAR,s,,,,,,1,
+5/26/18,18,none,left,HEAR,c,,,,,,1,
+5/26/18,18,none,left,HEAR,r,1.97,3.66,1.92,,1,,
+5/26/18,18,none,right,SAAP,green,,,,,,1,
+5/26/18,18,none,right,SAAP,blue,,,,,,1,
+5/26/18,18,none,right,RHOV,green,,,,,,1,
+5/26/18,18,none,right,RHOV,blue,,,,,,1,
+5/26/18,18,none,right,CEOL,green,,,,,,1,
+5/26/18,18,none,right,CEOL,blue,,,,,,1,
+5/26/18,18,none,right,HEAR,s,,,,,,1,
+5/26/18,18,none,right,HEAR,c,,,,,,1,
+5/26/18,18,none,right,HEAR,r,,,,,,1,
 12/12/18,18,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,18,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,18,none,right,HEAR,S,,,,,,1,"dead, no seedlings present"
@@ -3493,24 +3493,24 @@
 3/3/18,20,none,left,RHOV,blue,1.22,3.69,0.9,,1,,water stressed
 3/3/18,20,none,left,SAAP,green,2.21,0.71,0.45,,,1,looks dead
 3/3/18,20,none,left,SAAP,blue,1.84,1.42,0.31,,,1,looks dead
-5/12/18,20,no removal,left,SAAP,green,,,,,,1,missing
-5/12/18,20,no removal,left,SAAP,blue,,,,,,1,dead
-5/12/18,20,no removal,left,RHOV,green,,,,,,1,dead
-5/12/18,20,no removal,left,RHOV,blue,0.9,2.92,0.5,,1,,"green, a little water stressed"
-5/12/18,20,no removal,left,CEOL,green,,,,,,1,missing
-5/12/18,20,no removal,left,CEOL,blue,,,,,,1,missing
-5/12/18,20,no removal,left,HEAR,s,10,8.88,5.5,,1,,getting crispy
-5/12/18,20,no removal,left,HEAR,c,11.8,6.62,8.73,,1,,water stressed
-5/12/18,20,no removal,left,HEAR,r,7.2,5.8,4,,,1,dead or barely alive
-5/12/18,20,no removal,right,SAAP,green,,,,,,1,missing
-5/12/18,20,no removal,right,SAAP,blue,,,,,,1,dead
-5/12/18,20,no removal,right,RHOV,green,,,,,,1,dead
-5/12/18,20,no removal,right,RHOV,blue,,,,,,1,missing
-5/12/18,20,no removal,right,CEOL,green,,,,,,1,missing
-5/12/18,20,no removal,right,CEOL,blue,,,,,,1,missing
-5/12/18,20,no removal,right,HEAR,s,6.55,8.43,3.29,,1,,very water stressed
-5/12/18,20,no removal,right,HEAR,c,6.2,6.1,3.7,,,1,probably dead
-5/12/18,20,no removal,right,HEAR,r,10.92,5.23,2.32,,,1,looks dead
+5/12/18,20,none,left,SAAP,green,,,,,,1,missing
+5/12/18,20,none,left,SAAP,blue,,,,,,1,dead
+5/12/18,20,none,left,RHOV,green,,,,,,1,dead
+5/12/18,20,none,left,RHOV,blue,0.9,2.92,0.5,,1,,"green, a little water stressed"
+5/12/18,20,none,left,CEOL,green,,,,,,1,missing
+5/12/18,20,none,left,CEOL,blue,,,,,,1,missing
+5/12/18,20,none,left,HEAR,s,10,8.88,5.5,,1,,getting crispy
+5/12/18,20,none,left,HEAR,c,11.8,6.62,8.73,,1,,water stressed
+5/12/18,20,none,left,HEAR,r,7.2,5.8,4,,,1,dead or barely alive
+5/12/18,20,none,right,SAAP,green,,,,,,1,missing
+5/12/18,20,none,right,SAAP,blue,,,,,,1,dead
+5/12/18,20,none,right,RHOV,green,,,,,,1,dead
+5/12/18,20,none,right,RHOV,blue,,,,,,1,missing
+5/12/18,20,none,right,CEOL,green,,,,,,1,missing
+5/12/18,20,none,right,CEOL,blue,,,,,,1,missing
+5/12/18,20,none,right,HEAR,s,6.55,8.43,3.29,,1,,very water stressed
+5/12/18,20,none,right,HEAR,c,6.2,6.1,3.7,,,1,probably dead
+5/12/18,20,none,right,HEAR,r,10.92,5.23,2.32,,,1,looks dead
 12/12/18,20,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,20,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,20,none,right,HEAR,S1,,,,,,1,"dead, no seedlings present"
@@ -4221,24 +4221,24 @@
 3/3/18,24,none,left,RHOV,blue,1.48,1.87,0.65,,,1,"white, prob. dead"
 3/3/18,24,none,left,SAAP,green,1.69,2.03,1.19,,1,,wilty
 3/3/18,24,none,left,SAAP,blue,1.27,1.54,1.49,,1,,crispy
-5/12/18,24,no removal,left,SAAP,green,1.52,0.7,0.4,,,1,dead
-5/12/18,24,no removal,left,SAAP,blue,1.3,0.7,1,,,1,dead
-5/12/18,24,no removal,left,RHOV,green,1.3,2.5,1,,,1,dead
-5/12/18,24,no removal,left,RHOV,blue,1.37,1,0.7,,,1,dead
-5/12/18,24,no removal,left,CEOL,green,,,,,,1,
-5/12/18,24,no removal,left,CEOL,blue,,,,,,1,missing
-5/12/18,24,no removal,left,HEAR,s,,,,,,1,missing
-5/12/18,24,no removal,left,HEAR,c,6.4,6.6,1.9,,1,,barely alive
-5/12/18,24,no removal,left,HEAR,r,8.5,10.7,5.5,,1,,water stressed
-5/12/18,24,no removal,right,SAAP,green,,,,,,1,missing
-5/12/18,24,no removal,right,SAAP,blue,1.7,2.4,0.7,,,1,dead
-5/12/18,24,no removal,right,RHOV,green,2.9,3.1,0.2,,,1,dead
-5/12/18,24,no removal,right,RHOV,blue,1.7,2.2,0.2,,1,,"green, new growth"
-5/12/18,24,no removal,right,CEOL,green,,,,,,1,missing
-5/12/18,24,no removal,right,CEOL,blue,,,,,,1,missing
-5/12/18,24,no removal,right,HEAR,s1,6.5,5.1,0.7,,,1,dead
-5/12/18,24,no removal,right,HEAR,c,6.7,5.7,1.5,,,1,dead
-5/12/18,24,no removal,right,HEAR,s2,7.7,6.3,5.5,,1,,"barely alive, water stressed"
+5/12/18,24,none,left,SAAP,green,1.52,0.7,0.4,,,1,dead
+5/12/18,24,none,left,SAAP,blue,1.3,0.7,1,,,1,dead
+5/12/18,24,none,left,RHOV,green,1.3,2.5,1,,,1,dead
+5/12/18,24,none,left,RHOV,blue,1.37,1,0.7,,,1,dead
+5/12/18,24,none,left,CEOL,green,,,,,,1,
+5/12/18,24,none,left,CEOL,blue,,,,,,1,missing
+5/12/18,24,none,left,HEAR,s,,,,,,1,missing
+5/12/18,24,none,left,HEAR,c,6.4,6.6,1.9,,1,,barely alive
+5/12/18,24,none,left,HEAR,r,8.5,10.7,5.5,,1,,water stressed
+5/12/18,24,none,right,SAAP,green,,,,,,1,missing
+5/12/18,24,none,right,SAAP,blue,1.7,2.4,0.7,,,1,dead
+5/12/18,24,none,right,RHOV,green,2.9,3.1,0.2,,,1,dead
+5/12/18,24,none,right,RHOV,blue,1.7,2.2,0.2,,1,,"green, new growth"
+5/12/18,24,none,right,CEOL,green,,,,,,1,missing
+5/12/18,24,none,right,CEOL,blue,,,,,,1,missing
+5/12/18,24,none,right,HEAR,s1,6.5,5.1,0.7,,,1,dead
+5/12/18,24,none,right,HEAR,c,6.7,5.7,1.5,,,1,dead
+5/12/18,24,none,right,HEAR,s2,7.7,6.3,5.5,,1,,"barely alive, water stressed"
 12/12/18,24,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,24,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,24,none,right,HEAR,S,,,,,,1,"dead, no seedlings present"
@@ -4403,24 +4403,24 @@
 3/3/18,25,none,left,RHOV,blue,1.3,1.7,1.8,,,1,dead
 3/3/18,25,none,left,SAAP,green,2.02,2.21,0.52,,,1,dead (probably)
 3/3/18,25,none,left,SAAP,blue,3.43,0.1,0.19,,,1,dead
-5/12/18,25,no removal,left,SAAP,green,1.637,1.83,0.506,,,1,dead
-5/12/18,25,no removal,left,SAAP,blue,3.339,0.444,0.444,,,1,dead/stick
-5/12/18,25,no removal,left,RHOV,green,,,,,,1,missing
-5/12/18,25,no removal,left,RHOV,blue,,,,,,1,missing
-5/12/18,25,no removal,left,CEOL,green,,,,,,1,missing
-5/12/18,25,no removal,left,CEOL,blue,,,,,,1,missing
-5/12/18,25,no removal,left,HEAR,s,7.022,3.989,2.926,,1,,red leaves
-5/12/18,25,no removal,left,HEAR,c,4.742,4.302,0.251,,,1,"brown leaves, crispy"
-5/12/18,25,no removal,left,HEAR,r,7.406,8.209,5.508,,1,,"green leaves, sticky"
-5/12/18,25,no removal,right,SAAP,green,2.85,1.46,0.2,,,1,dead
-5/12/18,25,no removal,right,SAAP,blue,1.315,1.305,0.305,,,1,dead
-5/12/18,25,no removal,right,RHOV,green,1.5,2.3,0.7,,,1,dead
-5/12/18,25,no removal,right,RHOV,blue,,,,,,1,missing
-5/12/18,25,no removal,right,CEOL,green,,,,,,1,missing
-5/12/18,25,no removal,right,CEOL,blue,,,,,,1,missing
-5/12/18,25,no removal,right,HEAR,s,8.43,7.8,5.39,,1,,red leaves
-5/12/18,25,no removal,right,HEAR,c1,4.6,0.2,0.2,,1,,"stick only, estimated stick widths"
-5/12/18,25,no removal,right,HEAR,c2,5.487,7.172,4.407,,1,,"looks good, green"
+5/12/18,25,none,left,SAAP,green,1.637,1.83,0.506,,,1,dead
+5/12/18,25,none,left,SAAP,blue,3.339,0.444,0.444,,,1,dead/stick
+5/12/18,25,none,left,RHOV,green,,,,,,1,missing
+5/12/18,25,none,left,RHOV,blue,,,,,,1,missing
+5/12/18,25,none,left,CEOL,green,,,,,,1,missing
+5/12/18,25,none,left,CEOL,blue,,,,,,1,missing
+5/12/18,25,none,left,HEAR,s,7.022,3.989,2.926,,1,,red leaves
+5/12/18,25,none,left,HEAR,c,4.742,4.302,0.251,,,1,"brown leaves, crispy"
+5/12/18,25,none,left,HEAR,r,7.406,8.209,5.508,,1,,"green leaves, sticky"
+5/12/18,25,none,right,SAAP,green,2.85,1.46,0.2,,,1,dead
+5/12/18,25,none,right,SAAP,blue,1.315,1.305,0.305,,,1,dead
+5/12/18,25,none,right,RHOV,green,1.5,2.3,0.7,,,1,dead
+5/12/18,25,none,right,RHOV,blue,,,,,,1,missing
+5/12/18,25,none,right,CEOL,green,,,,,,1,missing
+5/12/18,25,none,right,CEOL,blue,,,,,,1,missing
+5/12/18,25,none,right,HEAR,s,8.43,7.8,5.39,,1,,red leaves
+5/12/18,25,none,right,HEAR,c1,4.6,0.2,0.2,,1,,"stick only, estimated stick widths"
+5/12/18,25,none,right,HEAR,c2,5.487,7.172,4.407,,1,,"looks good, green"
 12/12/18,25,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,25,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,25,none,right,HEAR,S,,,,,,1,"dead, no seedlings present"
@@ -5131,24 +5131,24 @@
 3/3/18,29,none,left,RHOV,blue,1.42,2.23,0.64,,1,,peach color
 3/3/18,29,none,left,SAAP,green,2.51,2.57,1.69,,,1,crispy and shrivelled
 3/3/18,29,none,left,SAAP,blue,,,,,,1,MISSING
-5/12/18,29,no removal,right,SAAP,green,3.15,0.13,0.13,,,1,"dead stump, weeded half of the plot"
-5/12/18,29,no removal,right,SAAP,blue,1.13,0.07,0.06,,,1,"dead stump, weeded half of the plot"
-5/12/18,29,no removal,right,RHOV,green,3.31,1.05,0.15,,,1,"dead, weeded half of the plot"
-5/12/18,29,no removal,right,RHOV,blue,0.91,0.07,0.06,,,1,"dead stump, weeded half of the plot"
-5/12/18,29,no removal,right,CEOL,green,,,,,,1,"missing, weeded half of the plot"
-5/12/18,29,no removal,right,CEOL,blue,,,,,,1,"missing, weeded half of the plot"
-5/12/18,29,no removal,right,HEAR,s1,15.1,6.42,3.18,,,1,"dead, weeded half of the plot"
-5/12/18,29,no removal,right,HEAR,c,4.88,4.35,0.49,,,1,"dead, weeded half of the plot"
-5/12/18,29,no removal,right,HEAR,s2,12.04,4.31,3.48,,,1,"dead, weeded half of the plot"
-5/12/18,29,no removal,left,SAAP,green,2.23,0.81,0.24,,,1,dead stump; un-weeded half of the plot
-5/12/18,29,no removal,left,SAAP,blue,,,,,,1,"missing, un-weeded half of the plot"
-5/12/18,29,no removal,left,RHOV,green,,,,,,1,"missing, un-weeded half of the plot"
-5/12/18,29,no removal,left,RHOV,blue,,,,,,1,"missing, un-weeded half of the plot"
-5/12/18,29,no removal,left,CEOL,green,,,,,,1,"missing, un-weeded half of the plot"
-5/12/18,29,no removal,left,CEOL,blue,,,,,,1,"missing, un-weeded half of the plot"
-5/12/18,29,no removal,left,HEAR,s,8.58,7.32,5.44,,,1,"dead, un-weeded half of the plot"
-5/12/18,29,no removal,left,HEAR,c,5.67,5.97,3.22,,,1,"dead, un-weeded half of the plot"
-5/12/18,29,no removal,left,HEAR,r,5.91,6.92,5.45,,,1,"dead, un-weeded half of the plot"
+5/12/18,29,none,right,SAAP,green,3.15,0.13,0.13,,,1,"dead stump, weeded half of the plot"
+5/12/18,29,none,right,SAAP,blue,1.13,0.07,0.06,,,1,"dead stump, weeded half of the plot"
+5/12/18,29,none,right,RHOV,green,3.31,1.05,0.15,,,1,"dead, weeded half of the plot"
+5/12/18,29,none,right,RHOV,blue,0.91,0.07,0.06,,,1,"dead stump, weeded half of the plot"
+5/12/18,29,none,right,CEOL,green,,,,,,1,"missing, weeded half of the plot"
+5/12/18,29,none,right,CEOL,blue,,,,,,1,"missing, weeded half of the plot"
+5/12/18,29,none,right,HEAR,s1,15.1,6.42,3.18,,,1,"dead, weeded half of the plot"
+5/12/18,29,none,right,HEAR,c,4.88,4.35,0.49,,,1,"dead, weeded half of the plot"
+5/12/18,29,none,right,HEAR,s2,12.04,4.31,3.48,,,1,"dead, weeded half of the plot"
+5/12/18,29,none,left,SAAP,green,2.23,0.81,0.24,,,1,dead stump; un-weeded half of the plot
+5/12/18,29,none,left,SAAP,blue,,,,,,1,"missing, un-weeded half of the plot"
+5/12/18,29,none,left,RHOV,green,,,,,,1,"missing, un-weeded half of the plot"
+5/12/18,29,none,left,RHOV,blue,,,,,,1,"missing, un-weeded half of the plot"
+5/12/18,29,none,left,CEOL,green,,,,,,1,"missing, un-weeded half of the plot"
+5/12/18,29,none,left,CEOL,blue,,,,,,1,"missing, un-weeded half of the plot"
+5/12/18,29,none,left,HEAR,s,8.58,7.32,5.44,,,1,"dead, un-weeded half of the plot"
+5/12/18,29,none,left,HEAR,c,5.67,5.97,3.22,,,1,"dead, un-weeded half of the plot"
+5/12/18,29,none,left,HEAR,r,5.91,6.92,5.45,,,1,"dead, un-weeded half of the plot"
 12/12/18,29,none,right,CEOL,green,,,,,,1,"dead, no seedlings present, fully weeded this side"
 12/12/18,29,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present, fully weeded this side"
 12/12/18,29,none,right,HEAR,S1,,,,,,1,"dead, no seedlings present, fully weeded this side"
@@ -5495,24 +5495,24 @@
 3/3/18,31,none,left,RHOV,blue,1.71,2.57,1.32,,1,,"doing okay, but not great - soil disturbance"
 3/3/18,31,none,left,SAAP,green,,,,,,1,MISSING - soil disturbance
 3/3/18,31,none,left,SAAP,blue,,,,,,1,MISSING - soil disturbance
-5/12/18,31,no removal,left,SAAP,green,,,,,,1,dead
-5/12/18,31,no removal,left,SAAP,blue,,,,,,1,dead
-5/12/18,31,no removal,left,RHOV,green,,,,,,1,dead
-5/12/18,31,no removal,left,RHOV,blue,,,,,,1,dead
-5/12/18,31,no removal,left,CEOL,green,,,,,,1,dead
-5/12/18,31,no removal,left,CEOL,blue,,,,,,1,dead
-5/12/18,31,no removal,left,HEAR,s1,5.8,6,5,,,1,dead
-5/12/18,31,no removal,left,HEAR,c,4.3,3.2,0.1,,,1,dead
-5/12/18,31,no removal,left,HEAR,s2,8.4,7.2,5.3,,,1,dead
-5/12/18,31,no removal,right,SAAP,green,,,,,,1,missing
-5/12/18,31,no removal,right,SAAP,blue,,,,,,1,dead
-5/12/18,31,no removal,right,RHOV,green,1.24,2.87,1.82,,1,,water stressed
-5/12/18,31,no removal,right,RHOV,blue,,,,,,1,dead
-5/12/18,31,no removal,right,CEOL,green,,,,,,1,missing
-5/12/18,31,no removal,right,CEOL,blue,,,,,,1,dead
-5/12/18,31,no removal,right,HEAR,s,,,,,,1,dead
-5/12/18,31,no removal,right,HEAR,c,3.96,3.6,2.71,,1,,water stressed
-5/12/18,31,no removal,right,HEAR,r,4.02,6.04,4.06,,1,,
+5/12/18,31,none,left,SAAP,green,,,,,,1,dead
+5/12/18,31,none,left,SAAP,blue,,,,,,1,dead
+5/12/18,31,none,left,RHOV,green,,,,,,1,dead
+5/12/18,31,none,left,RHOV,blue,,,,,,1,dead
+5/12/18,31,none,left,CEOL,green,,,,,,1,dead
+5/12/18,31,none,left,CEOL,blue,,,,,,1,dead
+5/12/18,31,none,left,HEAR,s1,5.8,6,5,,,1,dead
+5/12/18,31,none,left,HEAR,c,4.3,3.2,0.1,,,1,dead
+5/12/18,31,none,left,HEAR,s2,8.4,7.2,5.3,,,1,dead
+5/12/18,31,none,right,SAAP,green,,,,,,1,missing
+5/12/18,31,none,right,SAAP,blue,,,,,,1,dead
+5/12/18,31,none,right,RHOV,green,1.24,2.87,1.82,,1,,water stressed
+5/12/18,31,none,right,RHOV,blue,,,,,,1,dead
+5/12/18,31,none,right,CEOL,green,,,,,,1,missing
+5/12/18,31,none,right,CEOL,blue,,,,,,1,dead
+5/12/18,31,none,right,HEAR,s,,,,,,1,dead
+5/12/18,31,none,right,HEAR,c,3.96,3.6,2.71,,1,,water stressed
+5/12/18,31,none,right,HEAR,r,4.02,6.04,4.06,,1,,
 12/12/18,31,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,31,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,31,none,right,HEAR,S,,,,,,1,"dead, no seedlings present"
@@ -6405,24 +6405,24 @@
 3/3/18,36,none,left,RHOV,blue,1.25,2.46,1.7,,1,,stressed
 3/3/18,36,none,left,SAAP,green,1.26,3.9,0.66,,,1,looks dead
 3/3/18,36,none,left,SAAP,blue,,,,,,1,MISSING
-5/12/18,36,no removal,left,SAAP,green,,,,,,1,missing
-5/12/18,36,no removal,left,SAAP,blue,,,,,,1,missing
-5/12/18,36,no removal,left,RHOV,green,,,,,,1,missing
-5/12/18,36,no removal,left,RHOV,blue,,,,,,1,missing
-5/12/18,36,no removal,left,CEOL,green,,,,,,1,missing
-5/12/18,36,no removal,left,CEOL,blue,,,,,,1,missing
-5/12/18,36,no removal,left,HEAR,s,3.04,6.43,1.71,,,1,dead
-5/12/18,36,no removal,left,HEAR,c,,,,,,1,missing
-5/12/18,36,no removal,left,HEAR,r,9.068,10.721,6.19,,1,,good and green
-5/12/18,36,no removal,right,SAAP,green,,,,,,1,missing
-5/12/18,36,no removal,right,SAAP,blue,,,,,,1,missing --> stick
-5/12/18,36,no removal,right,RHOV,green,,,,,,1,missing
-5/12/18,36,no removal,right,RHOV,blue,,,,,,1,dead
-5/12/18,36,no removal,right,CEOL,green,,,,,,1,missing
-5/12/18,36,no removal,right,CEOL,blue,,,,,,1,missing
-5/12/18,36,no removal,right,HEAR,s,13.11,7.235,6.36,,1,,red leaves
-5/12/18,36,no removal,right,HEAR,c,9.9,8.33,3.56,,,1,dead
-5/12/18,36,no removal,right,HEAR,r,4.415,6.54,1.21,,1,,alive
+5/12/18,36,none,left,SAAP,green,,,,,,1,missing
+5/12/18,36,none,left,SAAP,blue,,,,,,1,missing
+5/12/18,36,none,left,RHOV,green,,,,,,1,missing
+5/12/18,36,none,left,RHOV,blue,,,,,,1,missing
+5/12/18,36,none,left,CEOL,green,,,,,,1,missing
+5/12/18,36,none,left,CEOL,blue,,,,,,1,missing
+5/12/18,36,none,left,HEAR,s,3.04,6.43,1.71,,,1,dead
+5/12/18,36,none,left,HEAR,c,,,,,,1,missing
+5/12/18,36,none,left,HEAR,r,9.068,10.721,6.19,,1,,good and green
+5/12/18,36,none,right,SAAP,green,,,,,,1,missing
+5/12/18,36,none,right,SAAP,blue,,,,,,1,missing --> stick
+5/12/18,36,none,right,RHOV,green,,,,,,1,missing
+5/12/18,36,none,right,RHOV,blue,,,,,,1,dead
+5/12/18,36,none,right,CEOL,green,,,,,,1,missing
+5/12/18,36,none,right,CEOL,blue,,,,,,1,missing
+5/12/18,36,none,right,HEAR,s,13.11,7.235,6.36,,1,,red leaves
+5/12/18,36,none,right,HEAR,c,9.9,8.33,3.56,,,1,dead
+5/12/18,36,none,right,HEAR,r,4.415,6.54,1.21,,1,,alive
 12/12/18,36,none,right,CEOL,green,,,,,,1,"dead, no seedlings present"
 12/12/18,36,none,right,CEOL,blue,,,,,,1,"dead, no seedlings present"
 12/12/18,36,none,right,HEAR,S,,,,,,1,"dead, no seedlings present"
