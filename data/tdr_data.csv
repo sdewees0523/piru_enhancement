@@ -1,21 +1,21 @@
 date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH01,,no removal,1,17.3,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH01,,no removal,2,17,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH01,,no removal,3,12.4,,15.6
-12-Dec-18,,,ENH01,,no removal,1,13.4,"15 cm probes, Gabe on TDR, Stephanie on seedling survival",
-12-Dec-18,,,ENH01,,no removal,2,19.9,,
-12-Dec-18,,,ENH01,,no removal,3,17.1,,16.8
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH01,,no removal,1,9,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH01,,no removal,2,8.7,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH01,,no removal,3,7.6,,
-19-Mar-20,,,ENH01,,no removal,1,28.9,using the repaired TDR and new tablet. Last day before the shelter-in-place order. 15 cm probes.,
-19-Mar-20,,,ENH01,,no removal,2,21.7,,
-19-Mar-20,,,ENH01,,no removal,3,26.2,,
-19-Mar-20,,,ENH01,,no removal,4,27.7,,26.1
-14-Apr-20,,,ENH01,,no removal,1,25.9,,
-14-Apr-20,,,ENH01,,no removal,2,30,,
-14-Apr-20,,,ENH01,,no removal,3,23.3,,
-14-Apr-20,,,ENH01,,no removal,4,26,,26.3
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH01,,none,1,17.3,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH01,,none,2,17,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH01,,none,3,12.4,,15.6
+12-Dec-18,,,ENH01,,none,1,13.4,"15 cm probes, Gabe on TDR, Stephanie on seedling survival",
+12-Dec-18,,,ENH01,,none,2,19.9,,
+12-Dec-18,,,ENH01,,none,3,17.1,,16.8
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH01,,none,1,9,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH01,,none,2,8.7,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH01,,none,3,7.6,,
+19-Mar-20,,,ENH01,,none,1,28.9,using the repaired TDR and new tablet. Last day before the shelter-in-place order. 15 cm probes.,
+19-Mar-20,,,ENH01,,none,2,21.7,,
+19-Mar-20,,,ENH01,,none,3,26.2,,
+19-Mar-20,,,ENH01,,none,4,27.7,,26.1
+14-Apr-20,,,ENH01,,none,1,25.9,,
+14-Apr-20,,,ENH01,,none,2,30,,
+14-Apr-20,,,ENH01,,none,3,23.3,,
+14-Apr-20,,,ENH01,,none,4,26,,26.3
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH02,,full removal,1,27.6,,
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH02,,full removal,2,27.6,,
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH02,,full removal,3,25.1,,26.8
@@ -78,37 +78,37 @@ date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
 14-Apr-20,,,ENH05,,half removal,1,28.6,,
 14-Apr-20,,,ENH05,,half removal,2,26.6,,
 14-Apr-20,,,ENH05,,half removal,3,25.2,,26.8
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH06,,no removal,1,13.7,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH06,,no removal,2,19.5,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH06,,no removal,3,22.7,,18.6
-12-Dec-18,,,ENH06,,no removal,1,25.7,,
-12-Dec-18,,,ENH06,,no removal,2,15.5,,
-12-Dec-18,,,ENH06,,no removal,3,25.7,,22.3
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH06,,no removal,1,8,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH06,,no removal,2,6.1,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH06,,no removal,3,12.5,,
-19-Mar-20,,,ENH06,,no removal,1,27.2,,
-19-Mar-20,,,ENH06,,no removal,2,29.6,,
-19-Mar-20,,,ENH06,,no removal,3,29.2,,28.7
-14-Apr-20,,,ENH06,,no removal,1,26.9,,
-14-Apr-20,,,ENH06,,no removal,2,26.1,,
-14-Apr-20,,,ENH06,,no removal,3,27.3,,26.76666667
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH07,,no removal,1,17.9,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH07,,no removal,2,15.2,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH07,,no removal,3,12.3,,15.1
-12-Dec-18,,,ENH07,,no removal,1,23.8,,
-12-Dec-18,,,ENH07,,no removal,2,20.5,,
-12-Dec-18,,,ENH07,,no removal,3,18,,20.8
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH07,,no removal,1,10.2,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH07,,no removal,2,8.4,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH07,,no removal,3,13.5,,
-19-Mar-20,,,ENH07,,no removal,1,30.3,suspected gopher activity in this plot below ground,
-19-Mar-20,,,ENH07,,no removal,2,24.5,suspected gopher activity in this plot below ground,
-19-Mar-20,,,ENH07,,no removal,3,21.4,suspected gopher activity in this plot below ground,
-19-Mar-20,,,ENH07,,no removal,4,27.6,suspected gopher activity in this plot below ground,26
-14-Apr-20,,,ENH07,,no removal,1,28.1,,
-14-Apr-20,,,ENH07,,no removal,2,28.7,,
-14-Apr-20,,,ENH07,,no removal,3,26.6,,27.8
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH06,,none,1,13.7,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH06,,none,2,19.5,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH06,,none,3,22.7,,18.6
+12-Dec-18,,,ENH06,,none,1,25.7,,
+12-Dec-18,,,ENH06,,none,2,15.5,,
+12-Dec-18,,,ENH06,,none,3,25.7,,22.3
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH06,,none,1,8,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH06,,none,2,6.1,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH06,,none,3,12.5,,
+19-Mar-20,,,ENH06,,none,1,27.2,,
+19-Mar-20,,,ENH06,,none,2,29.6,,
+19-Mar-20,,,ENH06,,none,3,29.2,,28.7
+14-Apr-20,,,ENH06,,none,1,26.9,,
+14-Apr-20,,,ENH06,,none,2,26.1,,
+14-Apr-20,,,ENH06,,none,3,27.3,,26.76666667
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH07,,none,1,17.9,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH07,,none,2,15.2,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH07,,none,3,12.3,,15.1
+12-Dec-18,,,ENH07,,none,1,23.8,,
+12-Dec-18,,,ENH07,,none,2,20.5,,
+12-Dec-18,,,ENH07,,none,3,18,,20.8
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH07,,none,1,10.2,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH07,,none,2,8.4,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH07,,none,3,13.5,,
+19-Mar-20,,,ENH07,,none,1,30.3,suspected gopher activity in this plot below ground,
+19-Mar-20,,,ENH07,,none,2,24.5,suspected gopher activity in this plot below ground,
+19-Mar-20,,,ENH07,,none,3,21.4,suspected gopher activity in this plot below ground,
+19-Mar-20,,,ENH07,,none,4,27.6,suspected gopher activity in this plot below ground,26
+14-Apr-20,,,ENH07,,none,1,28.1,,
+14-Apr-20,,,ENH07,,none,2,28.7,,
+14-Apr-20,,,ENH07,,none,3,26.6,,27.8
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH08,,half removal,1,14.6,,
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH08,,half removal,2,25.3,,
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH08,,half removal,3,24,,21.3
@@ -140,9 +140,9 @@ date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
 14-Apr-20,,,ENH09,,full removal,1,28.4,,
 14-Apr-20,,,ENH09,,full removal,2,28.4,tested again still 28.4,
 14-Apr-20,,,ENH09,,full removal,3,27.4,,28.06666667
-8-May-20,,,ENH1,,no removal,1,14,,
-8-May-20,,,ENH1,,no removal,2,13.9,,
-8-May-20,,,ENH1,,no removal,3,13.5,,13.8
+8-May-20,,,ENH1,,none,1,14,,
+8-May-20,,,ENH1,,none,2,13.9,,
+8-May-20,,,ENH1,,none,3,13.5,,13.8
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH10,,half removal,1,26.3,,
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH10,,half removal,2,25.2,,
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH10,,half removal,3,22.5,,24.7
@@ -161,24 +161,24 @@ date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
 8-May-20,,,ENH10,,half removal,1,12.3,,
 8-May-20,,,ENH10,,half removal,2,13.6,,
 8-May-20,,,ENH10,,half removal,3,10.6,,12.16666667
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH11,,no removal,1,13.9,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH11,,no removal,2,12.9,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH11,,no removal,3,24.2,,17
-12-Dec-18,,,ENH11,,no removal,1,26.3,,
-12-Dec-18,,,ENH11,,no removal,2,23.9,,
-12-Dec-18,,,ENH11,,no removal,3,21.3,,23.8
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH11,,no removal,1,9.3,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH11,,no removal,2,7.4,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH11,,no removal,3,8.8,,
-19-Mar-20,,,ENH11,,no removal,1,29.9,,
-19-Mar-20,,,ENH11,,no removal,2,26.9,,
-19-Mar-20,,,ENH11,,no removal,3,26.8,,27.9
-14-Apr-20,,,ENH11,,no removal,1,27.8,,
-14-Apr-20,,,ENH11,,no removal,2,26.6,,
-14-Apr-20,,,ENH11,,no removal,3,25.6,,26.66666667
-8-May-20,,,ENH11,,no removal,1,12.7,,
-8-May-20,,,ENH11,,no removal,2,9.2,,
-8-May-20,,,ENH11,,no removal,3,9.8,,10.56666667
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH11,,none,1,13.9,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH11,,none,2,12.9,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH11,,none,3,24.2,,17
+12-Dec-18,,,ENH11,,none,1,26.3,,
+12-Dec-18,,,ENH11,,none,2,23.9,,
+12-Dec-18,,,ENH11,,none,3,21.3,,23.8
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH11,,none,1,9.3,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH11,,none,2,7.4,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH11,,none,3,8.8,,
+19-Mar-20,,,ENH11,,none,1,29.9,,
+19-Mar-20,,,ENH11,,none,2,26.9,,
+19-Mar-20,,,ENH11,,none,3,26.8,,27.9
+14-Apr-20,,,ENH11,,none,1,27.8,,
+14-Apr-20,,,ENH11,,none,2,26.6,,
+14-Apr-20,,,ENH11,,none,3,25.6,,26.66666667
+8-May-20,,,ENH11,,none,1,12.7,,
+8-May-20,,,ENH11,,none,2,9.2,,
+8-May-20,,,ENH11,,none,3,9.8,,10.56666667
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH12,,full removal,1,26.8,,
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH12,,full removal,2,27,,
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH12,,full removal,3,26.2,,26.7
@@ -215,25 +215,25 @@ date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
 8-May-20,,,ENH13,,full removal,1,11.4,,
 8-May-20,,,ENH13,,full removal,2,14.7,,
 8-May-20,,,ENH13,,full removal,3,16.5,,14.2
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH14,,no removal,1,23.9,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH14,,no removal,2,23.6,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH14,,no removal,3,19.5,,22.3
-12-Dec-18,,,ENH14,,no removal,1,18.6,,
-12-Dec-18,,,ENH14,,no removal,2,30.8,,
-12-Dec-18,,,ENH14,,no removal,3,27.2,,25.5
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH14,,no removal,1,10.4,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH14,,no removal,2,11.2,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH14,,no removal,3,8.7,,
-19-Mar-20,,,ENH14,,no removal,1,29.5,,
-19-Mar-20,,,ENH14,,no removal,2,30.4,,
-19-Mar-20,,,ENH14,,no removal,3,23,,
-19-Mar-20,,,ENH14,,no removal,4,28.6,,27.9
-14-Apr-20,,,ENH14,,no removal,1,27.8,,
-14-Apr-20,,,ENH14,,no removal,2,28.6,,
-14-Apr-20,,,ENH14,,no removal,3,30.4,,28.93333333
-8-May-20,,,ENH14,,no removal,1,12.1,,
-8-May-20,,,ENH14,,no removal,2,11.8,,
-8-May-20,,,ENH14,,no removal,3,13.7,,12.53333333
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH14,,none,1,23.9,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH14,,none,2,23.6,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH14,,none,3,19.5,,22.3
+12-Dec-18,,,ENH14,,none,1,18.6,,
+12-Dec-18,,,ENH14,,none,2,30.8,,
+12-Dec-18,,,ENH14,,none,3,27.2,,25.5
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH14,,none,1,10.4,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH14,,none,2,11.2,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH14,,none,3,8.7,,
+19-Mar-20,,,ENH14,,none,1,29.5,,
+19-Mar-20,,,ENH14,,none,2,30.4,,
+19-Mar-20,,,ENH14,,none,3,23,,
+19-Mar-20,,,ENH14,,none,4,28.6,,27.9
+14-Apr-20,,,ENH14,,none,1,27.8,,
+14-Apr-20,,,ENH14,,none,2,28.6,,
+14-Apr-20,,,ENH14,,none,3,30.4,,28.93333333
+8-May-20,,,ENH14,,none,1,12.1,,
+8-May-20,,,ENH14,,none,2,11.8,,
+8-May-20,,,ENH14,,none,3,13.7,,12.53333333
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH15,,half removal,1,23.6,,
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH15,,half removal,2,26.8,,
 24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH15,,half removal,3,24.4,,24.9
@@ -288,24 +288,24 @@ date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
 8-May-20,,,ENH17,,half removal,1,13.3,,
 8-May-20,,,ENH17,,half removal,2,13.3,,
 8-May-20,,,ENH17,,half removal,3,11.3,,12.63333333
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH18,,no removal,1,17.9,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH18,,no removal,2,25.8,,
-24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH18,,no removal,3,18.6,,20.8
-12-Dec-18,,,ENH18,,no removal,1,26.8,,
-12-Dec-18,,,ENH18,,no removal,2,25.5,,
-12-Dec-18,,,ENH18,,no removal,3,27.2,,26.5
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH18,,no removal,1,12.1,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH18,,no removal,2,9.1,,
-26-Apr-18,3:00-4:30 pm,sunny and still,ENH18,,no removal,3,6.3,,
-19-Mar-20,,,ENH18,,no removal,1,31.5,,
-19-Mar-20,,,ENH18,,no removal,2,27.2,,
-19-Mar-20,,,ENH18,,no removal,3,29.9,,29.5
-14-Apr-20,,,ENH18,,no removal,1,27.4,,
-14-Apr-20,,,ENH18,,no removal,2,29.1,,
-14-Apr-20,,,ENH18,,no removal,3,27.9,,28.13333333
-8-May-20,,,ENH18,,no removal,1,14.6,,
-8-May-20,,,ENH18,,no removal,2,14.2,,
-8-May-20,,,ENH18,,no removal,3,13.8,,14.2
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH18,,none,1,17.9,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH18,,none,2,25.8,,
+24-Mar-19,10:40 am - 11:30 am,"sunny and warm, no breeze",ENH18,,none,3,18.6,,20.8
+12-Dec-18,,,ENH18,,none,1,26.8,,
+12-Dec-18,,,ENH18,,none,2,25.5,,
+12-Dec-18,,,ENH18,,none,3,27.2,,26.5
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH18,,none,1,12.1,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH18,,none,2,9.1,,
+26-Apr-18,3:00-4:30 pm,sunny and still,ENH18,,none,3,6.3,,
+19-Mar-20,,,ENH18,,none,1,31.5,,
+19-Mar-20,,,ENH18,,none,2,27.2,,
+19-Mar-20,,,ENH18,,none,3,29.9,,29.5
+14-Apr-20,,,ENH18,,none,1,27.4,,
+14-Apr-20,,,ENH18,,none,2,29.1,,
+14-Apr-20,,,ENH18,,none,3,27.9,,28.13333333
+8-May-20,,,ENH18,,none,1,14.6,,
+8-May-20,,,ENH18,,none,2,14.2,,
+8-May-20,,,ENH18,,none,3,13.8,,14.2
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH19,,full removal,1,13.1,,
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH19,,full removal,2,14.2,,
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH19,,full removal,3,13.8,,13.7
@@ -328,26 +328,26 @@ date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
 8-May-20,,,ENH2,,full removal,1,13.4,,
 8-May-20,,,ENH2,,full removal,2,10.4,,
 8-May-20,,,ENH2,,full removal,3,13.9,,12.56666667
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH20,,no removal,1,10.8,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH20,,no removal,2,14.3,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH20,,no removal,3,11.4,,12.2
-12-Dec-18,,,ENH20,,no removal,1,13.7,,
-12-Dec-18,,,ENH20,,no removal,2,14,,
-12-Dec-18,,,ENH20,,no removal,3,16.8,,14.8
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH20,,no removal,1,6.4,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH20,,no removal,2,6.7,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH20,,no removal,3,6.1,value#4 5.9,
-19-Mar-20,,,ENH20,,no removal,1,20.3,,
-19-Mar-20,,,ENH20,,no removal,2,20.2,,
-19-Mar-20,,,ENH20,,no removal,3,14.7,,
-19-Mar-20,,,ENH20,,no removal,4,22.4,,19.4
-14-Apr-20,,,ENH20,,no removal,1,19.9,,
-14-Apr-20,,,ENH20,,no removal,2,22.9,,
-14-Apr-20,,,ENH20,,no removal,3,15.2,,
-14-Apr-20,,,ENH20,,no removal,4,20.3,,19.575
-13-May-20,,,ENH20,,no removal,1,7,,
-13-May-20,,,ENH20,,no removal,2,6.9,,
-13-May-20,,,ENH20,,no removal,3,6.4,,6.766666667
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH20,,none,1,10.8,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH20,,none,2,14.3,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH20,,none,3,11.4,,12.2
+12-Dec-18,,,ENH20,,none,1,13.7,,
+12-Dec-18,,,ENH20,,none,2,14,,
+12-Dec-18,,,ENH20,,none,3,16.8,,14.8
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH20,,none,1,6.4,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH20,,none,2,6.7,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH20,,none,3,6.1,value#4 5.9,
+19-Mar-20,,,ENH20,,none,1,20.3,,
+19-Mar-20,,,ENH20,,none,2,20.2,,
+19-Mar-20,,,ENH20,,none,3,14.7,,
+19-Mar-20,,,ENH20,,none,4,22.4,,19.4
+14-Apr-20,,,ENH20,,none,1,19.9,,
+14-Apr-20,,,ENH20,,none,2,22.9,,
+14-Apr-20,,,ENH20,,none,3,15.2,,
+14-Apr-20,,,ENH20,,none,4,20.3,,19.575
+13-May-20,,,ENH20,,none,1,7,,
+13-May-20,,,ENH20,,none,2,6.9,,
+13-May-20,,,ENH20,,none,3,6.4,,6.766666667
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH21,,half removal,1,15.7,,
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH21,,half removal,2,20.3,,
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH21,,half removal,3,18.3,,18.1
@@ -403,44 +403,44 @@ date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
 13-May-20,,,ENH23,,half removal,1,11.6,,
 13-May-20,,,ENH23,,half removal,2,8.9,,
 13-May-20,,,ENH23,,half removal,3,10.1,,10.2
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH24,,no removal,1,16,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH24,,no removal,2,15.3,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH24,,no removal,3,18.1,,16.5
-12-Dec-18,,,ENH24,,no removal,1,25.7,,
-12-Dec-18,,,ENH24,,no removal,2,23.7,,
-12-Dec-18,,,ENH24,,no removal,3,14.2,,21.2
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH24,,no removal,1,11,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH24,,no removal,2,9.2,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH24,,no removal,3,6.7,value#4 8.5,
-19-Mar-20,,,ENH24,,no removal,1,25.3,,
-19-Mar-20,,,ENH24,,no removal,2,28.6,,
-19-Mar-20,,,ENH24,,no removal,3,25.4,,26.4
-14-Apr-20,,,ENH24,,no removal,1,27.1,,
-14-Apr-20,,,ENH24,,no removal,2,19.3,,
-14-Apr-20,,,ENH24,,no removal,3,28.6,,
-14-Apr-20,,,ENH24,,no removal,4,22,,24.25
-13-May-20,,,ENH24,,no removal,1,8.3,,
-13-May-20,,,ENH24,,no removal,2,8.7,,
-13-May-20,,,ENH24,,no removal,3,9.1,,8.7
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH25,,no removal,1,14.7,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH25,,no removal,2,16.5,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH25,,no removal,3,13.7,,15
-12-Dec-18,,,ENH25,,no removal,1,24.6,,
-12-Dec-18,,,ENH25,,no removal,2,16.7,,
-12-Dec-18,,,ENH25,,no removal,3,20.4,,20.6
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH25,,no removal,1,9.2,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH25,,no removal,2,7.1,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH25,,no removal,3,7.1,,
-19-Mar-20,,,ENH25,,no removal,1,20.7,,
-19-Mar-20,,,ENH25,,no removal,2,27.4,,
-19-Mar-20,,,ENH25,,no removal,3,23.4,,23.8
-14-Apr-20,,,ENH25,,no removal,1,20.4,,
-14-Apr-20,,,ENH25,,no removal,2,17,,
-14-Apr-20,,,ENH25,,no removal,3,24,,
-14-Apr-20,,,ENH25,,no removal,4,16.8,,19.55
-13-May-20,,,ENH25,,no removal,1,5.1,,
-13-May-20,,,ENH25,,no removal,2,7.4,,
-13-May-20,,,ENH25,,no removal,3,7.2,,6.566666667
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH24,,none,1,16,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH24,,none,2,15.3,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH24,,none,3,18.1,,16.5
+12-Dec-18,,,ENH24,,none,1,25.7,,
+12-Dec-18,,,ENH24,,none,2,23.7,,
+12-Dec-18,,,ENH24,,none,3,14.2,,21.2
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH24,,none,1,11,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH24,,none,2,9.2,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH24,,none,3,6.7,value#4 8.5,
+19-Mar-20,,,ENH24,,none,1,25.3,,
+19-Mar-20,,,ENH24,,none,2,28.6,,
+19-Mar-20,,,ENH24,,none,3,25.4,,26.4
+14-Apr-20,,,ENH24,,none,1,27.1,,
+14-Apr-20,,,ENH24,,none,2,19.3,,
+14-Apr-20,,,ENH24,,none,3,28.6,,
+14-Apr-20,,,ENH24,,none,4,22,,24.25
+13-May-20,,,ENH24,,none,1,8.3,,
+13-May-20,,,ENH24,,none,2,8.7,,
+13-May-20,,,ENH24,,none,3,9.1,,8.7
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH25,,none,1,14.7,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH25,,none,2,16.5,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH25,,none,3,13.7,,15
+12-Dec-18,,,ENH25,,none,1,24.6,,
+12-Dec-18,,,ENH25,,none,2,16.7,,
+12-Dec-18,,,ENH25,,none,3,20.4,,20.6
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH25,,none,1,9.2,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH25,,none,2,7.1,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH25,,none,3,7.1,,
+19-Mar-20,,,ENH25,,none,1,20.7,,
+19-Mar-20,,,ENH25,,none,2,27.4,,
+19-Mar-20,,,ENH25,,none,3,23.4,,23.8
+14-Apr-20,,,ENH25,,none,1,20.4,,
+14-Apr-20,,,ENH25,,none,2,17,,
+14-Apr-20,,,ENH25,,none,3,24,,
+14-Apr-20,,,ENH25,,none,4,16.8,,19.55
+13-May-20,,,ENH25,,none,1,5.1,,
+13-May-20,,,ENH25,,none,2,7.4,,
+13-May-20,,,ENH25,,none,3,7.2,,6.566666667
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH26,,half removal,1,14,,
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH26,,half removal,2,14.9,,
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH26,,half removal,3,17.1,,15.3
@@ -496,26 +496,26 @@ date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
 13-May-20,,,ENH28,,half removal,1,7.2,,
 13-May-20,,,ENH28,,half removal,2,5.6,,
 13-May-20,,,ENH28,,half removal,3,7.1,,6.633333333
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH29,,no removal,1,19.3,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH29,,no removal,2,10.6,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH29,,no removal,3,9.7,,13.2
-12-Dec-18,,,ENH29,,no removal,1,17.3,not weeded,
-12-Dec-18,,,ENH29,,no removal,2,18.6,not weeded,
-12-Dec-18,,,ENH29,,no removal,3,15.5,fully weeded,
-12-Dec-18,,,ENH29,,no removal,4,20.8,fully weeded,18.05
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH29,,no removal,1,7.6,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH29,,no removal,2,5.7,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH29,,no removal,3,6.6,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH29,,no removal,4,5.6,,
-19-Mar-20,,,ENH29,,no removal,1,26.8,,
-19-Mar-20,,,ENH29,,no removal,2,24.3,,
-19-Mar-20,,,ENH29,,no removal,3,24.8,,25.3
-14-Apr-20,,,ENH29,,no removal,1,25.5,,
-14-Apr-20,,,ENH29,,no removal,2,26.6,,
-14-Apr-20,,,ENH29,,no removal,3,22.8,,24.96666667
-13-May-20,,,ENH29,,no removal,1,6.7,,
-13-May-20,,,ENH29,,no removal,2,7.3,,
-13-May-20,,,ENH29,,no removal,3,6,,6.666666667
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH29,,none,1,19.3,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH29,,none,2,10.6,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH29,,none,3,9.7,,13.2
+12-Dec-18,,,ENH29,,none,1,17.3,not weeded,
+12-Dec-18,,,ENH29,,none,2,18.6,not weeded,
+12-Dec-18,,,ENH29,,none,3,15.5,fully weeded,
+12-Dec-18,,,ENH29,,none,4,20.8,fully weeded,18.05
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH29,,none,1,7.6,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH29,,none,2,5.7,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH29,,none,3,6.6,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH29,,none,4,5.6,,
+19-Mar-20,,,ENH29,,none,1,26.8,,
+19-Mar-20,,,ENH29,,none,2,24.3,,
+19-Mar-20,,,ENH29,,none,3,24.8,,25.3
+14-Apr-20,,,ENH29,,none,1,25.5,,
+14-Apr-20,,,ENH29,,none,2,26.6,,
+14-Apr-20,,,ENH29,,none,3,22.8,,24.96666667
+13-May-20,,,ENH29,,none,1,6.7,,
+13-May-20,,,ENH29,,none,2,7.3,,
+13-May-20,,,ENH29,,none,3,6,,6.666666667
 8-May-20,,,ENH3,,full removal,1,14.6,,
 8-May-20,,,ENH3,,full removal,2,12.5,,
 8-May-20,,,ENH3,,full removal,3,11.9,,13
@@ -541,25 +541,25 @@ date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
 13-May-20,,,ENH30,,full removal,1,7.2,,
 13-May-20,,,ENH30,,full removal,2,7.4,,
 13-May-20,,,ENH30,,full removal,3,6.8,,7.133333333
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH31,,no removal,1,14.9,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH31,,no removal,2,9.9,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH31,,no removal,3,14.5,,13.1
-12-Dec-18,,,ENH31,,no removal,1,17,,
-12-Dec-18,,,ENH31,,no removal,2,22,,
-12-Dec-18,,,ENH31,,no removal,3,20.7,,20.9
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH31,,no removal,1,6.3,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH31,,no removal,2,6.6,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH31,,no removal,3,6.4,,
-19-Mar-20,,,ENH31,,no removal,1,25.8,tried to get non-gophered samples. 17.6% moisture in gophered sample,
-19-Mar-20,,,ENH31,,no removal,2,27.7,tried to get non-gophered samples,
-19-Mar-20,,,ENH31,,no removal,4,25.7,tried to get non-gophered samples,26.4
-14-Apr-20,,,ENH31,,no removal,1,26.8,,
-14-Apr-20,,,ENH31,,no removal,2,17.5,,
-14-Apr-20,,,ENH31,,no removal,3,19.6,,
-14-Apr-20,,,ENH31,,no removal,4,20.6,,21.125
-13-May-20,,,ENH31,,no removal,1,8.1,,
-13-May-20,,,ENH31,,no removal,2,6.5,,
-13-May-20,,,ENH31,,no removal,3,7.2,,7.266666667
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH31,,none,1,14.9,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH31,,none,2,9.9,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH31,,none,3,14.5,,13.1
+12-Dec-18,,,ENH31,,none,1,17,,
+12-Dec-18,,,ENH31,,none,2,22,,
+12-Dec-18,,,ENH31,,none,3,20.7,,20.9
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH31,,none,1,6.3,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH31,,none,2,6.6,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH31,,none,3,6.4,,
+19-Mar-20,,,ENH31,,none,1,25.8,tried to get non-gophered samples. 17.6% moisture in gophered sample,
+19-Mar-20,,,ENH31,,none,2,27.7,tried to get non-gophered samples,
+19-Mar-20,,,ENH31,,none,4,25.7,tried to get non-gophered samples,26.4
+14-Apr-20,,,ENH31,,none,1,26.8,,
+14-Apr-20,,,ENH31,,none,2,17.5,,
+14-Apr-20,,,ENH31,,none,3,19.6,,
+14-Apr-20,,,ENH31,,none,4,20.6,,21.125
+13-May-20,,,ENH31,,none,1,8.1,,
+13-May-20,,,ENH31,,none,2,6.5,,
+13-May-20,,,ENH31,,none,3,7.2,,7.266666667
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH32,,half removal,1,14.4,,
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH32,,half removal,2,15.8,,
 24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH32,,half removal,3,12.6,,14.3
@@ -634,37 +634,37 @@ date,time,weather,plot,treatment,weeding,reading,TDR-value,notes,average
 13-May-20,,,ENH35,,full removal,1,7.1,,
 13-May-20,,,ENH35,,full removal,2,6.2,,
 13-May-20,,,ENH35,,full removal,3,7.4,,6.9
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH36,,no removal,1,15.2,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH36,,no removal,2,15.3,,
-24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH36,,no removal,3,14.6,,15
-12-Dec-18,,,ENH36,,no removal,1,26.9,,
-12-Dec-18,,,ENH36,,no removal,2,15.6,,
-12-Dec-18,,,ENH36,,no removal,3,18.8,,20.4
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH36,,no removal,1,6.8,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH36,,no removal,2,6.8,,
-19-Apr-18,11:00am-5:30 pm,sunny and still,ENH36,,no removal,3,7.2,,
-19-Mar-20,,,ENH36,,no removal,1,26.1,"all grass, no MAFA",
-19-Mar-20,,,ENH36,,no removal,2,25.8,"all grass, no MAFA",
-19-Mar-20,,,ENH36,,no removal,3,22.9,"all grass, no MAFA",
-19-Mar-20,,,ENH36,,no removal,4,19.6,"all grass, no MAFA",23.6
-14-Apr-20,,,ENH36,,no removal,1,22.6,,
-14-Apr-20,,,ENH36,,no removal,2,26.2,,
-14-Apr-20,,,ENH36,,no removal,3,18.4,,22.4
-13-May-20,,,ENH36,,no removal,1,6.3,,
-13-May-20,,,ENH36,,no removal,2,6.8,,
-13-May-20,,,ENH36,,no removal,3,5.9,,6.333333333
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH36,,none,1,15.2,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH36,,none,2,15.3,,
+24-Mar-19,12:40 pm - 1:30 pm,"sunny and warm, no breeze",ENH36,,none,3,14.6,,15
+12-Dec-18,,,ENH36,,none,1,26.9,,
+12-Dec-18,,,ENH36,,none,2,15.6,,
+12-Dec-18,,,ENH36,,none,3,18.8,,20.4
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH36,,none,1,6.8,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH36,,none,2,6.8,,
+19-Apr-18,11:00am-5:30 pm,sunny and still,ENH36,,none,3,7.2,,
+19-Mar-20,,,ENH36,,none,1,26.1,"all grass, no MAFA",
+19-Mar-20,,,ENH36,,none,2,25.8,"all grass, no MAFA",
+19-Mar-20,,,ENH36,,none,3,22.9,"all grass, no MAFA",
+19-Mar-20,,,ENH36,,none,4,19.6,"all grass, no MAFA",23.6
+14-Apr-20,,,ENH36,,none,1,22.6,,
+14-Apr-20,,,ENH36,,none,2,26.2,,
+14-Apr-20,,,ENH36,,none,3,18.4,,22.4
+13-May-20,,,ENH36,,none,1,6.3,,
+13-May-20,,,ENH36,,none,2,6.8,,
+13-May-20,,,ENH36,,none,3,5.9,,6.333333333
 8-May-20,,,ENH4,,half removal,1,8.8,,
 8-May-20,,,ENH4,,half removal,2,9,,
 8-May-20,,,ENH4,,half removal,3,9.8,,9.2
 8-May-20,,,ENH5,,half removal,1,10.4,,
 8-May-20,,,ENH5,,half removal,2,11.4,,
 8-May-20,,,ENH5,,half removal,3,11.9,,11.23333333
-8-May-20,,,ENH6,,no removal,1,11.3,,
-8-May-20,,,ENH6,,no removal,2,13,,
-8-May-20,,,ENH6,,no removal,3,13.3,,12.53333333
-8-May-20,,,ENH7,,no removal,1,13.2,,
-8-May-20,,,ENH7,,no removal,2,9.9,,
-8-May-20,,,ENH7,,no removal,3,13.2,,12.1
+8-May-20,,,ENH6,,none,1,11.3,,
+8-May-20,,,ENH6,,none,2,13,,
+8-May-20,,,ENH6,,none,3,13.3,,12.53333333
+8-May-20,,,ENH7,,none,1,13.2,,
+8-May-20,,,ENH7,,none,2,9.9,,
+8-May-20,,,ENH7,,none,3,13.2,,12.1
 8-May-20,,,ENH8,,half removal,1,14.2,,
 8-May-20,,,ENH8,,half removal,2,11.9,,
 8-May-20,,,ENH8,,half removal,3,11.1,,12.4
