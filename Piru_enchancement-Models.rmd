@@ -68,40 +68,77 @@ Notes: - **response variable**: The variable you want to test. (e.g.,. PAR, TDR,
 ### Saved as a csv in the "Processed" data folder.
 
 ```{r load data, include=TRUE}
-mafa_cover_all <- read_csv("data/processed/mafa_cover_all.csv",
+mafa_cover_all_load <- read_csv("data/processed/mafa_cover_all.csv",
   col_types = cols(
     plot_number = col_character(),
-    year = col_integer(),
+    year = col_character(),
     cover_percent = col_double(),
-    site = col_integer()
+    site = col_character()
     )
   )
+mafa_cover_all <- mafa_cover_all_load %>% 
+  dplyr::select(plot_number, year, cover_percent, site)
 
-par <- read_csv("data/processed/par.csv",
+par_load <- read_csv("data/processed/par.csv",
   col_types = cols(
     plot_number = col_character(),
     treatment = col_character(),
-    year = col_integer(),
+    year = col_character(),
     month = col_integer(),
-    site = col_integer(),
+    site = col_character(),
     normalized_par = col_double()
     )
   )
 
-tdr <- read_csv("data/processed/tdr.csv",
+par <- par_load %>% 
+  dplyr::select(date, year, month, site, plot_number, treatment, normalized_par)
+
+tdr_load <- read_csv("data/processed/tdr.csv",
   col_types = cols(
     plot_number = col_character(),
     treatment = col_character(),
-    year = col_integer(),
+    year = col_character(),
     month = col_integer(),
-    site = col_integer(),
+    site = col_character(),
     soil_moisture = col_double()
     )
   )
+tdr <- tdr_load %>% 
+  dplyr::select(date, year, month, site, plot_number, treatment, soil_moisture)
 
-exotic_cover_all <- read_csv("data/processed/exotic_cover_all.csv")
-survmort <- read_csv("data/processed/survmort.csv")
+exotic_cover_all_load <- read_csv("data/processed/exotic_cover_all.csv",
+    col_types = cols(
+    year = col_character(),
+    plot_number = col_character(),
+    MAFA_removal = col_character(),
+    site = col_character(),
+    cover_percent = col_double()
+    )
+)
+exotic_cover_all <- exotic_cover_all_load %>% 
+  dplyr::select(date, year, site, plot_number, MAFA_removal, cover_percent)
+
+survmort_load <- read_csv("data/processed/survmort.csv",
+                          col_types = cols(
+                             year = col_character(),
+                             month = col_integer(), 
+                             plot_number = col_character(),
+                             treatment = col_character(), 
+                             species = col_character(), 
+                             alive = col_integer(), 
+                             dead = col_integer(), 
+                             site = col_character(), 
+                             month_count = col_integer(), 
+                             transplanted = col_character()
+                          )
+                          )
+surmort <- survmort_load %>% 
+  dplyr::select(year, month, plot_number, treatment, species, alive, dead, site, month_count, transplanted)
+print(surmort)
+summary(surmort)
+
 ```
+
 ```{r left join to mafa_cover_all, include=TRUE}
 # PAR
 parmod <- par %>%
@@ -109,8 +146,8 @@ parmod <- par %>%
   rename(mafacover = cover_percent)
 print(parmod)
 write.csv(parmod, "data/processed/par_model.csv")
-par1 <- filter(parmod, site == "1")
-par2 <- filter(parmod, site == "2")
+# par1 <- filter(parmod, site == "1")
+# par2 <- filter(parmod, site == "2")
 
 # TDR
 tdrmod <- tdr %>% 
@@ -119,22 +156,20 @@ tdrmod <- tdr %>%
   filter(year <= 2019)
 print(tdrmod)
 write.csv(tdrmod, "data/processed/tdr_model.csv")
-tdr1 <- filter(tdrmod, site == "1")
-tdr2 <- filter(tdrmod, site == "2")
+# tdr1 <- filter(tdrmod, site == "1")
+# tdr2 <- filter(tdrmod, site == "2")
 
 # NN COVER
 nnmod <- exotic_cover_all %>% 
    left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
   rename(nncover = cover_percent.x,
          mafacover = cover_percent.y, 
-         treatment = MAFA_removal) %>% 
-   col_types = cols(
-      year = col_character()) %>% 
-  select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
+         treatment = MAFA_removal) #%>% 
+  # dplyr::select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
 print(nnmod)
 write.csv(nnmod, "data/processed/nn_model.csv")
-nnmod1 <- filter(nnmod, site == "1")
-nnmod2 <- filter(nnmod, site == "2")
+# nnmod1 <- filter(nnmod, site == "1")
+# nnmod2 <- filter(nnmod, site == "2")
 ```
 
 ------------------------------------------------------------------------
@@ -237,13 +272,22 @@ ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) +
 
 ```{r par model - additional figures, include=TRUE}
 
-# scatterplot: PAR x month <-- make site not continuous
+# scatterplot: PAR x month 
 ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
   geom_point(aes(color = site)) +
   labs(title = "Normalized PAR over time", x = "Date", y = "Normalized PAR") +
   theme_bw() 
 
 # boxplot: PAR by month <---- KIT - can you make a figure that shows a boxplot of normPAR for each month? <-- need to change YEAR, MONTH, SITE, to character. 3
+parmod %>%
+group_by(year, treatment) %>%
+summarize(mean_par=mean(normalized_par), 
+          sd_par=sd(normalized_par)
+)
+          
+parmod_box <- parmod %>% 
+    mutate(col_types = cols(month = col_character()))
+
 ggplot(data = parmod, 
        aes(x = month, y = normalized_par)) +
   labs(title = "Normalized PAR over time", x = "Month", y = "Normalized PAR") +
@@ -252,8 +296,8 @@ ggplot(data = parmod,
 
 # boxplot: PAR by site x treatment <-- broken and
 ggplot(data = parmod, aes(x = treatment, y = normalized_par)) +
-  geom_boxplot(aes(color = sitecolor)) +
-  labs(title = "Normalized PAR over time", x = "MAFA canopy cover (%)", y = "Date") +
+  geom_boxplot(aes(color = sitecolors)) #+
+  labs(title = "Normalized PAR over #time", x = "MAFA canopy cover (%)", y = "Date") +
   theme_bw() 
 
 
@@ -374,7 +418,7 @@ ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
   labs(title = "Soil Moisture by Site and Treatment", x = "Site", y = "Soil Moisture (%)") +
   theme_bw() 
 
-# scatterplot: tdr x mafacover <- broken
+# scatterplot: tdr x mafacover 
 ggplot(data = tdrmod, aes(x = mafacover, y = soil_moisture)) + 
   geom_point(aes(color = site)) +
   scale_color_manual(values=c(sitecolors)) +
@@ -534,11 +578,22 @@ Is canopy treatment or canopy cover a stronger predictor of the environmental co
 
 ## *df exploration*
 
-*dim(df)* gives you number of rows and columns in the df *str(df)* gives you the structure of your dataframe *names(df)* will give you the column names in the df *install.packages()* to install packages *installed.packages()* to see what packages are installed *class(df)* to tell if df or tibble + df \<- as_tibble(df) to turn into a tibble
+- *dim(df)* gives you number of rows and columns in the df 
+- *str(df)* gives you the structure of your dataframe 
+- *names(df)* will give you the column names in the df 
+- *install.packages()* to install packages 
+- *installed.packages()* to see what packages are installed 
+- *class(df)* to tell if df or tibble 
+  + df \<- as_tibble(df) to turn into a tibble
 
 ## *dplyr*
 
-*filter()* for sub-setting row/observations *select()* for sub-setting columns/variables *mutate()* for transforming variables \* df %\>% mutatue(newcolumn_name = variable selection) \* ==, \<, \>, can make multiple new columns within one mutate command *group_by(catvariable)* for numerical summaries of categories (e.g., site, treatment, species) *summarise(meansurvival = mean(survival), n = n())* for numerical summaries of observations (e.g., height, survival, percent cover) + n = n() will count total observations for your variable meanWage + creates a new tibble with a summary for each level *fivenum()* for all 5 summaries
+- *filter()* for sub-setting row/observations 
+- *select()* for sub-setting columns/variables 
+- *mutate()* for transforming variables \* df %\>% mutatue(newcolumn_name = variable selection) \* ==, \<, \>, can make multiple new columns within one mutate command 
+- *group_by(catvariable)* for numerical summaries of categories (e.g., site, treatment, species) 
+- *summarise(meansurvival = mean(survival), n = n())* for numerical summaries of observations (e.g., height, survival, percent cover) + n = n() will count total observations for your variable meanWage + creates a new tibble with a summary for each level 
+- *fivenum()* for all 5 summaries
 
 ## *statistics*
 
