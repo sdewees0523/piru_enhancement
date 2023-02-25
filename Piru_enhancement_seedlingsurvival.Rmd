@@ -77,13 +77,13 @@ survmort_load <- read_csv("data/processed/survmort.csv",
                         )
 # survival and mortality data WITH species
 survmort <- survmort_load %>% 
-  select(year, month, plot_number, treatment, species, alive, dead, site, month_count, transplanted) %>% 
-  mutate(treatment = recode(treatment, no = "none"))
+  dplyr::select(year, month, plot_number, treatment, species, alive, dead, site, month_count, transplanted) # %>%  
+#  mutate(treatment = recode(treatment, no = "none"))
 
 # survival and mortality data WITHOUT species
 survmortnospp <- survmort_load %>% 
-  select(year, month, plot_number, treatment, alive, dead, site, month_count, transplanted) %>% 
-  mutate(treatment = recode(treatment, no = "none")) %>% 
+  dplyr::select(year, month, plot_number, treatment, alive, dead, site, month_count, transplanted) %>% 
+ # mutate(treatment = recode(treatment, no = "none")) %>% 
   group_by(year, month, site, plot_number, treatment, month_count, transplanted) %>% 
   summarize(totalsurvival = sum(alive), 
             totalmortality = sum(dead)) %>% 
@@ -96,15 +96,15 @@ par_load <- read_csv("data/processed/par.csv",
     date = col_date(format = ""),
     plot_number = col_character(),
     treatment = col_character(),
-    year = col_integer(),
+    year = col_character(),
     month = col_integer(),
-    site = col_integer(),
+    site = col_character(),
     normalized_par = col_double()
     )
 )
 
 par <- par_load %>% 
-  select(year, month, site, plot_number, treatment, normalized_par)
+  dplyr::select(year, month, site, plot_number, treatment, normalized_par)
 print(par)
 
 # TDR data
@@ -112,23 +112,23 @@ tdr_load <- read_csv("data/processed/tdr.csv",
   col_types = cols(
     plot_number = col_character(),
     treatment = col_character(),
-    year = col_integer(),
+    year = col_character(),
     month = col_integer(),
-    site = col_integer(),
+    site = col_character(),
     soil_moisture = col_double()
     )
   )
 
 tdr <- tdr_load %>% 
-   select(year, month, site, plot_number, treatment, soil_moisture)
+   dplyr::select(year, month, site, plot_number, treatment, soil_moisture)
 print(tdr)  
 
 # exotic percent cover
 exotic_cover_all_load <- read_csv("data/processed/exotic_cover_all.csv",
   col_types = cols(
-    date = col_date(),
-    year = col_integer(),
-    site = col_integer(),
+    date = col_date(format = ""),
+    year = col_character(),
+    site = col_character(),
     plot_number = col_character(),
     MAFA_removal = col_character(),
     cover_percent = col_double()
@@ -136,7 +136,7 @@ exotic_cover_all_load <- read_csv("data/processed/exotic_cover_all.csv",
 )
 
 exotic_cover_all <- exotic_cover_all_load %>% 
-  select(date, year, site, plot_number, MAFA_removal, cover_percent) %>% 
+  dplyr::select(date, year, site, plot_number, MAFA_removal, cover_percent) %>% 
   rename(treatment = MAFA_removal)
 print(exotic_cover_all)
 
@@ -158,37 +158,43 @@ print(exotic_cover_all)
 
 # May 2018 
   
-```{r MAY 2018 - join data, include=TRUE}
+```{r MAY 2018 - rate of change, include=FALSE}
 
+# YOU DON'T NEED TO CALCULATE SURVIVAL RATE RIGHT NOW
+# JUST RUN MODELS TO SEE WHAT MAKES A DIFFERENCE AT SURVEY TIME POINT. 
+# YOU CAN ALWAYS GO BACK AND CALCULATE RATE ON YOUR SECOND PASS.
+# 
+#survmortnospp_2018 <- survmortnospp %>% 
+#  dplyr::filter(year == "2018") %>% 
+#  dplyr::select(!totalmortality) %>% 
+#  dplyr::select(!month_count)
+
+#survmortnospp_2018_wider <- survmortnospp_2018 %>%
+#  pivot_wider(names_from = month, values_from = totalsurvival) 
+  
+#view(survmortnospp_2018_wider)
+
+# END OF CREATING A WIDER DF
+```
+
+
+```{r MAY 2018 - join data, include=TRUE}
 # subsetting data for May 2018 survival
 # survmortnospp = may 2018
 # par = april 2018
 # tdr = april 2018
 # nncover = may 2018
 
-survmortnospp_2018 <- survmortnospp %>% 
-  dplyr::filter(year == "2018") %>% 
-  select(!totalmortality) %>% 
-  select(!month_count)
-survmortnospp_2018_wider <- survmortnospp_2018 %>%
-  pivot_wider(names_from = month, values_from = totalsurvival)
-  
-view(survmortnospp_2018_wider)
-
-
-####### ended here on Feb 24. 2023. Plot 5 needs to be renamed as HALF. 
-
-survmortnospp_jan2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="1")
+#survmortnospp_jan2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="1")
 survmortnospp_may2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="5")
-
 par_april2018 <- dplyr::filter(par, year == "2018" & month =="4")
 tdr_april2018 <- tdr %>% 
   dplyr::filter(year == "2018" & month =="4")
 nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018")
 
-print(survmortnospp_jan2018)
+print(survmortnospp_may2018)
 
-# left join data for May 2018 survival
+# left join data for May 2018 survival <---- STEPHANIE START HERE
 survmortnospp_may2018_join <- survmortnospp_may2018 %>% 
   dplyr::left_join(par_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%    #left join par
   select(!treatment.x) %>% 
