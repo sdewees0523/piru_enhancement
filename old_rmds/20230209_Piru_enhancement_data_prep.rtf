@@ -1,0 +1,411 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2639
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11220\viewh8100\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 ---\
+title: "data_prep_2"\
+author: "Kit Swift"\
+date: "2022-11-23"\
+output: html_document\
+---\
+\
+```\{r setup, include=FALSE\}\
+knitr::opts_chunk$set(echo = TRUE)\
+library(here) # similar to set working directory\
+library(tidyverse) # data wrangling\
+library(lubridate) # dates and times\
+library(plotly)\
+library(olsrr)\
+library(survival)\
+library(lme4)\
+```\
+\
+#Data Prep\
+\
+## MAFA percent cover\
+```\{r mafa_cover prep, include=TRUE\}\
+# load mafa_alive percent cover data as a .csv\
+cover_import_prep <- read_csv("data/mafa_cover.csv", \
+    col_types = cols(\
+      date = col_character(), \
+      plot_number = col_integer(), \
+      cover_percent = col_number(), # question for SHANE - Percent cover as number or integer?\
+      notes = col_character()\
+      )\
+    )\
+\
+```\
+```\{r mafa_cover_2018, include=TRUE\}\
+# creating a dataset of MAFA cover in 2018\
+mafa_cover_2018 <- read.csv(here("data", "mafa_cover.csv")) %>%\
+  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% \
+  mutate(date = mdy(date),\
+         month = month(date),\
+         year = year(date)) %>% \
+  filter(year %in% c("2018")) %>%\
+  select(plot_number, cover_percent, year, month) %>%  \
+  mutate(transplanted = 2018) %>% \
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) \
+print(mafa_cover_2018)\
+# 36 rows\
+# names(mafa_cover_2018)\
+```\
+```\{r mafa_cover_2019, include=TRUE\}\
+# creating a dataset of MAFA cover in 2019\
+mafa_cover_2019 <- read.csv(here("data", "mafa_cover.csv")) %>%\
+  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% \
+  mutate(date = mdy(date),\
+         month = month(date),\
+         year = year(date)) %>% \
+  filter(year %in% c("2019")) %>%\
+  select(plot_number, cover_percent, year, month) %>%  \
+  mutate(transplanted = 2019) %>% \
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))\
+print(mafa_cover_2019)\
+# 36 rows\
+```\
+```\{r mafa cover all, include=TRUE\}\
+mafa_cover_all <- rbind(mafa_cover_2018, mafa_cover_2019) %>%\
+  select("plot_number", "year", "cover_percent", "site")\
+print(mafa_cover_all)\
+# 36 x 3 = 108 rows\
+```\
+\
+## Total exotic percent cover\
+```\{r totalexotic_cover prep, include=TRUE\}\
+\
+# load total_exotic percent cover data as a .csv\
+cover_import <- read_csv("data/totexo_cover.csv", \
+    col_types = cols(\
+      date = col_character(), \
+      plot_number = col_integer(), \
+      cover_percent = col_number(), # question for SHANE - Percent cover as number or integer?\
+      notes = col_character()\
+      )\
+    )\
+```\
+```\{r totalexotic_cover 2018, include=TRUE\}\
+# creating a dataset of total exotic cover in 2018\
+exotic_cover_2018 <- read.csv(here("data", "totexo_cover.csv")) %>%\
+  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% \
+  mutate(date = mdy(date),\
+         month = month(date),\
+         year = year(date)) %>% \
+  filter(year %in% c("2018")) %>%\
+  select(date, plot_number, MAFA_removal, cover_percent, year, month) %>%  \
+  mutate(transplanted = 2018) %>% \
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))\
+print(exotic_cover_2018)\
+# 36 rows\
+```\
+```\{r totalexotic_cover 2019, include=TRUE\}\
+# creating a dataset of total exotic cover in 2019\
+exotic_cover_2019 <- read.csv(here("data", "totexo_cover.csv")) %>%\
+  select(date, plot_number, MAFA_removal, cover_type, cover_percent) %>% \
+  mutate(date = mdy(date),\
+         month = month(date),\
+         year = year(date), \
+         treatment = MAFA_removal) %>% \
+  filter(year %in% c("2019")) %>%\
+  select(date, plot_number, cover_percent, year, month, MAFA_removal) %>%  \
+  mutate(transplanted = 2019) %>% \
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))\
+print(exotic_cover_2019)\
+# 36 rows\
+```\
+```\{r totalexotic_cover all, include=TRUE\}\
+exotic_cover_all <- rbind(exotic_cover_2018, exotic_cover_2019 )%>%\
+  select("date", "year", "site", "plot_number", "MAFA_removal", "cover_percent")\
+print(exotic_cover_all)\
+# 36 x 2 = 72 rows\
+```\
+\
+## Seedling survival\
+```\{r seedling survivial prep, include=TRUE\} \
+survival_prep <- read.csv(here("data", "survival_data.csv")) %>% \
+  select(date, plot_number, MAFA_removal, species, alive) %>% \
+  rename(treatment = MAFA_removal) %>% \
+  mutate(date = mdy(date),\
+         month = month(date),\
+         year = year(date),\
+         treatment = str_remove(treatment, "removal")\
+        ) %>% \
+  group_by(year, month, plot_number, treatment, species, date) %>% \
+  summarise(alive = sum(alive, na.rm = TRUE)) %>% \
+  ungroup() %>% \
+  mutate(\
+    month = as.integer(month),\
+    year = as.integer(year)\
+  ) %>%  \
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) \
+print(survival_prep)\
+```\
+```\{r survival months since transplanting, include = TRUE\}\
+#Setting the month to be a count up from jan 2018\
+month_0 <- c("2018-01-30", "2018-02-09", "2018-02-10")\
+month_1 <- c("2018-02-24", "2018-02-23", "2018-03-03")\
+\
+#if else statement to create months that count up from month transplanted\
+for (i in 1:length(survival_prep$date)) \{\
+  if(grepl(month_0[1], survival_prep$date[i])||grepl(month_0[2], survival_prep$date[i])||grepl(month_0[3], survival_prep$date[i]))\{\
+    survival_prep$month_count[i] <- 0; survival_prep$transplanted[i] <- 2018\} \
+  else\{\
+    if(grepl(month_1[1], survival_prep$date[i])||grepl(month_1[2], survival_prep$date[i])||grepl(month_1[3], survival_prep$date[i]))\{\
+      survival_prep$month_count[i] <- 1; survival_prep$transplanted[i] <- 2018\} \
+    else\{\
+      if(survival_prep$year[i] == 2018)\{\
+      survival_prep$month_count[i] <- survival_prep$month[i] - 1; survival_prep$transplanted[i] <- 2018\}\
+      else\{\
+        if(survival_prep$year[i] == 2019)\{\
+        survival_prep$month_count[i] <- survival_prep$month[i] + 11; survival_prep$transplanted[i] <- 2019\}\
+        else\{\
+          if(survival_prep$year[i] == 2020)\{\
+          survival_prep$month_count[i] <- survival_prep$month[i] + 23; survival_prep$transplanted[i] <- 2019\}\
+          else\{\
+            if(survival_prep$year[i] == 2021)\{\
+            survival_prep$month_count[i] <- survival_prep$month[i] + 35; survival_prep$transplanted[i] <- 2019\}\
+            else\{\
+              survival_prep$month_count[i] <- FALSE\
+            \}\}\}\}\}\}\}\
+print(survival_prep)\
+\
+survival <- subset(survival_prep, select = -date)\
+\
+print(survival) # will only print the first 100 pages\
+write.csv(survival, "data/processed/survival.csv")\
+# ignore warning message\
+```\
+\
+```\{r test month count, inclued = FALSE\}\
+#month_count_0 <- filter(survival, month_count == 0)\
+#print(month_count_0)\
+\
+#month_count_1 <- filter(survival, month_count == 1)\
+#print(month_count_1)\
+\
+#month_count_12 <- filter(survival, month_count == 12)\
+#print(month_count_12)\
+```\
+\
+## Seedling mortality\
+```\{r seedling mortality prep, include=TRUE\}\
+mortality_prep <- read.csv(here("data", "survival_data.csv")) %>% \
+  select(date, plot_number, MAFA_removal, species, dead) %>% \
+  rename(treatment = MAFA_removal) %>% \
+  mutate(date = mdy(date),\
+         month = month(date),\
+         year = year(date),\
+         treatment = str_remove(treatment, "removal")) %>% \
+  group_by(year, month, plot_number, treatment, species, date) %>% \
+  summarise(dead = sum(dead, na.rm = TRUE)) %>% \
+    ungroup() %>% \
+   mutate(\
+    month = as.integer(month),\
+    year = as.integer(year)\
+  ) %>%  \
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))\
+print(mortality_prep)\
+```\
+\
+```\{r mortality months since transplanting, include = TRUE\}\
+\
+#if else statement to create months that count up from month transplanted\
+for (i in 1:length(mortality_prep$date)) \{\
+  if(grepl(month_0[1], mortality_prep$date[i])||grepl(month_0[2], mortality_prep$date[i])||grepl(month_0[3], mortality_prep$date[i]))\{\
+    mortality_prep$month_count[i] <- 0; mortality_prep$transplanted[i] <- 2018\} \
+  else\{\
+    if(grepl(month_1[1], mortality_prep$date[i])||grepl(month_1[2], mortality_prep$date[i])||grepl(month_1[3], mortality_prep$date[i]))\{\
+      mortality_prep$month_count[i] <- 1; mortality_prep$transplanted[i] <- 2018\} \
+    else\{\
+      if(mortality_prep$year[i] == 2018)\{\
+      mortality_prep$month_count[i] <- mortality_prep$month[i] - 1; mortality_prep$transplanted[i] <- 2018\}\
+      else\{\
+        if(mortality_prep$year[i] == 2019)\{\
+        mortality_prep$month_count[i] <- mortality_prep$month[i] + 11; mortality_prep$transplanted[i] <- 2019\}\
+        else\{\
+          if(mortality_prep$year[i] == 2020)\{\
+          mortality_prep$month_count[i] <- mortality_prep$month[i] + 23; mortality_prep$transplanted[i] <- 2019\}\
+          else\{\
+            if(mortality_prep$year[i] == 2021)\{\
+            mortality_prep$month_count[i] <- mortality_prep$month[i] + 35; mortality_prep$transplanted[i] <- 2019\}\
+            else\{\
+              mortality_prep$month_count[i] <- FALSE\
+            \}\}\}\}\}\}\}\
+\
+print(mortality_prep)\
+\
+mortality <- subset(mortality_prep, select = -date)\
+\
+write.csv(mortality, "data/processed/mortality.csv")\
+# mortality is the inverse of survival\
+\
+```\
+\
+## Seedling survival + mortality in one simple package\
+```\{r seedling survivial and mortality prep, include=TRUE\} \
+survmort_prep <- read.csv(here("data", "survival_data.csv")) %>%\
+  select(date, plot_number, MAFA_removal, species, alive, dead) %>%\
+  rename(treatment = MAFA_removal) %>%\
+  mutate(date = mdy(date),\
+         month = month(date),\
+         year = year(date),\
+         treatment = str_remove(treatment, "removal")\
+        ) %>%\
+  group_by(year, month, plot_number, treatment, species, date) %>%\
+  summarise(alive = sum(alive, na.rm = TRUE), dead = sum(dead, na.rm = TRUE)) %>%\
+  ungroup() %>%\
+  mutate(\
+    month = as.integer(month),\
+    year = as.integer(year)\
+  ) %>%\
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))\
+print(survmort_prep)\
+```\
+\
+```\{r survmort months since transplanting, include = TRUE\}\
+#Setting the month to be a count up from jan 2018\
+month_0 <- c("2018-01-30", "2018-02-09", "2018-02-10")\
+month_1 <- c("2018-02-24", "2018-02-23", "2018-03-03")\
+\
+#if else statement to create months that count up from month transplanted\
+for (i in 1:length(survmort_prep$date)) \{\
+  if(grepl(month_0[1], survmort_prep$date[i])||grepl(month_0[2], survmort_prep$date[i])||grepl(month_0[3], survmort_prep$date[i]))\{\
+    survmort_prep$month_count[i] <- 0; survmort_prep$transplanted[i] <- 2018; survmort_prep$month[i] <- 1\}\
+  else\{\
+    if(grepl(month_1[1], survmort_prep$date[i])||grepl(month_1[2], survmort_prep$date[i])||grepl(month_1[3], survmort_prep$date[i]))\{\
+      survmort_prep$month_count[i] <- 1; survmort_prep$transplanted[i] <- 2018; survmort_prep$month[i] <- 2\}\
+    else\{\
+      if(survmort_prep$year[i] == 2018)\{\
+      survmort_prep$month_count[i] <- survmort_prep$month[i] - 1; survmort_prep$transplanted[i] <- 2018\}\
+      else\{\
+        if(survmort_prep$year[i] == 2019)\{\
+        survmort_prep$month_count[i] <- survmort_prep$month[i] + 11; survmort_prep$transplanted[i] <- 2019\}\
+        else\{\
+          if(survmort_prep$year[i] == 2020)\{\
+          survmort_prep$month_count[i] <- survmort_prep$month[i] + 23; survmort_prep$transplanted[i] <- 2019\}\
+          else\{\
+            if(survmort_prep$year[i] == 2021)\{\
+            survmort_prep$month_count[i] <- survmort_prep$month[i] + 35; survmort_prep$transplanted[i] <- 2019\}\
+            else\{\
+              survmort_prep$month_count[i] <- FALSE\
+            \}\}\}\}\}\}\}\
+print(survmort_prep)\
+\
+survmort <- subset(survmort_prep, select = -date)\
+\
+print(survmort) # will only print the first 100 pages\
+write.csv(survmort, "data/processed/survmort.csv")\
+# ignore warning message\
+```\
+## PAR - sunshine\
+```\{r par, include=TRUE\}\
+par <- read.csv(here("data", "par_data.csv")) %>% \
+  select(date, plot, weeding, readingno, ambient_PAR_1, below_PAR_1) %>% \
+  rename(plot_number = plot) %>% \
+  rename(treatment = weeding) %>% \
+  mutate(date = case_when(date == "11-Sep-18" ~ "9/11/2018",\
+                          date == "30-Jan-19"~"1/30/2019",\
+                          date == "25-Jan-19"~"1/25/2019",\
+                          date == "24-Mar-19"~"3/24/2019",\
+                          date == "24-May-19" ~ "5/24/2019",\
+                          date == "19-Jul-19"~ "7/19/2019",\
+                          date == "9-Sep-19" ~ "9/09/2019",\
+                          date == "16-Nov-19" ~ "11/16/2019",\
+                          TRUE ~ date),\
+         plot_number = str_remove(plot_number, "ENH0"),\
+         plot_number = str_remove(plot_number, "ENH"),\
+         plot_number = as.integer(plot_number),\
+         treatment = str_remove(treatment, "removal"),\
+         date = mdy(date),\
+         site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) %>% \
+  group_by(date, plot_number, site, treatment) %>% \
+  summarize(ambient_par = mean(ambient_PAR_1),\
+            below_par = mean(below_PAR_1)) %>% \
+  ungroup() %>% \
+  mutate(normalized_par = below_par/ambient_par,\
+         month = month(date),\
+         year = year(date),\
+         year = as.integer(year),\
+         month = as.integer(month)) %>% \
+  select(date, year, month, site, plot_number, treatment, normalized_par)\
+\
+print(par)\
+write.csv(par, "data/processed/par.csv")\
+\
+```\
+\
+## TDR - soil moisture\
+```\{r tdr, include=True\}\
+tdr <- read.csv(here("data", "tdr_data.csv")) %>%\
+  select(date, plot, weeding, reading, TDR.value) %>%\
+  rename(plot_number = plot,\
+         soil_moisture = TDR.value,\
+         treatment = weeding) %>%\
+  mutate(plot_number = str_remove(plot_number, "ENH0"),\
+         plot_number = str_remove(plot_number, "ENH"),\
+         plot_number = as.numeric(plot_number),\
+         treatment = str_remove(treatment, "removal"),\
+         date = dmy(date),\
+         site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'),\
+         treatment = str_replace(treatment, "no", "none")) %>%\
+  group_by(date, plot_number, site, treatment) %>%\
+  summarize(soil_moisture = mean(soil_moisture, na.rm = TRUE)) %>%\
+  ungroup() %>%\
+  mutate(month = month(date),\
+         year = year(date)) %>%\
+  #select(!date) %>%\
+  select(date, year, month, site, plot_number, treatment, soil_moisture) %>%\
+  mutate(\
+    year = as.integer(year),\
+    month = as.integer(month),\
+    plot_number = as.integer(plot_number)\
+    )\
+\
+\
+print(tdr)\
+write.csv(tdr, "data/processed/tdr.csv")\
+```\
+\
+\
+# Single Doc Join\
+```\{r main_join, include=FALSE\}\
+\
+surv_month <- rep(1:12, each = 36, 4)\
+surv_year <- rep(2018:2021, each = 432)\
+surv_plot <- rep(seq(1,36, by = 1), 48)\
+surv_monthc <- rep(0:47, each = 36)\
+surv_hold <- data.frame(surv_plot, surv_year, surv_month, surv_monthc) %>%\
+   rename(month = surv_month,\
+          year = surv_year,\
+          plot_number = surv_plot,\
+          month_count = surv_monthc)\
+\
+surv_all <- surv_hold %>%\
+  left_join(survmort, by = c("month_count", "plot_number"), na.rm = F)  %>%\
+  mutate(month = coalesce(month.y, month.x),\
+         year = coalesce(year.x, year.y)) %>%\
+  left_join(par, by = c("month", "year", "plot_number"), na.rm = F)  %>%\
+  left_join(tdr, by = c("month", "year", "plot_number"), na.rm = F) %>%\
+  mutate(site = coalesce(site, site.y, site.x),\
+         treatment = coalesce(treatment.x, treatment.y, treatment)) %>%\
+  drop_na(site) %>%\
+  left_join(mafa_cover_all, by = c("plot_number", "site", "year")) %>%\
+  left_join(exotic_cover_all, by = c("plot_number", "site", "year"), suffix = c(".native", ".nonnative")) %>%\
+  select("year","month", "month_count", "site", "plot_number", "treatment", "species", "alive", "dead", "normalized_par", "soil_moisture", "cover_percent.native", "cover_percent.nonnative") %>%\
+  rename(exotic_cover = cover_percent.nonnative,\
+         native_cover = cover_percent.native)\
+\
+write.csv(surv_all, "data//processed/surv_all.csv")\
+surv_months <- unique(surv_all$month_count)\
+surv_months\
+# [1]  0  1  3  4  8 11 12 14 15 16 17 18 20 22 26 27 28 33 37 39\
+```\
+\
+\
+\
+\
+\
+}
