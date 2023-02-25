@@ -131,15 +131,17 @@ write.csv(exotic_cover_all, "data/processed/exotic_cover_all.csv")
 
 ## Seedling survival
 ```{r seedling survivial prep, include=TRUE} 
-survival_prep <- read.csv(here("data", "survival_data.csv")) %>% 
-  dplyr::select(date, plot_number, MAFA_removal, species, alive) %>% 
-  rename(treatment = MAFA_removal) %>% 
+survival_prep_load <- read.csv(here("data", "survival_data.csv")) 
+
+survival_prep <- survival_prep_load %>% 
+  dplyr::select(date, plot_number, MAFA_removal, species, alive) %>%
+    rename(treatment = MAFA_removal) %>% 
   mutate(date = mdy(date),
          month = month(date),
          year = year(date),
          treatment = str_remove(treatment, "removal")
-        ) %>% 
-  group_by(year, month, plot_number, treatment, species, date) %>% 
+         ) %>% 
+  group_by(year, month, plot_number, treatment, species, date) %>%
   summarise(alive = sum(alive, na.rm = TRUE)) %>% 
   ungroup() %>% 
   mutate(
@@ -147,7 +149,13 @@ survival_prep <- read.csv(here("data", "survival_data.csv")) %>%
     year = as.integer(year)
   ) %>%  
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) 
-print(survival_prep)
+      
+view(survival_prep)
+     
+         
+#   mutate(treatment = case_when(.$treatment == "no" ~ "none", TRUE ~ survival_prep_load$treatment)) 
+# treatment = case_when(plot_number == "5" ~ "half", TRUE ~ survival_prep_1$treatment))
+ 
 ```
 ```{r survival months since transplanting, include = TRUE}
 #Setting the month to be a count up from jan 2018
@@ -198,14 +206,17 @@ write.csv(survival, "data/processed/survival.csv")
 
 ## Seedling mortality
 ```{r seedling mortality prep, include=TRUE}
-mortality_prep <- read.csv(here("data", "survival_data.csv")) %>% 
+mortality_prep_load <- read.csv(here("data", "survival_data.csv")) 
+
+mortality_prep <- mortality_prep_load %>% 
   dplyr::select(date, plot_number, MAFA_removal, species, dead) %>% 
   rename(treatment = MAFA_removal) %>% 
   mutate(date = mdy(date),
          month = month(date),
          year = year(date),
-         treatment = str_remove(treatment, "removal")) %>% 
-  group_by(year, month, plot_number, treatment, species, date) %>% 
+         treatment = str_remove(treatment, "removal")
+         ) %>% 
+  group_by(year, month, plot_number, treatment, species, date) %>%
   summarise(dead = sum(dead, na.rm = TRUE)) %>% 
     ungroup() %>% 
    mutate(
@@ -213,7 +224,7 @@ mortality_prep <- read.csv(here("data", "survival_data.csv")) %>%
     year = as.integer(year)
   ) %>%  
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
-print(mortality_prep)
+view(mortality_prep)
 ```
 
 ```{r mortality months since transplanting, include = TRUE}
