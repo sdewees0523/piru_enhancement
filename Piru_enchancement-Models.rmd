@@ -83,7 +83,7 @@ mafa_cover_all <- mafa_cover_all_load %>%
 
 par_load <- read_csv("data/processed/par.csv",
   col_types = cols(
-    date = col_date(format = ""),
+    date = col_character(),
     plot_number = col_character(),
     treatment = col_character(),
     year = col_character(),
@@ -124,7 +124,7 @@ exotic_cover_all <- exotic_cover_all_load %>%
 survmort_load <- read_csv("data/processed/survmort.csv",
                           col_types = cols(
                              year = col_character(),
-                             month = col_integer(), 
+                             month = col_character(), 
                              plot_number = col_character(),
                              treatment = col_character(), 
                              species = col_character(), 
@@ -148,9 +148,9 @@ parmod <- par %>%
   left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
   rename(mafacover = cover_percent)
 print(parmod)
-# write.csv(parmod, "data/processed/par_model.csv")
-# par1 <- filter(parmod, site == "1")
-# par2 <- filter(parmod, site == "2")
+parmod %>% 
+  group_by(year, treatment) %>% 
+  summarise(N = length(normalized_par))
 
 # TDR
 tdrmod <- tdr %>% 
@@ -158,6 +158,10 @@ tdrmod <- tdr %>%
   rename(mafacover = cover_percent) %>% 
   filter(year <= 2019)
 print(tdrmod)
+tdrmod %>% 
+  group_by(year, treatment) %>% 
+  summarise(N = length(soil_moisture))
+
 # write.csv(tdrmod, "data/processed/tdr_model.csv")
 # tdr1 <- filter(tdrmod, site == "1")
 # tdr2 <- filter(tdrmod, site == "2")
@@ -170,6 +174,9 @@ nnmod <- exotic_cover_all %>%
          treatment = MAFA_removal) #%>% 
   # dplyr::select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
 print(nnmod)
+nnmod %>%  # check number of data points
+  group_by(year, treatment) %>% 
+  summarise(N = length(mafacover))
 # write.csv(nnmod, "data/processed/nn_model.csv")
 # nnmod1 <- filter(nnmod, site == "1")
 # nnmod2 <- filter(nnmod, site == "2")
@@ -242,16 +249,56 @@ qqline(ranef(MOD)$plot_number[,1]) # unique plots
 print(lme.parmod)
 summary(lme.parmod) # p-values
 anova(lme.parmod) # fixed level effects, pvalues, etc.
-# par is significant by mafa cover 
+# par is significant by mafa cover and month
+
+# anova(lme.parmod) # fixed level effects, pvalues, etc.
+#Type III Analysis of Variance Table with Satterthwaite's method
+#           Sum Sq  Mean Sq NumDF   DenDF F value    Pr(>F)    
+#treatment 0.00067 0.000336     2  34.513  0.0197 0.9805359    
+#mafacover 0.21026 0.210258     1 137.703 12.3214 0.0006057 ***
+#site      0.01195 0.011947     1  40.192  0.7001 0.4076914    
+#month     1.77375 0.295624     6 250.588 17.3240 < 2.2e-16 ***
+
+# post-hoc Tukey test
+# visualize significant factors from anova(lme.parrmod)
+
+emmip(lme.parmod, mafacover ~ month)
+
+# get stats on interactions
+emmeans(lme.parmod, list(pairwise ~ mafacover*month), adjust = "tukey") # <--- What do these results mean?
+
+# mean, SE: year x month
+parmod %>% 
+  group_by(year, month) %>% 
+  summarise(MEAN_par=mean(normalized_par, na.rm = TRUE),
+            SD = sd(normalized_par, na.rm = TRUE),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
+            )
+
+# mean, SE: year x treatment
+parmod %>% 
+  group_by(year, treatment) %>% 
+  summarise(MEAN_par=mean(normalized_par, na.rm = TRUE),
+            SD = sd(normalized_par, na.rm = TRUE),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
+            )
 ```
 
 4.  figures
 
 ```{r par model - figures, include=TRUE}
+# scatterplot: PAR x date
+ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
+  geom_point(aes(color = treatment)) +
+labs(title = "Normalized PAR over time", x = "Date", y = "Nomalized PAR") +
+  geom_smooth(method="lm")+
+  theme_bw()
 
 # scatterplot: PAR x mafacover (%)
 ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
-  geom_point() +
+  geom_point(aes(color = month)) +
 labs(title = "Normalized PAR by MAFA cover (%)", x = "MAFA canopy cover (%)", y = "PAR") +
   geom_smooth(method="lm")+
   theme_bw()
@@ -285,7 +332,7 @@ ggplot(data = parmod, aes(x = date, y = normalized_par)) +
 parmod %>%
 group_by(year, treatment) %>%
 summarize(mean_par=mean(normalized_par), 
-          sd_par=sd(normalized_par)
+          sd_par=sd(normalized_par), 
 )
           
 parmod_box <- parmod %>% 
