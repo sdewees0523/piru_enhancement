@@ -67,7 +67,7 @@ Notes:
 survmort_load <- read_csv("data/processed/survmort.csv",
                       col_types = cols(
                         year = col_character(),
-                        month = col_integer(), 
+                        month = col_character(), 
                         site = col_character(),
                         plot_number = col_character(), 
                         treatment = col_character(),
@@ -93,14 +93,18 @@ survmortnospp <- survmort_load %>%
   ungroup()
 print(survmortnospp) # :) yay! it worked!
 
+survmortnospp %>% # check number of data points
+  group_by(year, treatment) %>% 
+  summarise(N = length(totalsurvival))
+
 # PAR data
 par_load <- read_csv("data/processed/par.csv",
   col_types = cols(
-    date = col_date(format = ""),
+    date = col_character(),
     plot_number = col_character(),
     treatment = col_character(),
     year = col_character(),
-    month = col_integer(),
+    month = col_character(),
     site = col_character(),
     normalized_par = col_double()
     )
@@ -116,7 +120,7 @@ tdr_load <- read_csv("data/processed/tdr.csv",
     plot_number = col_character(),
     treatment = col_character(),
     year = col_character(),
-    month = col_integer(),
+    month = col_character(),
     site = col_character(),
     soil_moisture = col_double()
     )
@@ -129,7 +133,7 @@ print(tdr)
 # exotic percent cover
 exotic_cover_all_load <- read_csv("data/processed/exotic_cover_all.csv",
   col_types = cols(
-    date = col_date(format = ""),
+    date = col_character(),
     year = col_character(),
     site = col_character(),
     plot_number = col_character(),
@@ -137,6 +141,7 @@ exotic_cover_all_load <- read_csv("data/processed/exotic_cover_all.csv",
     cover_percent = col_double()
   )
 )
+
 
 exotic_cover_all <- exotic_cover_all_load %>% 
   dplyr::select(date, year, site, plot_number, MAFA_removal, cover_percent) %>% 
@@ -206,7 +211,7 @@ par_april2018 <- dplyr::filter(par, year == "2018" & month =="4") # par april 20
 tdr_april2018 <- tdr %>% dplyr::filter(year == "2018" & month =="4") #tdr april 2018
 nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") # nncover may 2018
 
-print(survmortnospp_may2018)
+view(survmortnospp_may2018)
 
 survmortnospp_may2018_join <- survmortnospp_may2018 %>% 
   dplyr::left_join(par_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%    #left join par
@@ -232,8 +237,10 @@ view(survmortnospp_may2018_join)
 
 ```{r MAY 2018 - normality, include =TRUE}
 
-lme.may2018.mod <- lmer(totalsurvival ~ normalized_par + soil_moisture + exotic_percentcover + site + (1|treatment) + (1|plot), # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG?
-                         data = survmortnospp_may2018_join)
+lme.may2018.mod <- lmer(totalsurvival ~ normalized_par + soil_moisture + exotic_percentcover + site + (1|treatment), 
+                        data = survmortnospp_may2018_join) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? 
+# plot number not included because only data point per plot (n = 36)
+                         
 
 MOD <- lme.may2018.mod
 
@@ -280,13 +287,31 @@ print(lme.may2018.mod)
 summary(lme.may2018.mod)
 anova(lme.may2018.mod) # A significant p-value indicates that one or more significant differences exist between group means.
 # seedling survival is not correlated with par, tdr, exotic percent cover, or site.
-# site may be ecologically interesting (p = 0.0843)
+# SITE may be ecologically interesting (p = 0.0843)
+# Type III Analysis of Variance Table with Satterthwaite's method
+#                     Sum Sq Mean Sq NumDF  DenDF F value  Pr(>F)  
+#normalized_par       1.8734  1.8734     1 30.996  0.2605 0.61338  
+#soil_moisture        2.5569  2.5569     1 30.834  0.3556 0.55534  
+#exotic_percentcover  1.7381  1.7381     1 25.546  0.2417 0.62718  
+#site                22.9048 22.9048     1 30.273  3.1850 0.08434 .
+
+# post-hoc Tukey test
+# get stats on interactions
+emmeans(lme.may2018.mod, list(pairwise ~ site), adjust = "tukey")
+# site is not significantly different (p = 0.0923)
 
 # calculate mean survival at Site 1 and Site 2
 survmortnospp_may2018_join %>% 
   group_by(site) %>% 
-  summarise(mean_survival=mean(totalsurvival, na.rm = TRUE),
-            sd_survival=sd(totalsurvival, na.rm = TRUE))
+  summarise(MEAN_totalsurvival=mean(totalsurvival, na.rm = TRUE),
+            SD = sd(totalsurvival, na.rm = TRUE), 
+            N = length(totalsurvival), 
+            SE = ((sd(totalsurvival, na.rm = TRUE))/sqrt(length((totalsurvival))))
+  )
+#  site  MEAN_totalsurvival    SD     N    SE
+#  <chr>              <dbl> <dbl> <int> <dbl>
+#   1                   6.67  3.36    18 0.792
+#   2                   3.89  1.94    18 0.457
 ```
 
 - figures 
