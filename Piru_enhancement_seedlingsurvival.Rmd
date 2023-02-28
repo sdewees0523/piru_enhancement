@@ -14,8 +14,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r libraries, message=FALSE}
 library(here) # similar to set working directory
-library(tidyverse) # data wrangling
-library(emmeans)
+library(dplyr) # includes functions:
+library(tidyverse) # data wrangling, includes packages: ggplot2, tibble, tidyr, rear, purrr, stringr, forcats
+library(lme4)
+library(lmerTest)
+library(emmeans) 
 ```
 
 # Load colors for graphs
@@ -155,8 +158,13 @@ print(exotic_cover_all)
 
 ```
   
+***
 
 # May 2018 
+
+### Code to save for later on calculating survival rate or change between two time points. 
+
+- RUN AFTER "SURVIVAL AT TIME POINTS" AND ONLY MAKE CODE IF IT'S NEEDED
   
 ```{r MAY 2018 - rate of change, include=TRUE}
 
@@ -184,6 +192,7 @@ print(exotic_cover_all)
 # END OF CREATING A WIDER DF
 ```
 
+### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
 
 ```{r MAY 2018 - join data, include=TRUE}
 # subsetting data for May 2018 survival
@@ -192,16 +201,13 @@ print(exotic_cover_all)
 # tdr = april 2018
 # nncover = may 2018
 
-#survmortnospp_jan2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="1")
-survmortnospp_may2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="5")
-par_april2018 <- dplyr::filter(par, year == "2018" & month =="4")
-tdr_april2018 <- tdr %>% 
-  dplyr::filter(year == "2018" & month =="4")
-nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018")
+survmortnospp_may2018 <- dplyr::filter(survmortnospp, year == "2018" & month =="5") #survival May 2018
+par_april2018 <- dplyr::filter(par, year == "2018" & month =="4") # par april 2018
+tdr_april2018 <- tdr %>% dplyr::filter(year == "2018" & month =="4") #tdr april 2018
+nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") # nncover may 2018
 
 print(survmortnospp_may2018)
 
-# left join data for May 2018 survival <---- STEPHANIE START HERE
 survmortnospp_may2018_join <- survmortnospp_may2018 %>% 
   dplyr::left_join(par_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%    #left join par
   dplyr::select(!treatment.x) %>% 
@@ -226,7 +232,7 @@ view(survmortnospp_may2018_join)
 
 ```{r MAY 2018 - normality, include =TRUE}
 
-lme.may2018.mod <- lmer(totalsurvival ~ normalized_par + soil_moisture + exotic_percentcover + site + (1|treatment), # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG?
+lme.may2018.mod <- lmer(totalsurvival ~ normalized_par + soil_moisture + exotic_percentcover + site + (1|treatment) + (1|plot), # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG?
                          data = survmortnospp_may2018_join)
 
 MOD <- lme.may2018.mod
@@ -297,20 +303,20 @@ ggplot(data = survmortnospp_may2018_join, aes(x = site, y = totalsurvival)) +
 
 # May 2019 Seedling survival 
 
-```{r march 2019 - join data, include=TRUE}
+```{r may 2019 - join data, include=TRUE}
 # subsetting data for May 2019 survival
-# survmortnospp = may 2018
-# par = april 2018
-# tdr = april 2018
-# nncover = may 2018
+# survmortnospp = may 2019
+# par = may 2019
+# tdr = march 2019
+# nncover = 2019
 survmortnospp_may2019 <- dplyr::filter(survmortnospp, year == "2019" & month =="4" | year == "2019" & month =="5")
-print(par_may2019)
-
-par_may2019 <- dplyr::filter(par, year == "2019" & month =="4")
-tdr_may2019 <- tdr %>% 
-  dplyr::filter(year == "2019" & month =="4")
+par_may2019 <- dplyr::filter(par, year == "2019" & month =="5")
+tdr_march2019 <- tdr %>% 
+  dplyr::filter(year == "2019" & month == "3")
+  
+tdr_march2019 <- tdr %>% 
+    dplyr::filter(year == "2019" & month =="3")
 nncover_may2019 <- dplyr::filter(exotic_cover_all, year == "2019")
-
 print(survmortnospp_may2019) # each df should have 36 rows of data
 
 
@@ -333,7 +339,7 @@ view(survmortnospp_may2019_join)
 ```
 
 
-```{r MAY 2019 - join data, include=TRUE}
+```{r MAY 2019 - join data, include=FALSE}
 
 # subsetting data for May 2019 survival
 # survmortnospp = may 2019
@@ -342,75 +348,30 @@ view(survmortnospp_may2019_join)
 # nncover = may 2019
 
 survmortnospp_t2 <- dplyr::filter(survmortnospp, month_count =="16") # <-- missing data for plots 1-6, 13, etc.
-view(survmortnospp_t2)
+#view(survmortnospp_t2)
 par_t2 <- dplyr::filter(par, year == "2019" & month =="5")
 tdr_t2 <- tdr %>% 
   dplyr::filter(year == "2019" & month =="3")
 nncover_t2 <- dplyr::filter(exotic_cover_all, year == "2019")
 
 # left join data for Jan-May 2019 (t2) survival
-survmortnospp_t2_mod <- survmortnospp_t2 %>% 
-  dplyr::left_join(par_t2, by = c("year", "site", "plot_number", "treatment"), na.rm = F) %>%    #left join par
-  rename(month_survival = month.x, 
-         month_par = month.y) %>% 
-  select(!date) %>% 
-  dplyr::left_join(tdr_t2, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join tdr
-  rename(treatment = treatment.x, 
-         month_tdr = month) %>% 
-  select(!treatment.y) %>% 
-   dplyr::left_join(nncover_t2, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join exotic percent cover
-  rename(exotic_percentcover = cover_percent) %>% 
-  select(!treatment.y) %>% 
-  select(!date)
-view(survmortnospp_t2_mod)
+#survmortnospp_t2_mod <- survmortnospp_t2 %>% 
+#  dplyr::left_join(par_t2, by = c("year", "site", "plot_number", "treatment"), na.rm = F) %>%    #left join par
+#  rename(month_survival = month.x, 
+#         month_par = month.y) %>% 
+#  select(!date) %>% 
+#  dplyr::left_join(tdr_t2, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join tdr
+#  rename(treatment = treatment.x, 
+#         month_tdr = month) %>% 
+#  select(!treatment.y) %>% 
+#   dplyr::left_join(nncover_t2, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join exotic percent cover
+#  rename(exotic_percentcover = cover_percent) %>% 
+#  select(!treatment.y) %>% 
+#  select(!date)
+#view(survmortnospp_t2_mod)
 
 ```
 
 
-```{r}
-may2019survival <- dplyr::filter(survmortnospp, year == "2019" & month =="5")
-sept2019survival <- dplyr::filter(survmortnospp, year == "2019" & month =="9")
-nov2019survival <- dplyr::filter(survmortnospp, year == "2019" & month =="11")
-
-
-
-april
-
-
-```
-```{r left join, include=TRUE}
-  left_join(par, by = c("year", "site", "plot_number"), na.rm = F) 
-  
-  
-  rename(mafacover = cover_percent)
-print(parmod)
-write.csv(parmod, "data/processed/par_model.csv")
-par1 <- filter(parmod, site == "1")
-par2 <- filter(parmod, site == "2")
-
-# TDR
-tdrmod <- tdr %>% 
-  left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
-  rename(mafacover = cover_percent) %>% 
-  filter(year <= 2019)
-print(tdrmod)
-write.csv(tdrmod, "data/processed/tdr_model.csv")
-tdr1 <- filter(tdrmod, site == "1")
-tdr2 <- filter(tdrmod, site == "2")
-
-# NN COVER
-nnmod <- exotic_cover_all %>% 
-   left_join(mafa_cover_all, by = c("year", "month", "site", "plot_number"), na.rm = F) %>% 
-  rename(nncover = cover_percent.x,
-         mafacover = cover_percent.y, 
-         treatment = MAFA_removal) %>% 
-   col_types = cols(
-      year = col_character()) %>% 
-  select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
-print(nnmod)
-write.csv(nnmod, "data/processed/nn_model.csv")
-nnmod1 <- filter(nnmod, site == "1")
-nnmod2 <- filter(nnmod, site == "2")
-```
   
   
