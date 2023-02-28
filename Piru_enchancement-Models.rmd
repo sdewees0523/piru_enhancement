@@ -251,7 +251,7 @@ summary(lme.parmod) # p-values
 anova(lme.parmod) # fixed level effects, pvalues, etc.
 # par is significant by mafa cover and month
 
-# anova(lme.parmod) # fixed level effects, pvalues, etc.
+# anova(lme.parmod) # fixed level effects, pvalues, etc. <-- WHAT DOES THIS EVEN MEAN???
 #Type III Analysis of Variance Table with Satterthwaite's method
 #           Sum Sq  Mean Sq NumDF   DenDF F value    Pr(>F)    
 #treatment 0.00067 0.000336     2  34.513  0.0197 0.9805359    
@@ -296,11 +296,12 @@ labs(title = "Normalized PAR over time", x = "Date", y = "Nomalized PAR") +
   geom_smooth(method="lm")+
   theme_bw()
 
-# scatterplot: PAR x mafacover (%)
+# scatterplot: PAR x mafacover (%) x month
 ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = month)) +
 labs(title = "Normalized PAR by MAFA cover (%)", x = "MAFA canopy cover (%)", y = "PAR") +
-  geom_smooth(method="lm")+
+  geom_smooth(method="lm", se = FALSE, fullrange = TRUE, 
+              aes(color=month)) +
   theme_bw()
 
 # scatterplot: PAR x mafacover x treatment <-- use treatmentcolor instead of default
@@ -335,9 +336,7 @@ summarize(mean_par=mean(normalized_par),
           sd_par=sd(normalized_par), 
 )
           
-parmod_box <- parmod %>% 
-    mutate(col_types = cols(month = col_character()))
-
+# boxplot of normalized PAR x month
 ggplot(data = parmod, 
        aes(x = month, y = normalized_par)) +
   labs(title = "Normalized PAR over time", x = "Month", y = "Normalized PAR") +
@@ -345,8 +344,9 @@ ggplot(data = parmod,
   theme_bw() 
 
 # boxplot: PAR by site x treatment <-- broken and
-ggplot(data = parmod, aes(x = treatment, y = normalized_par)) +
-  geom_boxplot(aes(color = sitecolors)) #+
+ggplot(data = parmod, 
+       aes(x = treatment, y = normalized_par)) +
+  geom_boxplot(aes(color = treatment)) +
   labs(title = "Normalized PAR over #time", x = "MAFA canopy cover (%)", y = "Date") +
   theme_bw() 
 
@@ -554,21 +554,21 @@ anova(lme.nnmod) # A significant p-value indicates that one or more significant 
 # year may be ecologically interesting (p = 0.065)
 
 # visualize significant factors from anova(lme.tdrmod)
-emmip(lme.nnmod, site*year)
+emmip(lme.nnmod, site ~ year)
 # emmip(lme.tdrmod, month ~ treatment | site)
 
 # convert from character to number
 # nnmod$year <- as.numeric(nnmod$year)
 # nnmod$site <- as.numeric(nnmod$site)
 
-nnmod$year <- as.character(nnmod$year)
-nnmod$site <- as.character(nnmod$site)
-nnmod$treatment <- as.character(nnmod$treatment)
+# convert from number to character
+#nnmod$year <- as.character(nnmod$year)
+#nnmod$site <- as.character(nnmod$site)
+#nnmod$treatment <- as.character(nnmod$treatment)
 
 # get stats on interactions
-emmeans(lme.tdrmod, pairwise~year*treatment, adjust="tukey")
-# lme.tdrmod_letters <- multcompLetters(lme.tdrmod_emmeans)
-# print(letters)
+emmeans(lme.tdrmod, pairwise~year, adjust="tukey")
+# year is NOT significant p=0.3811
 
 #lsmeans(lme.tdrmod, pairwise~site*treatment, adjust="tukey") # emmeans and lsmeans give the same results
 
@@ -601,7 +601,7 @@ plot(TukeyHSD(nnmod_treat_site))
 
 ```{r nnmod - figures, include=TRUE}
 
-nnmod$site = as.factor(nnmod$site)
+# nnmod$site = as.factor(nnmod$site)
 
 # boxplot: nncover x year
 ggplot(data = nnmod, aes(x = year, y = nncover)) + 
