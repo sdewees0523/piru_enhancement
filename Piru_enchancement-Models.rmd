@@ -15,17 +15,17 @@ knitr::opts_chunk$set(echo = TRUE)
 library(here) # similar to set working directory
 library(tidyverse) # data wrangling
 library(lubridate) # dates and times
-library(readr)
 library(ggthemes)
 library(plotly)
 library(dplyr)
 library(olsrr)
-library(survival)
+#library(survival)
 library(lme4)
 library(lmerTest)
 library(multcomp)
 library(multcompView)
 library(emmeans)
+library(multcomp) # functions: multcompLetters2, multcompLetters3, multcompLetters4 using aov object
 
 #mafa_cover_all = MAFA % cover 2018 and 2019
 #exotic_cover_all = exotic % cover 2018 and 2019
@@ -68,6 +68,8 @@ Notes: - **response variable**: The variable you want to test. (e.g.,. PAR, TDR,
 ### Saved as a csv in the "Processed" data folder.
 
 ```{r load data, include=TRUE}
+# variables as characters
+# data as double numbers
 mafa_cover_all_load <- read_csv("data/processed/mafa_cover_all.csv",
   col_types = cols(
     plot_number = col_character(),
@@ -81,10 +83,11 @@ mafa_cover_all <- mafa_cover_all_load %>%
 
 par_load <- read_csv("data/processed/par.csv",
   col_types = cols(
+    date = col_date(format = ""),
     plot_number = col_character(),
     treatment = col_character(),
     year = col_character(),
-    month = col_integer(),
+    month = col_character(),
     site = col_character(),
     normalized_par = col_double()
     )
@@ -98,7 +101,7 @@ tdr_load <- read_csv("data/processed/tdr.csv",
     plot_number = col_character(),
     treatment = col_character(),
     year = col_character(),
-    month = col_integer(),
+    month = col_character(),
     site = col_character(),
     soil_moisture = col_double()
     )
@@ -132,10 +135,10 @@ survmort_load <- read_csv("data/processed/survmort.csv",
                              transplanted = col_character()
                           )
                           )
-surmort <- survmort_load %>% 
+survmort <- survmort_load %>% 
   dplyr::select(year, month, plot_number, treatment, species, alive, dead, site, month_count, transplanted)
-print(surmort)
-summary(surmort)
+print(survmort)
+summary(survmort)
 
 ```
 
@@ -145,7 +148,7 @@ parmod <- par %>%
   left_join(mafa_cover_all, by = c("year", "site", "plot_number"), na.rm = F) %>% 
   rename(mafacover = cover_percent)
 print(parmod)
-write.csv(parmod, "data/processed/par_model.csv")
+# write.csv(parmod, "data/processed/par_model.csv")
 # par1 <- filter(parmod, site == "1")
 # par2 <- filter(parmod, site == "2")
 
@@ -155,7 +158,7 @@ tdrmod <- tdr %>%
   rename(mafacover = cover_percent) %>% 
   filter(year <= 2019)
 print(tdrmod)
-write.csv(tdrmod, "data/processed/tdr_model.csv")
+# write.csv(tdrmod, "data/processed/tdr_model.csv")
 # tdr1 <- filter(tdrmod, site == "1")
 # tdr2 <- filter(tdrmod, site == "2")
 
@@ -167,7 +170,7 @@ nnmod <- exotic_cover_all %>%
          treatment = MAFA_removal) #%>% 
   # dplyr::select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
 print(nnmod)
-write.csv(nnmod, "data/processed/nn_model.csv")
+# write.csv(nnmod, "data/processed/nn_model.csv")
 # nnmod1 <- filter(nnmod, site == "1")
 # nnmod2 <- filter(nnmod, site == "2")
 ```
@@ -182,7 +185,7 @@ write.csv(nnmod, "data/processed/nn_model.csv")
 
 ```{r par model - normality, include = TRUE}
 
-lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|date) +(1|plot_number) + (1|year),
+lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|date) + (1|plot_number) + (1|year),
                    data = parmod)
 
 MOD <- lme.parmod
@@ -381,9 +384,11 @@ emmeans(lme.tdrmod, list(pairwise ~ site*treatment), adjust = "tukey")
 
 tdrmod %>% 
   group_by(year, month) %>% 
-  summarise(mean_soil_moisture=mean(soil_moisture, na.rm = TRUE),
-            sd_soil_moisture=sd(soil_moisture, na.rm = TRUE))
-
+  summarise(MEAN_soil_moisture=mean(soil_moisture, na.rm = TRUE),
+            SD = sd(soil_moisture, na.rm = TRUE),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture, na.rm = TRUE))/sqrt(length((soil_moisture))))
+            )
 ```
 
 ```{r tdrmod - additional stats, include=TRUE}
@@ -425,6 +430,8 @@ ggplot(data = tdrmod, aes(x = mafacover, y = soil_moisture)) +
   labs(title = "Soil Moisture by Site and Treatment", x = "Site", y = "Soil Moisture (%)") +
   geom_smooth(method="lm")+
   theme_bw()
+
+
 ```
 
 ------------------------------------------------------------------------
@@ -442,7 +449,7 @@ ggplot(data = tdrmod, aes(x = mafacover, y = soil_moisture)) +
 #names(nnmod)
 #print(nnmod)
 #str(nnmod)
-lme.nnmod <- lmer(nncover ~ treatment + mafacover + site + year + (1|date) + (1|plot_number), # no month variable
+lme.nnmod <- lmer(nncover ~ treatment + mafacover + site + year + (1|date) + (1|plot_number), # no month column, year = month
                    data = nnmod) 
 
 MOD <- lme.nnmod
@@ -498,6 +505,33 @@ summary(lme.nnmod)
 anova(lme.nnmod) # A significant p-value indicates that one or more significant differences exist between group means.
 # non-native cover is not correlated with mafa cover, treatment, site, or year.
 # year may be ecologically interesting (p = 0.065)
+
+# visualize significant factors from anova(lme.tdrmod)
+emmip(lme.nnmod, site*year)
+# emmip(lme.tdrmod, month ~ treatment | site)
+
+# convert from character to number
+# nnmod$year <- as.numeric(nnmod$year)
+# nnmod$site <- as.numeric(nnmod$site)
+
+nnmod$year <- as.character(nnmod$year)
+nnmod$site <- as.character(nnmod$site)
+nnmod$treatment <- as.character(nnmod$treatment)
+
+# get stats on interactions
+emmeans(lme.tdrmod, pairwise~year*treatment, adjust="tukey")
+# lme.tdrmod_letters <- multcompLetters(lme.tdrmod_emmeans)
+# print(letters)
+
+#lsmeans(lme.tdrmod, pairwise~site*treatment, adjust="tukey") # emmeans and lsmeans give the same results
+
+nnmod %>% 
+  group_by(year, site, treatment) %>% 
+  summarise(mean_nncover=mean(nncover, na.rm = TRUE),
+            sd_nncover = sd(nncover, na.rm = TRUE), 
+            N = length(nncover),
+            SE_nncover=((sd(nncover, na.rm = TRUE))/sqrt(length((nncover))))
+            )
 ```
 
 ```{r nnmod - additional stats, include=TRUE}
@@ -519,6 +553,17 @@ plot(TukeyHSD(nnmod_treat_site))
 4.  figures
 
 ```{r nnmod - figures, include=TRUE}
+
+nnmod$site = as.factor(nnmod$site)
+
+# boxplot: nncover x year
+ggplot(data = nnmod, aes(x = year, y = nncover)) + 
+  geom_boxplot(aes(fill = year)) +
+ # scale_fill_manual(values = c('#F19B34', '#9F7E75', '#92A587')) +
+ # scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
+  labs(title = "Non-native cover by Site and Treatment", x = "Site", y = "Non-native cover (%)") +
+  geom_smooth(method="lm") +
+  theme_bw()
 
 # boxplot: nncover x site x treatment (no correlation)
 nnmod$site = as.factor(nnmod$site)
