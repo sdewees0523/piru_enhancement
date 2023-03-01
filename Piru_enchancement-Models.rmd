@@ -2,7 +2,7 @@
 title: "Piru_enchancement-Models"
 author: "Kit Swift"
 date: "2022-12-15"
-output: html_documents
+output: html_document
 ---
 
 # Load libraries
@@ -290,31 +290,37 @@ parmod %>%
 
 ```{r par model - figures, include=TRUE}
 # scatterplot: PAR x date
-ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
+parscatter.1 <- ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
   geom_point(aes(color = treatment)) +
 labs(title = "Normalized PAR over time", x = "Date", y = "Nomalized PAR") +
   geom_smooth(method="lm")+
   theme_bw()
+ggplotly(parscatter.1)
+
 
 # scatterplot: PAR x mafacover (%) x month
-ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
+parscatter.2 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = month)) +
-labs(title = "Normalized PAR by MAFA cover (%)", x = "MAFA canopy cover (%)", y = "PAR") +
+  labs(title = "Normalized PAR by MAFA cover (%)", x = "MAFA canopy cover (%)", y = "PAR") +
   geom_smooth(method="lm", se = FALSE, fullrange = TRUE, 
-              aes(color=month)) +
+             aes(color=month)) +
   theme_bw()
+ggplotly(parscatter.2)
 
 # scatterplot: PAR x mafacover x treatment <-- use treatmentcolor instead of default
-ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
+parscatter.3 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = treatment)) +
   labs(title = "Normalized PAR by MAFA cover (%) and Treatment", x = "MAFA canopy cover (%)", y = "PAR") +
   theme_bw()
+ggplotly(parscatter.3)
 
 # scatterplot: PAR x mafacover x site <-- make site not continuous & use sitecolor instead of default
-ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
+parscatter.4 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = site)) +
   labs(title = "Normalized PAR by MAFA cover (%) and Site", x = "MAFA canopy cover (%)", y = "PAR") +
   theme_bw() 
+ggplotly(parscatter.4)
+
 
 #ggplot(crab_data, aes(x = size)) +
 #   geom_histogram(binwidth = 1, aes(fill = site)) +
@@ -322,35 +328,27 @@ ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) +
 ```
 
 ```{r par model - additional figures, include=TRUE}
-
-# scatterplot: PAR x month 
-ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
+# scatterplot: PAR x month <-- make site not continuous
+parscatter.5 <- ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
   geom_point(aes(color = site)) +
   labs(title = "Normalized PAR over time", x = "Date", y = "Normalized PAR") +
   theme_bw() 
+ggplotly(parscatter.5)
 
-# boxplot: PAR by month <---- KIT - can you make a figure that shows a boxplot of normPAR for each month? <-- need to change YEAR, MONTH, SITE, to character. 3
-parmod %>%
-group_by(year, treatment) %>%
-summarize(mean_par=mean(normalized_par), 
-          sd_par=sd(normalized_par), 
-)
-          
-# boxplot of normalized PAR x month
-ggplot(data = parmod, 
-       aes(x = month, y = normalized_par)) +
+# boxplot: PAR by month 
+parbox.1 <- ggplot(data = parmod, 
+       aes(x = month, y = normalized_par, color = month)) +
   labs(title = "Normalized PAR over time", x = "Month", y = "Normalized PAR") +
   geom_boxplot() +
   theme_bw() 
+ggplotly(parbox.1)
 
 # boxplot: PAR by site x treatment <-- broken and
-ggplot(data = parmod, 
-       aes(x = treatment, y = normalized_par)) +
+parbox.2 <- ggplot(data = parmod, aes(x = treatment, y = normalized_par)) +
   geom_boxplot(aes(color = treatment)) +
-  labs(title = "Normalized PAR over #time", x = "MAFA canopy cover (%)", y = "Date") +
+  labs(title = "Normalized PAR over time", x = "MAFA canopy cover (%)", y = "Date") +
   theme_bw() 
-
-
+ggplotly(parbox.2)
 ```
 
 ------------------------------------------------------------------------
@@ -464,20 +462,21 @@ anova(tdrmod_treat)
 ```{r tdrmod - figures, include = TRUE}
 
 # boxplot: TDR by site by treatment
-ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
+tdrbox <- ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
   geom_boxplot(aes(fill = treatment)) +
   scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
   labs(title = "Soil Moisture by Site and Treatment", x = "Site", y = "Soil Moisture (%)") +
   theme_bw() 
+ggplotly(tdrbox) %>% layout(boxmode = "group")
 
 # scatterplot: tdr x mafacover 
-ggplot(data = tdrmod, aes(x = mafacover, y = soil_moisture)) + 
+tdrscatter <- ggplot(data = tdrmod, aes(x = mafacover, y = soil_moisture)) + 
   geom_point(aes(color = site)) +
   scale_color_manual(values=c(sitecolors)) +
   labs(title = "Soil Moisture by Site and Treatment", x = "Site", y = "Soil Moisture (%)") +
-  geom_smooth(method="lm")+
+  geom_smooth(method="lm", color = "#291611")+
   theme_bw()
-
+ggplotly(tdrscatter)
 
 ```
 
@@ -604,38 +603,42 @@ plot(TukeyHSD(nnmod_treat_site))
 # nnmod$site = as.factor(nnmod$site)
 
 # boxplot: nncover x year
-ggplot(data = nnmod, aes(x = year, y = nncover)) + 
+nnbox.1 <- ggplot(data = nnmod, aes(x = year, y = nncover)) + 
   geom_boxplot(aes(fill = year)) +
- # scale_fill_manual(values = c('#F19B34', '#9F7E75', '#92A587')) +
+  scale_fill_manual(values = c('#F19B34', '#92A587')) +
  # scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
   labs(title = "Non-native cover by Site and Treatment", x = "Site", y = "Non-native cover (%)") +
   geom_smooth(method="lm") +
   theme_bw()
+ggplotly(nnbox.1)
 
 # boxplot: nncover x site x treatment (no correlation)
 nnmod$site = as.factor(nnmod$site)
-ggplot(data = nnmod, aes(x = site, y = nncover)) + 
+nnbox.2 <- ggplot(data = nnmod, aes(x = site, y = nncover)) + 
   geom_boxplot(aes(fill = treatment)) +
  # scale_fill_manual(values = c('#F19B34', '#9F7E75', '#92A587')) +
   scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
   labs(title = "Non-native cover by Site and Treatment", x = "Site", y = "Non-native cover (%)") +
   geom_smooth(method="lm") +
   theme_bw()
+ggplotly(nnbox.2) %>% layout(boxmode = "group")
 
 # boxplot: mafacover x treatment x site (no correlation)
-ggplot(data = nnmod, aes(x = treatment, y = nncover)) + 
+nnbox.3 <- ggplot(data = nnmod, aes(x = treatment, y = nncover)) + 
   geom_boxplot(aes(fill = site)) +
   geom_smooth(method="lm") +
   labs(title = "Non-native cover by Treatment and Site", x = "Treatment", y = "Non-native cover (%)") +
   scale_fill_manual(values = c(sitecolors)) +
   # scale_fill_manual(values = c('#D3E3CA', '#92A587')) +
   theme_bw()
+ggplotly(nnbox.3) %>% layout(boxmode = "group")
 
 # scatterplot: nncover x mafacover (no correlation)
-ggplot(data = nnmod, aes(x = mafacover, y = nncover)) + 
+nnscatter.1 <- ggplot(data = nnmod, aes(x = mafacover, y = nncover)) + 
   geom_point() +
   geom_smooth(method="lm")+
   theme_bw()
+ggplotly(nnscatter.1)
 ```
 
 ------------------------------------------------------------------------

@@ -34,6 +34,8 @@ names(cal_palettes)
 cal_palette(name = "chaparral1", n = 5, type = "continuous") # [1] "#DCC27A" "#F19B34"
 site1color <- "#DCC27A"
 site2color <- "#F19B34"
+site1outline <- "#9C8A58"
+site2outline <- "#936126"
 sitecolors <- c(site1color, site2color)
 
 # Treatment colors: Full, half, none 
@@ -318,10 +320,13 @@ survmortnospp_may2018_join %>%
 ```{r MAY 2018 - figures, include=TRUE}
 
 # boxplot: average survival by site
-ggplot(data = survmortnospp_may2018_join, aes(x = site, y = totalsurvival)) +
-   geom_boxplot(aes(group = site)) +
+survbox.1 <- ggplot(data = survmortnospp_may2018_join, aes(x = site, y = totalsurvival)) +
+   geom_boxplot(aes(fill = site, color = site)) +
+   scale_color_manual(values = c(site1outline, site2outline)) +
+   scale_fill_manual(values = c(site1color, site2color)) +
    labs(title = "Average seedling survival in May 2018", x = "Site", y = "Average seedling survival (n)") + 
     theme_bw() 
+ggplotly(survbox.1)
 
 ```
 
