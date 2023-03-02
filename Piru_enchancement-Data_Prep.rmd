@@ -3,6 +3,8 @@ title: "data_prep_2"
 author: "Kit Swift"
 date: "2022-11-23"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
