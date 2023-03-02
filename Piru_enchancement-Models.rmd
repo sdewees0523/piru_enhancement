@@ -635,7 +635,7 @@ print(lme.nnmod)
 summary(lme.nnmod)
 anova(lme.nnmod) # A significant p-value indicates that one or more significant differences exist between group means.
 # non-native cover is not correlated with mafa cover, treatment, site, or year.
-# year may be ecologically interesting (p = 0.065)
+
 
 # visualize significant factors from anova(lme.tdrmod)
 emmip(lme.nnmod, site ~ year)
@@ -732,10 +732,11 @@ ggplotly(nnscatter.1)
 
 ### PAR
 
--   PAR is significantly correlated with MAFA cover.
--   PAR is not correlated with treatment, site, or month.
+-   PAR is significantly correlated with MAFA cover and month.
+-   PAR is not correlated with treatment, year, or site.
+-   The slope of par x mafa cover is significantly different in May and July (or March and July?) than in the other months.
 -   More canopy cover does mean more shade, and less canopy cover means more sun.
--   No influence of month is expected since we normalized PAR values.
+
 
 ### TDR
 
