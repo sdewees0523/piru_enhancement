@@ -3,6 +3,8 @@ title: "Piru_enchancement-Models"
 author: "Kit Swift"
 date: "2022-12-15"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Load libraries
@@ -24,7 +26,7 @@ library(lme4)
 library(lmerTest)
 library(multcomp)
 library(multcompView)
-library(emmeans)
+library(emmeans) # includes lsmeans
 library(multcomp) # functions: multcompLetters2, multcompLetters3, multcompLetters4 using aov object
 
 #mafa_cover_all = MAFA % cover 2018 and 2019
@@ -191,7 +193,8 @@ nnmod %>%  # check number of data points
 2.  testing the residuals for normality
 
 ```{r par model - normality, include = TRUE}
-
+parmod$treatment <- as.factor(parmod$treatment)
+parmod$site <- as.factor(parmod$site)
 lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|date) + (1|plot_number) + (1|year),
                    data = parmod)
 
@@ -250,8 +253,6 @@ print(lme.parmod)
 summary(lme.parmod) # p-values
 anova(lme.parmod) # fixed level effects, pvalues, etc.
 # par is significant by mafa cover and month
-
-# anova(lme.parmod) # fixed level effects, pvalues, etc. <-- WHAT DOES THIS EVEN MEAN???
 #Type III Analysis of Variance Table with Satterthwaite's method
 #           Sum Sq  Mean Sq NumDF   DenDF F value    Pr(>F)    
 #treatment 0.00067 0.000336     2  34.513  0.0197 0.9805359    
@@ -263,9 +264,60 @@ anova(lme.parmod) # fixed level effects, pvalues, etc.
 # visualize significant factors from anova(lme.parrmod)
 
 emmip(lme.parmod, mafacover ~ month)
+# mafacover is 26.32... that values must be from the model
 
-# get stats on interactions
-emmeans(lme.parmod, list(pairwise ~ mafacover*month), adjust = "tukey") # <--- What do these results mean?
+# testing the differnce between slopes
+parmod.interaction <- lm(normalized_par ~ mafacover*month, data = parmod)
+anova(parmod.interaction) # p-values for the interaction
+# Analysis of Variance Table
+#Response: normalized_par
+#                 Df Sum Sq Mean Sq F value    Pr(>F)    
+#mafacover         1 1.3002 1.30023 53.2054 3.242e-12 ***
+#month             6 1.7738 0.29563 12.0973 4.632e-12 ***
+#mafacover:month   6 0.4450 0.07416  3.0346  0.006871 ** 
+#Residuals       274 6.6960 0.02444     
+
+# Obtain R2 slopes
+parmod.interaction$coefficients
+parmod.lst <- lstrends(parmod.interaction, "month", var="mafacover")
+print(parmod.lst)
+
+# Compare slopes
+pairs(parmod.lst)
+# normalized_par in Jan and May are sig different and Jan and July are sig different
+#contrast          estimate      SE  df t.ratio p.value
+# month1 - month11  0.003656 0.00173 274   2.117  0.3457
+# month1 - month3   0.003513 0.00173 274   2.035  0.3954
+# month1 - month4   0.001238 0.00248 274   0.500  0.9988
+# month1 - month5   0.006508 0.00173 274   3.769  0.0038 <--
+# month1 - month7   0.005591 0.00173 274   3.237  0.0227 <--
+# month1 - month9   0.003805 0.00157 274   2.418  0.1949
+# month11 - month3 -0.000142 0.00173 274  -0.082  1.0000
+# month11 - month4 -0.002418 0.00248 274  -0.977  0.9587
+# month11 - month5  0.002852 0.00173 274   1.652  0.6488
+# month11 - month7  0.001935 0.00173 274   1.121  0.9214
+# month11 - month9  0.000149 0.00157 274   0.095  1.0000
+# month3 - month4  -0.002275 0.00248 274  -0.919  0.9693
+# month3 - month5   0.002994 0.00173 274   1.734  0.5938
+# month3 - month7   0.002077 0.00173 274   1.203  0.8926
+# month3 - month9   0.000291 0.00157 274   0.185  1.0000
+# month4 - month5   0.005270 0.00248 274   2.129  0.3387
+# month4 - month7   0.004353 0.00248 274   1.758  0.5774
+# month4 - month9   0.002567 0.00237 274   1.083  0.9328
+# month5 - month7  -0.000917 0.00173 274  -0.531  0.9984
+# month5 - month9  -0.002703 0.00157 274  -1.718  0.6046
+# month7 - month9  -0.001786 0.00157 274  -1.135  0.9168
+# P value adjustment: tukey method for comparing a family of 7 estimates 
+
+
+# mean, SE: mafacover x month
+parmod %>% 
+  group_by(month, ) %>% 
+  summarise(MEAN_par=mean(normalized_par, na.rm = TRUE),
+            SD = sd(normalized_par, na.rm = TRUE),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
+            )
 
 # mean, SE: year x month
 parmod %>% 
@@ -285,13 +337,40 @@ parmod %>%
             SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
             )
 ```
+```{r par extra stats code, include=FALSE}
+# get stats on interactions
+#emmeans(lme.parmod, list(pairwise ~ month), adjust = "tukey")
+#emmeans(lme.parmod, list(pairwise ~ mafacover), adjust = "tukey")
+#emmeans(lme.parmod, list(pairwise ~ mafacover + month), adjust = "tukey") # <--- What do these results mean?
+
+# ordinal logistic regression
+parmod$month <- as.factor(parmod$month)
+
+ggplot(parmod, aes(x = month, y = normalized_par)) +
+  geom_boxplot(size = .75) +
+  geom_jitter(alpha = .5) +
+ # facet_grid(site ~ year, margins = TRUE) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+
+parmod.r2 = lm(normalized_par ~ mafa_cover_all, data = parmod) 
+# Extracting R-squared parameter from summary 
+summary(ml)$r.squared 
+
+olr.parmod <- polr(normalized_par ~ month + mafacover, data = parmod, Hess=TRUE)
+summary(olr.parmod)
+
+## view a summary of the model
+summary(m)
+```
 
 4.  figures
 
 ```{r par model - figures, include=TRUE}
+
 # scatterplot: PAR x date
 parscatter.1 <- ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
   geom_point(aes(color = treatment)) +
+  scale_color_manual(values=c(treatmentcolors)) +
 labs(title = "Normalized PAR over time", x = "Date", y = "Nomalized PAR") +
   geom_smooth(method="lm")+
   theme_bw()
@@ -310,6 +389,7 @@ ggplotly(parscatter.2)
 # scatterplot: PAR x mafacover x treatment <-- use treatmentcolor instead of default
 parscatter.3 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = treatment)) +
+  scale_color_manual(values=c(treatmentcolors)) +
   labs(title = "Normalized PAR by MAFA cover (%) and Treatment", x = "MAFA canopy cover (%)", y = "PAR") +
   theme_bw()
 ggplotly(parscatter.3)
@@ -317,9 +397,12 @@ ggplotly(parscatter.3)
 # scatterplot: PAR x mafacover x site <-- make site not continuous & use sitecolor instead of default
 parscatter.4 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = site)) +
+  scale_color_manual(values=c(sitecolors)) +
   labs(title = "Normalized PAR by MAFA cover (%) and Site", x = "MAFA canopy cover (%)", y = "PAR") +
   theme_bw() 
 ggplotly(parscatter.4)
+
+# scatterplot: PAR x nncover (%) x month
 
 
 #ggplot(crab_data, aes(x = size)) +
@@ -331,6 +414,7 @@ ggplotly(parscatter.4)
 # scatterplot: PAR x month <-- make site not continuous
 parscatter.5 <- ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
   geom_point(aes(color = site)) +
+  scale_color_manual(values=c(sitecolors)) +
   labs(title = "Normalized PAR over time", x = "Date", y = "Normalized PAR") +
   theme_bw() 
 ggplotly(parscatter.5)
@@ -346,6 +430,7 @@ ggplotly(parbox.1)
 # boxplot: PAR by site x treatment <-- broken and
 parbox.2 <- ggplot(data = parmod, aes(x = treatment, y = normalized_par)) +
   geom_boxplot(aes(color = treatment)) +
+  scale_color_manual(values=c(treatmentcolors)) +
   labs(title = "Normalized PAR over time", x = "MAFA canopy cover (%)", y = "Date") +
   theme_bw() 
 ggplotly(parbox.2)
