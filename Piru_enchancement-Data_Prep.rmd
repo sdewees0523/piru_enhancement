@@ -133,17 +133,21 @@ write.csv(exotic_cover_all, "data/processed/exotic_cover_all.csv")
 
 ## Seedling survival
 ```{r seedling survivial prep, include=TRUE} 
-survival_prep_load <- read.csv(here("data", "survival_data.csv")) 
+survival_prep_load <- read.csv("data/survival_data.csv")
 
 survival_prep <- survival_prep_load %>% 
-  dplyr::select(date, plot_number, MAFA_removal, species, alive) %>%
-    rename(treatment = MAFA_removal) %>% 
+  dplyr::select(date, plot_number, MAFA_removal, species, stem_height_cm, width_1_cm, width_2_cm, alive) %>%
+    rename(treatment = MAFA_removal, 
+           height = stem_height_cm, 
+           width1 = width_1_cm, 
+           width2 = width_2_cm
+           )%>% 
   mutate(date = mdy(date),
          month = month(date),
          year = year(date),
          treatment = str_remove(treatment, "removal")
          ) %>% 
-  group_by(year, month, plot_number, treatment, species, date) %>%
+  group_by(year, month, plot_number, treatment, species, height, width1, width2, date) %>%
   summarise(alive = sum(alive, na.rm = TRUE)) %>% 
   ungroup() %>% 
   mutate(
@@ -226,7 +230,7 @@ mortality_prep <- mortality_prep_load %>%
     year = as.integer(year)
   ) %>%  
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
-view(mortality_prep)
+print(mortality_prep)
 ```
 
 ```{r mortality months since transplanting, include = TRUE}
@@ -322,6 +326,8 @@ write.csv(survmort, "data/processed/survmort.csv")
 ## PAR - sunshine
 ```{r par, include=TRUE}
 par_load <- read.csv(here("data", "par_data.csv")) 
+
+par_load$date <- as.character(par_load$date)
 
 par <- par_load %>% 
   dplyr::select(date, plot, weeding, readingno, ambient_PAR_1, below_PAR_1) %>% 

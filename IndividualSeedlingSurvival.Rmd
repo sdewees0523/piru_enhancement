@@ -1,0 +1,118 @@
+---
+title: "Facilitation - Individual seedling surv"
+author: "Stephanie Ma Lucero"
+date: "2023-03-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r libraries-data, message=FALSE}
+library(here) # similar to set working directory
+library(tidyverse) # data wrangling
+library(lubridate) # dates and times
+library(ggthemes)
+library(plotly)
+library(dplyr)
+library(olsrr)
+#library(survival)
+library(lme4)
+library(lmerTest)
+library(multcomp)
+library(multcompView)
+library(emmeans) # includes lsmeans
+library(multcomp) # functions: multcompLetters2, multcompLetters3, multcompLetters4 using aov object
+
+#mafa_cover_all = MAFA % cover 2018 and 2019
+#exotic_cover_all = exotic % cover 2018 and 2019
+
+```
+
+# Load colors for graphs
+
+```{r colors, include=TRUE}
+devtools::install_github("an-bui/calecopal")
+
+library(calecopal)
+# all palettes
+names(cal_palettes)
+
+# Site colors: 1, 2 
+cal_palette(name = "chaparral1", n = 5, type = "continuous") # [1] "#DCC27A" "#F19B34"
+site1color <- "#DCC27A"
+site2color <- "#F19B34"
+sitecolors <- c(site1color, site2color)
+
+# Treatment colors: Full, half, none 
+cal_palette(name = "chaparral3", n = 5, type = "continuous") # [1] "#D3E3CA", "#92A587", "#2F3525"
+cal_palette(name = "desert", n = 5, type = "continuous") # [1] "#F6EECF", "#B09175", "#291611"
+treatment1color <- "#F6EECF"
+treatment2color <- "#B09175"
+treatment3color <- "#291611"
+treatmentcolors <- c(treatment1color, treatment2color, treatment3color)
+
+```
+
+# Question 1: How do environmental conditions change by a) canopy treatment and b) canopy cover?
+
+Is canopy treatment or canopy cover a stronger predictor of the environmental conditions below the shrub canopy?
+
+Notes: - **response variable**: The variable you want to test. (e.g.,. PAR, TDR, nncover) - **explanatory variables**: The variables that can explain the outcome. (e.g., treatment, mafacover, site) - **data frame**: Include all the data you'll be working with. (e.g., combine par and mafa_cover_all) - **formula**: a formula is a two-sided linear formula object describing both the *fixed-effects* and *random effects* part of the model, with the response on the left of a \~ operator and the terms, separated by + operators, on the right. - **random effects**: Random-effects terms are distinguished by vertical bars **(\|)** separating expressions for design matrices from grouping factors. Two vertical bars **(\|\|)** can be used to specify multiple uncorrelated random effects for the same grouping variable. + Because of the way it is implemented, the \|\|-syntax works only for design matrices containing numeric (continuous) predictors; to fit models with independent categorical effects, see dummy or the lmer_alt function from the afex package.)
+
+### Load PAR, TDR, and non-native percent cover data.
+
+### Saved as a csv in the "Processed" data folder.
+
+## Seedling survival
+```{r seedling survivial prep, include=TRUE} 
+survival_prep_load <- read.csv("data/survival_data.csv")
+str(survival_prep_load)
+#, 
+#    col_types = cols(
+#      date = col_character(), 
+#      plot_number = col_character(), 
+#      MAFA_removal = col_character(),
+#     location = col_character(),
+#      species = col_character(),
+#      #individual = col_character(),
+#      stem_height_cm = col_number(),
+#      width_1_cm = col_number(),
+#      width_2_cm = col_number(),
+#      #condition = col_character,
+#      alive = col_character(),
+#      dead = col_character(),
+#      notes = col_character()
+#      )
+#    )
+
+survival_prep <- survival_prep_load %>% 
+  dplyr::select(date, plot_number, MAFA_removal, species, stem_height_cm, width_1_cm, width_2_cm, alive) %>%
+    rename(treatment = MAFA_removal, 
+           height = stem_height_cm, 
+           width1 = width_1_cm, 
+           width2 = width_2_cm
+           ) %>% 
+  mutate(date = mdy(date),
+         month = month(date),
+         year = year(date),
+         treatment = str_remove(treatment, "removal")
+         ) %>% 
+  mutate(
+    month = as.integer(month),
+    year = as.integer(year), 
+    height = as.numeric(height), 
+    width1 = as.numeric(width1),
+    width2 = as.numeric(width2)
+  ) %>%  
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
+      
+print(survival_prep)
+
+#   mutate(treatment = case_when(.$treatment == "no" ~ "none", TRUE ~ survival_prep_load$treatment)) 
+# treatment = case_when(plot_number == "5" ~ "half", TRUE ~ survival_prep_1$treatment))
+ 
+```
