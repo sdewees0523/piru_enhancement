@@ -17,6 +17,7 @@ library(tidyverse) # data wrangling
 library(lubridate) # dates and times
 library(ggthemes)
 library(plotly)
+library(ggpubr)
 library(dplyr)
 library(olsrr)
 #library(survival)
@@ -57,7 +58,7 @@ treatmentcolors <- c(treatment1color, treatment2color, treatment3color)
 
 ```
 
-# Question 1: How do environmental conditions change by a) canopy treatment and b) canopy cover?
+# Question 3: What seedling traits lead to greater survival?
 
 Is canopy treatment or canopy cover a stronger predictor of the environmental conditions below the shrub canopy?
 
@@ -116,3 +117,426 @@ print(survival_prep)
 # treatment = case_when(plot_number == "5" ~ "half", TRUE ~ survival_prep_1$treatment))
  
 ```
+
+2018 seedling survival
+
+- data prep
+
+```{r 2018 seedling survival, include=TRUE}
+seedlingsurvival <- read.csv("data/seedlingsurvival_2018.csv")
+
+# combine plot_number, location, species, individual to one column
+seedlingsurvival$seedlingID <- paste(seedlingsurvival$plot_number, seedlingsurvival$location, seedlingsurvival$species, seedlingsurvival$individual, sep="_") 
+
+# combine timepoint and alive to one column
+seedlingsurvival$timepoint_status <- paste(seedlingsurvival$timepoint, seedlingsurvival$alive, sep="_") 
+
+view(seedlingsurvival)
+
+ceol_prep <- seedlingsurvival %>% 
+  #select(!date) %>% 
+ # select(!month) %>% 
+  filter(species == "CEOL") %>% 
+  select("seedlingID", "timepoint_status", "stem_height_cm") %>% 
+  mutate(stem_height_cm = as.numeric(stem_height_cm))
+         
+str(ceol_prep)
+as.tibble(ceol_prep)
+
+# how many unique seedlingIDs are there?
+ceol_prep %>% 
+  dplyr::summarize(seedlings_planted = n_distinct(seedlingID))
+# 144 - because we planted 144 seedlings
+
+
+# data is your dataframe of interest. --> ceol_prep
+# key is the column whose values will become variable names. --> seedlingID
+# value is the column where values will fill in under the new variables created from key. --> height
+
+ceol_wide <- spread(ceol_prep, timepoint_status, stem_height_cm) %>%  # without NAs as zeros
+  replace(is.na(.), 0) # with NAs as zeros
+view(ceol_wide)
+
+ceol_wide <- spread(ceol_prep, timepoint_status, stem_height_cm) 
+  
+#reshape(ceol_prep, idvar = "seedlingID", timevar = "timepoint", direction = "wide")
+view(ceol_wide)
+
+ceol_wide %>% 
+  filter("1_1" > 0.1)
+
+
+write.csv(ceol_wide, "data/processed/ceol_wide_2018.csv")
+
+
+# 
+as.tibble(ceol_prep)
+ceol_prep_2 <- seedlingsurvival %>% 
+  filter(species == "CEOL") %>% 
+  select("timepoint", "alive", "seedlingID", "stem_height_cm") %>% 
+  mutate(stem_height_cm = as.numeric(stem_height_cm))
+ceol_prep_2 <- as.tibble(ceol_prep_2)
+view(ceol_prep_2)
+
+ceol_wide_2 <- spread(ceol_prep_2, alive, stem_height_cm) 
+view(ceol_wide_2)
+
+ceol_wide_2_rename <- ceol_wide_2 %>% 
+  rename(dead = 0)
+
+write.csv(ceol_wide_2, "data/processed/ceol_wide2_2018.csv")
+ceol_wide_2_load <- read.csv("data/ceol_wide2_2018_sml.csv")
+view(ceol_wide_2_load)
+#ceol_wide_3 <- spread(ceol_wide_2_load, alive, timepoint)
+#view(ceol_wide_3)
+
+maymarch <- read.csv("data/seedlingsurvival_march2018.csv")
+view(maymarch)
+maymarch_aov <- aov((height.in.march ~ aliveinmay) , data = maymarch)
+summary.aov(maymarch_aov)
+```
+
+```{r all seedlings march 2018, include=TRUE}
+
+seedling_prep <- seedlingsurvival %>% 
+  #select(!date) %>% 
+ # select(!month) %>% 
+  #filter(species == "CEOL") %>% 
+  select("timepoint", "alive", "species", "seedlingID", "stem_height_cm") %>% 
+  mutate(stem_height_cm = as.numeric(stem_height_cm))
+seedling_prep_2 <- as.tibble(seedling_prep)
+view(seedling_prep_2)
+
+seedling_wide_2 <- spread(seedling_prep_2, alive, stem_height_cm) 
+view(seedling_wide_2)
+
+write.csv(seedling_wide_2, "data/processed/seedling_wide2_2018.csv")
+# process data in Excel and save in data folder
+seedling_wide_2_load <- read.csv("data/2018_march.may.csv")
+view(seedling_wide_2_load)
+str(seedling_wide_2_load)
+
+seedling_wide_2_load_meanSD <- seedling_wide_2_load %>%
+  group_by(species, aliveinmay) %>%
+  summarise_at(vars(march_aliveH), list(mean = mean, sd = sd)) %>% 
+  filter(aliveinmay == "Y" | aliveinmay == "N")
+view(seedling_wide_2_load_meanSD)
+
+#  column plot
+seedling_wide_2_load_meanSD_plot <- ggplot(seedling_wide_2_load_meanSD, aes(x = aliveinmay, y = mean, fill = aliveinmay)) +
+ facet_wrap(~ species) +
+  geom_col(position = "dodge", width = 0.8) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2,
+                 position=position_dodge(.9)) +
+  labs(title = "Seedling height as a predictor of survival", x = "Survived to May 2018", y = "Average height in March 2018 (cm)") +
+  scale_fill_manual(values = c('gold', 'darkgreen')) +
+                       theme_bw()
+seedling_wide_2_load_meanSD_plot + scale_x_discrete(limits=c("Y", "N"),
+                                         labels=c("Y" = "YES", "N" = "NO"))
+
+# CEOL March 2018
+march2018_ceol <- seedling_wide_2_load %>% 
+  filter(species == "CEOL")
+march2018_ceol_aov <- aov((march_aliveH ~ aliveinmay) , data = march2018_ceol)
+summary.aov(march2018_ceol_aov)
+
+# HEAR March 2018
+march2018_hear <- seedling_wide_2_load %>% 
+  filter(species == "HEAR")
+march2018_hear_aov <- aov((march_aliveH ~ aliveinmay) , data = march2018_hear)
+summary.aov(march2018_hear_aov)
+
+# RHOV March 2018
+march2018_rhov <- seedling_wide_2_load %>% 
+  filter(species == "CEOL")
+march2018_rhov_aov <- aov((march_aliveH ~ aliveinmay) , data = march2018_rhov)
+summary.aov(march2018_rhov_aov)
+
+# SAAP March 2018
+march2018_saap <- seedling_wide_2_load %>% 
+  filter(species == "SAAP")
+march2018_saap_aov <- aov((march_aliveH ~ aliveinmay) , data = march2018_saap)
+summary.aov(march2018_saap_aov)
+
+```
+
+```{r 2019 seedling survival data prep, include=TRUE}
+seedlingsurvival_2019_load <- read.csv("data/seedlingsurvival_2019.csv")
+seedlingsurvival_2019 <- seedlingsurvival_2019_load %>% 
+  filter(year == "2019") %>% 
+  filter(timepoint == "jan" | timepoint == "march" | timepoint == "may" | timepoint == "sept" )
+
+# combine plot_number, location, species, individual to one column
+seedlingsurvival_2019$seedlingID <- paste(seedlingsurvival_2019$plot_number, seedlingsurvival_2019$location, seedlingsurvival_2019$species, sep="_") 
+
+# combine timepoint and status to one column
+seedlingsurvival_2019$timepoint_status <- paste(seedlingsurvival_2019$timepoint, seedlingsurvival_2019$status, sep="_") 
+
+view(seedlingsurvival_2019)
+
+seedlingsurvival_2019_prep <- seedlingsurvival_2019 %>% 
+  select("species", "seedlingID", "timepoint_status", "status", "timepoint", "stem_height_cm") %>% 
+  mutate(stem_height_cm = as.numeric(stem_height_cm))
+         
+str(seedlingsurvival_2019_prep)
+as.tibble(seedlingsurvival_2019_prep)
+
+# how many unique seedlingIDs are there?
+seedlingsurvival_2019_prep %>% 
+  dplyr::summarize(seedlings_planted = n_distinct(seedlingID))
+# 397
+
+# data is your dataframe of interest. --> ceol_prep
+# key is the column whose values will become variable names. --> seedlingID
+# value is the column where values will fill in under the new variables created from key. --> height
+
+seedlingsurvival_2019_wide <- spread(seedlingsurvival_2019_prep, timepoint_status, stem_height_cm) %>%  # without NAs as zeros
+  replace(is.na(.), 0) # with NAs as zeros
+view(seedlingsurvival_2019_wide)
+
+# seedlingsurvival_2019_wide <- spread(seedlingsurvival_2019_prep, status, stem_height_cm) 
+  
+#reshape(ceol_prep, idvar = "seedlingID", timevar = "timepoint", direction = "wide")
+# view(seedlingsurvival_2019_wide)
+
+# seedlingsurvival_2019_wide %>% 
+#  filter("1_1" > 0.1)
+
+
+#write.csv(ceol_wide, "data/processed/ceol_wide_2018.csv")
+
+
+# 
+
+seedlingsurvival_2019_wide_2 <- spread(seedlingsurvival_2019_prep, status, stem_height_cm) 
+view(seedlingsurvival_2019_wide_2)
+
+write.csv(seedlingsurvival_2019_wide_2, "data/processed/seedlingsurvival_2019_wide.csv")
+# export to Excel
+
+```
+
+```{r all seedlings jan 2019 data prep, include=TRUE}
+# import from Excel
+seedlingsurvival2019_sml_load <- read.csv("data/seedlingsurvival_2019_sml.csv")
+head(seedlingsurvival2019_sml_load)
+str(seedlingsurvival2019_sml_load)
+
+seedlingsurvival2019_sml <- seedlingsurvival2019_sml_load %>% 
+  dplyr::select("species", "seedlingID", "alive_janH", "alive_marchH", "alive_mayH", "alive_septH", "aliveinjan", "aliveinmarch", "aliveinmay", "aliveinsept") 
+str(seedlingsurvival2019_sml)
+seedlingsurvival2019_sml_2 <- as.tibble(seedlingsurvival2019_sml)
+head(seedlingsurvival2019_sml_2)
+
+# mean and SD of january height ~ alive or dead in March
+seedlingsurvival2019_jan_meanSD <- seedlingsurvival2019_sml_2 %>%
+  #group_by(species, aliveinmarch) %>%
+   group_by(aliveinmarch) %>%
+  summarise_at(vars(alive_janH), list(mean = mean, sd = sd)) %>% 
+  filter(aliveinmarch == "Y" | aliveinmarch == "N")
+view(seedlingsurvival2019_jan_meanSD)
+```
+```{r jan 2018 - normality, include=TRUE}
+# omitting NAs in January height data, this way all heights are paired with a Y or N (aka. equal values in columns used in analysis)
+seedlingsurvival2019_sml_2_najan <- seedlingsurvival2019_sml_2[!is.na(seedlingsurvival2019_sml_2$alive_janH),]
+view(seedlingsurvival2019_sml_2_najan)
+
+# lm - test normality of January 2019 residuals by species and alive in march
+lm.alive_janH <- lm(alive_janH ~ species + aliveinmarch, seedlingsurvival2019_sml_2_najan)
+
+MOD <- lm.alive_janH
+
+# Calculate model's residual and fitted values
+F1 <- fitted(MOD)
+E1 <- residuals(MOD, "pearson")
+
+# See residuals as a histogram, look for normal distribution
+hist(E1)
+
+# Graph residuals against a normal distribution, look for all points to be on 1:1 line
+#need to call next two lines together
+qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
+qqline(E1)
+
+# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
+# run together 2 lines
+plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
+abline(h = 0) # looking for random scatter
+
+# Check for crazy outliers, look for lines MUCH taller than the rest of data
+plot(cooks.distance(MOD))
+
+# Plot a box plot for each factor, look for equal variance amount levels along the zero line
+# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
+# Random effects need the qqline just like normality. 
+# So, only species and alive(Y/N) get boxplots
+boxplot(E1 ~ species, data = seedlingsurvival2019_sml_2_najan)
+abline(h = 0)
+
+boxplot(E1 ~ aliveinmarch, data = seedlingsurvival2019_sml_2_najan)
+abline(h = 0)
+
+# Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
+#qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
+#qqline(ranef(MOD)$plot_number[,1]) # unique plots
+
+#qqnorm(ranef(MOD)$year[,1], main = "Plot Residuals") # year doesn't run becuase only 2 numbers
+#qqline(ranef(MOD)$year[,1]) # unique plots
+
+
+#residuals_jan_spp <- residuals(model_jan_spp)
+#shapiro.test(residuals_jan_spp)
+# test normality of January 2019 residuals by species and aliveinmarch
+model_jan_sppaliveinmarch <- lm(alive_janH ~ species + aliveinmarch, seedlingsurvival2019_sml_2_najan)
+```
+```{r jan 2019 - stats, include=TRUE}
+
+print(lm.alive_janH)
+summary(lm.alive_janH) # p-values
+anova(lm.alive_janH)
+# species is significant
+# aliveinmarch is not significant
+
+# post-hoc on lm to get stats on interactions
+emmeans(lm.alive_janH, pairwise ~ species)
+#$contrasts
+# contrast    estimate    SE  df t.ratio p.value
+# CEOL - HEAR   -3.576 0.238 390 -15.003  <.0001
+# CEOL - RHOV    0.365 0.238 390   1.538  0.4157 <-- 
+# CEOL - SAAP   -1.671 0.237 390  -7.041  <.0001
+# HEAR - RHOV    3.941 0.217 390  18.193  <.0001
+# HEAR - SAAP    1.905 0.211 390   9.028  <.0001
+# RHOV - SAAP   -2.037 0.215 390  -9.493  <.0001
+emmeans(lm.alive_janH, pairwise ~ aliveinmarch)
+#emmeans(lm.alive_janH, pairwise ~ aliveinmarch)
+#$contrasts
+# contrast estimate    SE  df t.ratio p.value
+# N - Y      -0.232 0.217 390  -1.071  0.2850 <-- 
+
+#one-way ANOVA of all seedlings
+ggboxplot(seedlingsurvival2019_sml_2_najan, x = "species", y = "alive_janH", palette = c("gold", "darkgreen"))
+jan2019_all_aov <- aov((alive_janH ~ aliveinmarch) , data = seedlingsurvival2019_sml_2_najan)
+summary.aov(jan2019_all_aov)
+TukeyHSD(jan2019_all_aov)
+
+# 2-way anova test of all seedlings by species
+ggboxplot(seedlingsurvival2019_sml_2_najan, x = "species", y = "alive_janH", color = "aliveinmarch", palette = c("gold", "darkgreen"))
+
+seedlingsurvival2019_sml_2.aov2 <- aov(alive_janH ~ aliveinmarch + species, data = seedlingsurvival2019_sml_2_najan)
+summary(seedlingsurvival2019_sml_2.aov2)
+TukeyHSD(seedlingsurvival2019_sml_2.aov2, which = "aliveinmarch")
+TukeyHSD(seedlingsurvival2019_sml_2.aov2, which = "species")
+# TukeyHSD(seedlingsurvival2019_sml_2.aov2)
+
+#  column plot
+seedlingsurvival2019_jan_meanSD_plot <- ggplot(seedlingsurvival2019_jan_meanSD, aes(x = aliveinmarch, y = mean, fill = aliveinmarch)) +
+ facet_wrap(~ species) +
+  geom_col(position = "dodge", width = 0.8) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2,
+                 position=position_dodge(.9)) +
+  labs(title = "Seedling height as a predictor of survival", x = "Survived to March 2019", y = "Average height in January 2019 (cm)") +
+  scale_fill_manual(values = c('gold', 'darkgreen')) +
+                       theme_bw()
+seedlingsurvival2019_jan_meanSD_plot + scale_x_discrete(limits=c("Y", "N"),
+                                         labels=c("Y" = "YES", "N" = "NO"))
+
+# CEOL Jan 2019
+jan2019_ceol <- seedlingsurvival2019_sml_2 %>% 
+  filter(species == "CEOL")
+head(jan2019_ceol)
+jan2019_ceol_aov <- aov((alive_janH ~ aliveinmarch) , data = jan2019_ceol)
+summary.aov(jan2019_ceol_aov)
+
+# did not run the rest
+
+# HEAR Jan 2019
+#march2018_hear <- seedling_wide_2_load %>% 
+#  filter(species == "HEAR")
+#march2018_hear_aov <- aov((march_aliveH ~ aliveinmay) , data = march2018_hear)
+#summary.aov(march2018_hear_aov)
+
+# RHOV Jan 2019
+#march2018_rhov <- seedling_wide_2_load %>% 
+#  filter(species == "CEOL")
+#march2018_rhov_aov <- aov((march_aliveH ~ aliveinmay) , data = march2018_rhov)
+#summary.aov(march2018_rhov_aov)
+
+# SAAP Jan 2019
+#march2018_saap <- seedling_wide_2_load %>% 
+#  filter(species == "SAAP")
+#march2018_saap_aov <- aov((march_aliveH ~ aliveinmay) , data = march2018_saap)
+#summary.aov(march2018_saap_aov)
+
+```
+
+```{r all seedlings march 2019 aov, include=TRUE}
+
+# mean and SD of march height ~ alive or dead in may
+seedlingsurvival2019_march_meanSD <- seedlingsurvival2019_sml_2 %>%
+  group_by(species, aliveinmay) %>%
+  summarise_at(vars(alive_marchH), list(mean = mean, sd = sd)) %>% 
+  filter(aliveinmay == "Y" | aliveinmay == "N")
+view(seedlingsurvival2019_march_meanSD)
+
+#  column plot
+seedlingsurvival2019_march_meanSD_plot <- ggplot(seedlingsurvival2019_march_meanSD, aes(x = aliveinmay, y = mean, fill = aliveinmay)) +
+ facet_wrap(~ species) +
+  geom_col(position = "dodge", width = 0.8) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2,
+                 position=position_dodge(.9)) +
+  labs(title = "Seedling height as a predictor of survival", x = "Survived to May 2019", y = "Average height in March 2019 (cm)") +
+  scale_fill_manual(values = c('gold', 'darkgreen')) +
+                       theme_bw()
+seedlingsurvival2019_march_meanSD_plot + scale_x_discrete(limits=c("Y", "N"),
+                                         labels=c("Y" = "YES", "N" = "NO"))
+
+# CEOL March 2019
+ceol2019 <- seedlingsurvival2019_sml_2 %>% 
+  filter(species == "CEOL")
+head(ceol2019)
+march_ceol2019_aov <- aov((alive_marchH ~ aliveinmay) , data = ceol2019)
+summary.aov(march_ceol2019_aov)
+```
+
+```{r all seedlings may 2019 aov, include=TRUE}
+
+# mean and SD of march height ~ alive or dead in may
+seedlingsurvival2019_may_meanSD <- seedlingsurvival2019_sml_2 %>%
+  group_by(species, aliveinsept) %>%
+  summarise_at(vars(alive_marchH), list(mean = mean, sd = sd)) %>% 
+  filter(aliveinsept == "Y" | aliveinsept == "N")
+view(seedlingsurvival2019_may_meanSD)
+
+#  column plot
+seedlingsurvival2019_may_meanSD_plot <- ggplot(seedlingsurvival2019_may_meanSD, aes(x = aliveinsept, y = mean, fill = aliveinsept)) +
+ facet_wrap(~ species) +
+  geom_col(position = "dodge", width = 0.8) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2,
+                 position=position_dodge(.9)) +
+  labs(title = "Seedling height as a predictor of survival", x = "Survived to September 2019", y = "Average height in May 2019 (cm)") +
+  scale_fill_manual(values = c('gold', 'darkgreen')) +
+                       theme_bw()
+seedlingsurvival2019_may_meanSD_plot + scale_x_discrete(limits=c("Y", "N"),
+                                         labels=c("Y" = "YES", "N" = "NO"))
+
+# CEOL May 2019
+may_ceol2019_aov <- aov((alive_mayH ~ aliveinsept) , data = ceol2019)
+summary.aov(may_ceol2019_aov)
+```
+
+```{r alive or dead in may dependent on height in march}
+
+ceol_may2018 <- read.csv("data/CEOL_may2018.csv")
+
+view(ceol_may2018)
+
+
+
+ceol_aliveinmarch <- ceol_wide %>% 
+  select("seedlingID", "1_1", "2_0", "2_1")
+  
+print(ceol_aliveinmarch)
+dplyr::summarize(seedlings_planted = n_distinct(seedlingID))
+  
+```
+
