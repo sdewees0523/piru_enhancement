@@ -134,30 +134,51 @@ write.csv(exotic_cover_all, "data/processed/exotic_cover_all.csv")
 ## Seedling survival
 ```{r seedling survivial prep, include=TRUE} 
 survival_prep_load <- read.csv("data/survival_data.csv")
+str(survival_prep_load)
+#, 
+#    col_types = cols(
+#      date = col_character(), 
+#      plot_number = col_character(), 
+#      MAFA_removal = col_character(),
+#     location = col_character(),
+#      species = col_character(),
+#      #individual = col_character(),
+#      stem_height_cm = col_number(),
+#      width_1_cm = col_number(),
+#      width_2_cm = col_number(),
+#      #condition = col_character,
+#      alive = col_character(),
+#      dead = col_character(),
+#      notes = col_character()
+#      )
+#    )
 
 survival_prep <- survival_prep_load %>% 
   dplyr::select(date, plot_number, MAFA_removal, species, stem_height_cm, width_1_cm, width_2_cm, alive) %>%
+ # mutate_all(na_if,alive,"") %>% # fills blank cells with NA
     rename(treatment = MAFA_removal, 
            height = stem_height_cm, 
            width1 = width_1_cm, 
            width2 = width_2_cm
-           )%>% 
+           ) %>% 
   mutate(date = mdy(date),
          month = month(date),
          year = year(date),
          treatment = str_remove(treatment, "removal")
          ) %>% 
-  group_by(year, month, plot_number, treatment, species, height, width1, width2, date) %>%
+  group_by(year, month, plot_number, treatment, species, date, height, width1, width2) %>%
   summarise(alive = sum(alive, na.rm = TRUE)) %>% 
   ungroup() %>% 
   mutate(
     month = as.integer(month),
-    year = as.integer(year)
+    year = as.integer(year), 
+    height = as.numeric(height), 
+    width1 = as.numeric(width1),
+    width2 = as.numeric(width2)
   ) %>%  
-  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) 
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
       
-view(survival_prep)
-     
+print(survival_prep)
          
 #   mutate(treatment = case_when(.$treatment == "no" ~ "none", TRUE ~ survival_prep_load$treatment)) 
 # treatment = case_when(plot_number == "5" ~ "half", TRUE ~ survival_prep_1$treatment))
@@ -215,19 +236,25 @@ write.csv(survival, "data/processed/survival.csv")
 mortality_prep_load <- read.csv(here("data", "survival_data.csv")) 
 
 mortality_prep <- mortality_prep_load %>% 
-  dplyr::select(date, plot_number, MAFA_removal, species, dead) %>% 
-  rename(treatment = MAFA_removal) %>% 
+  dplyr::select(date, plot_number, MAFA_removal, species, dead, stem_height_cm, width_1_cm, width_2_cm) %>% 
+  rename(treatment = MAFA_removal, 
+         height = stem_height_cm,
+         width1 = width_1_cm,
+         width2 = width_2_cm) %>% 
   mutate(date = mdy(date),
          month = month(date),
          year = year(date),
          treatment = str_remove(treatment, "removal")
          ) %>% 
-  group_by(year, month, plot_number, treatment, species, date) %>%
+  group_by(year, month, plot_number, treatment, species, height, width1, width2, date) %>%
   summarise(dead = sum(dead, na.rm = TRUE)) %>% 
     ungroup() %>% 
    mutate(
     month = as.integer(month),
-    year = as.integer(year)
+    year = as.integer(year), 
+    height = as.numeric(height),
+    width1 = as.numeric(width1),
+    width2 = as.numeric(width2)
   ) %>%  
   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2'))
 print(mortality_prep)
@@ -270,8 +297,10 @@ write.csv(mortality, "data/processed/mortality.csv")
 ## Seedling survival + mortality in one simple package
 ```{r seedling survivial and mortality prep, include=TRUE} 
 survmort_prep <- read.csv(here("data", "survival_data.csv")) %>%
-  dplyr::select(date, plot_number, MAFA_removal, species, alive, dead) %>%
-  rename(treatment = MAFA_removal) %>%
+  dplyr::select(date, plot_number, MAFA_removal, species, alive, dead, stem_height_cm, width_1_cm, width_2_cm) %>%
+  rename(treatment = MAFA_removal,
+         height = 
+          ) %>%
   mutate(date = mdy(date),
          month = month(date),
          year = year(date),
