@@ -199,7 +199,15 @@ print(exotic_cover_all)
 # END OF CREATING A WIDER DF
 ```
 
+
+```{r}
+height <- read.csv(here("data", "seedlingheight_survival_data.csv")) %>% 
+  mutate(date = mdy(date))
+```
+
+
 ### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
+  - Add height at March to include in model
 
 ```{r MAY 2018 - join data, include=TRUE}
 # subsetting data for May 2018 survival
@@ -213,21 +221,21 @@ par_april2018 <- dplyr::filter(par, year == "2018" & month =="4") # par april 20
 tdr_april2018 <- tdr %>% dplyr::filter(year == "2018" & month =="4") #tdr april 2018
 nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") # nncover may 2018
 
-view(survmortnospp_may2018)
+#view(survmortnospp_may2018)
 
 survmortnospp_may2018_join <- survmortnospp_may2018 %>% 
-  dplyr::left_join(par_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%    #left join par
+  dplyr::left_join(par_april2018, by = c("year", "site", "plot_number")) %>%    #left join par
   dplyr::select(!treatment.x) %>% 
    rename(month_survival = month.x, 
          month_par = month.y, 
          treatment = treatment.y) %>% 
   #select(!date) %>% 
   dplyr::select(transplanted, year, month_survival, month_count, site, plot_number, treatment, normalized_par, month_par, totalsurvival, totalmortality) %>% 
-  dplyr::left_join(tdr_april2018, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join tdr
+  dplyr::left_join(tdr_april2018, by = c("year", "site", "plot_number")) %>%   # left join tdr
   rename(treatment = treatment.x, 
          month_tdr = month) %>% 
   dplyr::select(!treatment.y) %>% 
-   dplyr::left_join(nncover_may2018, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join exotic percent cover
+   dplyr::left_join(nncover_may2018, by = c("year", "site", "plot_number")) %>%   # left join exotic percent cover
   rename(exotic_percentcover = cover_percent) %>% 
   dplyr::select(!treatment.y) %>% 
   dplyr::select(!date) %>% 
@@ -332,7 +340,7 @@ ggplotly(survbox.1)
 
 
 # May 2019 Seedling survival 
-
+  - add height
 ```{r may 2019 - join data, include=TRUE}
 # subsetting data for May 2019 survival
 # survmortnospp = may 2019
@@ -402,6 +410,6 @@ nncover_t2 <- dplyr::filter(exotic_cover_all, year == "2019")
 
 ```
 
-
+### May-sep or Nov 2019
   
   
