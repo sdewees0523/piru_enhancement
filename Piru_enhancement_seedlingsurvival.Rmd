@@ -19,6 +19,7 @@ library(tidyverse) # data wrangling, includes packages: ggplot2, tibble, tidyr, 
 library(lme4)
 library(lmerTest)
 library(emmeans) 
+library(lubridate)
 ```
 
 # Load colors for graphs
@@ -98,6 +99,12 @@ print(survmortnospp) # :) yay! it worked!
 survmortnospp %>% # check number of data points
   group_by(year, treatment) %>% 
   summarise(N = length(totalsurvival))
+
+# loading in height data
+height_raw <- read.csv(here("data", "seedlingheight_survival_data.csv")) %>% 
+  mutate(date = mdy(date)) #having R recognize date as a date
+
+#
 
 # PAR data
 par_load <- read_csv("data/processed/par.csv",
@@ -200,11 +207,6 @@ print(exotic_cover_all)
 ```
 
 
-```{r}
-height <- read.csv(here("data", "seedlingheight_survival_data.csv")) %>% 
-  mutate(date = mdy(date))
-```
-
 
 ### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
   - Add height at March to include in model
@@ -221,6 +223,34 @@ par_april2018 <- dplyr::filter(par, year == "2018" & month =="4") # par april 20
 tdr_april2018 <- tdr %>% dplyr::filter(year == "2018" & month =="4") #tdr april 2018
 nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") # nncover may 2018
 
+height_march <- height_raw %>% 
+  filter(date >= "2018-02-24" & date <= "2018-03-31") %>% # filtering to only have rows of data taken in March 
+  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
+  rename(march_stem_height_cm = stem_height_cm)
+
+survival_may <- height_raw %>% 
+  filter(date >= "2018-05-01" & date <= "2018-05-31") %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, alive, individual) %>% 
+  rename(may_alive = alive) %>% 
+  mutate(may_alive = replace_na(may_alive, 0),
+         individual = case_when(individual == "s" ~ "S",
+                                individual == "c" ~ "C",
+                                individual == "r" ~ "R",
+                                TRUE ~ individual))  # 0= dead 1 = alive
+
+height_march_surv_may <- full_join(height_march, survival_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
+  drop_na() %>%  # removing na's for now. But should an NA in alive be assumed as dead? 
+  mutate(plot_number = as.character(plot_number)) %>% 
+  left_join(par_april2018, by = "plot_number") %>% 
+  select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par) %>% 
+  left_join(tdr_april2018, by = "plot_number") %>% 
+  select(!year & !site & !month & !treatment) %>% 
+  left_join(nncover_may2018, by = "plot_number") %>% 
+  select(!year & !date & !treatment) %>% 
+  rename(exotic_percentcover = cover_percent) %>% 
+  rename(treatment = MAFA_removal)
+  
+  
 #view(survmortnospp_may2018)
 
 survmortnospp_may2018_join <- survmortnospp_may2018 %>% 
@@ -247,8 +277,8 @@ view(survmortnospp_may2018_join)
 
 ```{r MAY 2018 - normality, include =TRUE}
 
-lme.may2018.mod <- lmer(totalsurvival ~ normalized_par + soil_moisture + exotic_percentcover + site + (1|treatment), 
-                        data = survmortnospp_may2018_join) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? 
+lme.may2018.mod <- lmer(may_alive ~ normalized_par + soil_moisture + exotic_percentcover + site + (1|treatment) + (1|plot_number), 
+                        data = height_march_surv_may) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? 
 # plot number not included because only data point per plot (n = 36)
                          
 
@@ -280,7 +310,7 @@ plot(cooks.distance(MOD))
 # So, only site and treatment get box plots. 
 # MAFA cover is a covariate (continuous variable).
 
-boxplot(E1 ~ site, data = survmortnospp_may2018_join) # <---- make sure to change to df, not the lme
+boxplot(E1 ~ site, data = height_march_surv_may) # <---- make sure to change to df, not the lme
 abline(h = 0)
 
 # Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
