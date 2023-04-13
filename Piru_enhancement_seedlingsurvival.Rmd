@@ -20,6 +20,7 @@ library(lme4)
 library(lmerTest)
 library(emmeans) 
 library(lubridate)
+library(patchwork)
 ```
 
 # Load colors for graphs
@@ -248,7 +249,8 @@ height_march_surv_may <- full_join(height_march, survival_may, by = c("plot_numb
   left_join(nncover_may2018, by = "plot_number") %>% 
   select(!year & !date & !treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
-  rename(treatment = MAFA_removal)
+  rename(treatment = MAFA_removal) %>% 
+  mutate(march_stem_height_cm = as.numeric(march_stem_height_cm))
   
   
 #view(survmortnospp_may2018)
@@ -277,12 +279,13 @@ view(survmortnospp_may2018_join)
 
 ```{r MAY 2018 - normality, include =TRUE}
 
-lme.may2018.mod <- lmer(may_alive ~ normalized_par + soil_moisture + exotic_percentcover + site + (1|treatment) + (1|plot_number), 
-                        data = height_march_surv_may) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? 
+glme.may2018.mod <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|treatment) + (1|plot_number), 
+                         family = binomial,
+                         data = height_march_surv_may) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? Now treatment is significant... 
 # plot number not included because only data point per plot (n = 36)
                          
 
-MOD <- lme.may2018.mod
+MOD <- glme.may2018.mod
 
 # Calculate model's residual and fitted values
 F1 <- fitted(MOD)
@@ -323,9 +326,9 @@ qqline(ranef(MOD)$treatment[,1]) # unique dates
 
 ```{r MAY 2018 - stats, include=TRUE}
 
-print(lme.may2018.mod)
-summary(lme.may2018.mod)
-anova(lme.may2018.mod) # A significant p-value indicates that one or more significant differences exist between group means.
+print(glme.may2018.mod)
+summary(glme.may2018.mod)
+anova(glme.may2018.mod) # A significant p-value indicates that one or more significant differences exist between group means.
 # seedling survival is not correlated with par, tdr, exotic percent cover, or site.
 # SITE may be ecologically interesting (p = 0.0843)
 # Type III Analysis of Variance Table with Satterthwaite's method
@@ -337,16 +340,16 @@ anova(lme.may2018.mod) # A significant p-value indicates that one or more signif
 
 # post-hoc Tukey test
 # get stats on interactions
-emmeans(lme.may2018.mod, list(pairwise ~ site), adjust = "tukey")
+emmeans(glme.may2018.mod, list(pairwise ~ site), adjust = "tukey")
 # site is not significantly different (p = 0.0923)
 
 # calculate mean survival at Site 1 and Site 2
-survmortnospp_may2018_join %>% 
+height_march_surv_may %>% 
   group_by(site) %>% 
-  summarise(MEAN_totalsurvival=mean(totalsurvival, na.rm = TRUE),
-            SD = sd(totalsurvival, na.rm = TRUE), 
-            N = length(totalsurvival), 
-            SE = ((sd(totalsurvival, na.rm = TRUE))/sqrt(length((totalsurvival))))
+  summarise(MEAN_totalsurvival=mean(may_alive, na.rm = TRUE),
+            SD = sd(may_alive, na.rm = TRUE), 
+            N = length(may_alive), 
+            SE = ((sd(may_alive, na.rm = TRUE))/sqrt(length((may_alive))))
   )
 #  site  MEAN_totalsurvival    SD     N    SE
 #  <chr>              <dbl> <dbl> <int> <dbl>
@@ -357,6 +360,90 @@ survmortnospp_may2018_join %>%
 - figures 
 ```{r MAY 2018 - figures, include=TRUE}
 
+## Soil moisture
+
+soil_moisture_site_1_prediction <- c(6:12) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(normalized_par = mean(height_march_surv_may$normalized_par),
+         exotic_percentcover = mean(height_march_surv_may$exotic_percentcover),
+         site = "1",
+         march_stem_height_cm = mean(height_march_surv_may$march_stem_height_cm, na.rm = TRUE),
+         treatment = "full removal",
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+soil_moisture_site_2_prediction <- c(6:12) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(normalized_par = mean(height_march_surv_may$normalized_par),
+         exotic_percentcover = mean(height_march_surv_may$exotic_percentcover),
+         site = "2",
+         march_stem_height_cm = mean(height_march_surv_may$march_stem_height_cm, na.rm = TRUE),
+         treatment = "full removal",
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+site_1_sm_plot <- ggplot()+
+  geom_point(data = height_march_surv_may %>%  filter(site == "1"), aes(x = soil_moisture, y = may_alive), alpha = 0.25)+
+  geom_line(data = soil_moisture_site_1_prediction, aes(x = soil_moisture, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Soil Moisture (%)",
+       y = "Probability of Survival",
+       title = "Site 1")
+
+site_2_sm_plot <- ggplot()+
+  geom_point(data = height_march_surv_may %>%  filter(site == "2"), aes(x = soil_moisture, y = may_alive), alpha = 0.25)+
+  geom_line(data = soil_moisture_site_2_prediction, aes(x = soil_moisture, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Soil Moisture (%)",
+       y = "Probability of Survival",
+       title = "Site 2")
+
+site_1_sm_plot + site_2_sm_plot
+## stem height
+stem_height_site_1_prediction <- seq(from = 0.2, to = 14, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(march_stem_height_cm = ".") %>% 
+  mutate(normalized_par = mean(height_march_surv_may$normalized_par),
+         exotic_percentcover = mean(height_march_surv_may$exotic_percentcover),
+         site = "1",
+         soil_moisture = mean(height_march_surv_may$soil_moisture),
+         treatment = "full removal",
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+stem_height_site_2_prediction <- seq(from = 0.2, to = 14, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(march_stem_height_cm = ".") %>% 
+  mutate(normalized_par = mean(height_march_surv_may$normalized_par),
+         exotic_percentcover = mean(height_march_surv_may$exotic_percentcover),
+         site = "2",
+         soil_moisture = mean(height_march_surv_may$soil_moisture),
+         treatment = "full removal",
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+site_1_sh_plot <- ggplot()+
+  geom_point(data = height_march_surv_may %>%  filter(site == "1"), aes(x = march_stem_height_cm, y = may_alive), alpha = 0.25)+
+  geom_line(data = stem_height_site_1_prediction, aes(x = march_stem_height_cm, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Stem Height (cm)",
+       y = "Probability of Survival",
+       title = "Site 1")
+
+site_2_sh_plot <- ggplot()+
+  geom_point(data = height_march_surv_may %>%  filter(site == "2"), aes(x = march_stem_height_cm, y = may_alive), alpha = 0.25)+
+  geom_line(data = stem_height_site_2_prediction, aes(x = march_stem_height_cm, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Stem Height (cm)",
+       y = "Probability of Survival",
+       title = "Site 2")
+
+site_1_sh_plot + site_2_sh_plot
+## site
+
+
 # boxplot: average survival by site
 survbox.1 <- ggplot(data = survmortnospp_may2018_join, aes(x = site, y = totalsurvival)) +
    geom_boxplot(aes(fill = site, color = site)) +
@@ -365,6 +452,8 @@ survbox.1 <- ggplot(data = survmortnospp_may2018_join, aes(x = site, y = totalsu
    labs(title = "Average seedling survival in May 2018", x = "Site", y = "Average seedling survival (n)") + 
     theme_bw() 
 ggplotly(survbox.1)
+
+
 
 ```
 
