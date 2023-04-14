@@ -470,6 +470,33 @@ survmortnospp_may2019 <- dplyr::filter(survmortnospp, year == "2019" & month =="
 par_may2019 <- dplyr::filter(par, year == "2019" & month =="5")
 tdr_march2019 <- tdr %>% 
   dplyr::filter(year == "2019" & month == "3")
+
+# Making height and survival dataframe
+
+height_march_2019 <- height_raw %>% 
+  filter(date == "2019-03-11") %>% # filtering to only have rows of data taken in March 
+  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm) %>% 
+  rename(march_stem_height_cm = stem_height_cm)
+
+survival_may_2019 <- height_raw %>% 
+  filter(date>= "2019-04-30" & date <= "2019-05-01") %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, alive) %>% 
+  rename(may_alive = alive) %>% 
+  mutate(may_alive = replace_na(may_alive, 0))  # 0= dead 1 = alive
+
+height_march_surv_may_2019 <- full_join(height_march_2019, survival_may_2019, by = c("plot_number", "MAFA_removal", "location", "species")) %>% 
+  drop_na() %>%  # removing na's for now. But should an NA in alive be assumed as dead? 
+  mutate(plot_number = as.character(plot_number)) %>% 
+  left_join(par_april2018, by = "plot_number") %>% 
+  select(plot_number, MAFA_removal, location, species, march_stem_height_cm, may_alive, normalized_par) %>% 
+  left_join(tdr_april2018, by = "plot_number") %>% 
+  select(!year & !site & !month & !treatment) %>% 
+  left_join(nncover_may2018, by = "plot_number") %>% 
+  select(!year & !date & !treatment) %>% 
+  rename(exotic_percentcover = cover_percent) %>% 
+  rename(treatment = MAFA_removal) %>% 
+  mutate(march_stem_height_cm = as.numeric(march_stem_height_cm))
+
   
 tdr_march2019 <- tdr %>% 
     dplyr::filter(year == "2019" & month =="3")
@@ -495,37 +522,155 @@ view(survmortnospp_may2019_join)
 
 ```
 
+```{r}
+glme.may2019.mod <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
+                         family = binomial,
+                         data = height_march_surv_may_2019)
+                         
+
+MOD <- glme.may2019.mod
+
+# Calculate model's residual and fitted values
+F1 <- fitted(MOD)
+E1 <- residuals(MOD, "pearson")
+
+# See residuals as a histogram, look for normal distribution
+hist(E1)
+
+# Graph residuals against a normal distribution, look for all points to be on 1:1 line
+#need to call next two lines together
+qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
+qqline(E1)
+
+# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
+# run together 2 lines
+plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
+abline(h = 0) # looking for random scatter
+
+# Check for crazy outliers, look for lines MUCH taller than the rest of data
+plot(cooks.distance(MOD))
+
+# Plot a box plot for each factor, look for equal variance amount levels along the zero line
+# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
+# Random effects need the qqline just like normality. 
+# So, only site and treatment get box plots. 
+# MAFA cover is a covariate (continuous variable).
+
+boxplot(E1 ~ site, data = height_march_surv_may_2019) # <---- make sure to change to df, not the lme
+abline(h = 0)
+
+# Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
+qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$treatment[,1]) # unique dates
+
+```
+
+```{r}
+print(glme.may2019.mod)
+summary(glme.may2019.mod)
+anova(glme.may2019.mod) 
+
+# post-hoc Tukey test
+# get stats on interactions
+emmeans(glme.may2019.mod, list(pairwise ~ site), adjust = "tukey")
+# site is not significantly different (p = 0.0923)
+
+# calculate mean survival at Site 1 and Site 2
+height_march_surv_may_2019 %>% 
+  group_by(site) %>% 
+  summarise(MEAN_totalsurvival=mean(may_alive, na.rm = TRUE),
+            SD = sd(may_alive, na.rm = TRUE), 
+            N = length(may_alive), 
+            SE = ((sd(may_alive, na.rm = TRUE))/sqrt(length((may_alive))))
+  )
+#  site  MEAN_totalsurvival    SD     N    SE
+#  <chr>              <dbl> <dbl> <int> <dbl>
+#   1                   6.67  3.36    18 0.792
+#   2                   3.89  1.94    18 0.457
+```
+
+```{r}
+## Soil moisture
+
+soil_moisture_site_1_prediction <- c(6:12) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(normalized_par = mean(height_march_surv_may_2019$normalized_par),
+         exotic_percentcover = mean(height_march_surv_may_2019$exotic_percentcover),
+         site = "1",
+         march_stem_height_cm = mean(height_march_surv_may_2019$march_stem_height_cm, na.rm = TRUE),
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
+
+soil_moisture_site_2_prediction <- c(6:12) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(normalized_par = mean(height_march_surv_may_2019$normalized_par),
+         exotic_percentcover = mean(height_march_surv_may_2019$exotic_percentcover),
+         site = "2",
+         march_stem_height_cm = mean(height_march_surv_may_2019$march_stem_height_cm, na.rm = TRUE),
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
+
+site_1_sm_plot <- ggplot()+
+  geom_point(data = height_march_surv_may_2019 %>%  filter(site == "1"), aes(x = soil_moisture, y = may_alive), alpha = 0.25)+
+  geom_line(data = soil_moisture_site_1_prediction, aes(x = soil_moisture, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Soil Moisture (%)",
+       y = "Probability of Survival",
+       title = "Site 1")
+
+site_2_sm_plot <- ggplot()+
+  geom_point(data = height_march_surv_may_2019 %>%  filter(site == "2"), aes(x = soil_moisture, y = may_alive), alpha = 0.25)+
+  geom_line(data = soil_moisture_site_2_prediction, aes(x = soil_moisture, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Soil Moisture (%)",
+       y = "Probability of Survival",
+       title = "Site 2")
+
+site_1_sm_plot + site_2_sm_plot
+## stem height
+stem_height_site_1_prediction <- seq(from = 0.05, to = 11, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(march_stem_height_cm = ".") %>% 
+  mutate(normalized_par = mean(height_march_surv_may_2019$normalized_par),
+         exotic_percentcover = mean(height_march_surv_may_2019$exotic_percentcover),
+         site = "1",
+         soil_moisture = mean(height_march_surv_may_2019$soil_moisture),
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
+
+stem_height_site_2_prediction <- seq(from = 0.05, to = 11, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(march_stem_height_cm = ".") %>% 
+  mutate(normalized_par = mean(height_march_surv_may_2019$normalized_par),
+         exotic_percentcover = mean(height_march_surv_may_2019$exotic_percentcover),
+         site = "2",
+         soil_moisture = mean(height_march_surv_may_2019$soil_moisture),
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
+
+site_1_sh_plot <- ggplot()+
+  geom_point(data = height_march_surv_may_2019 %>%  filter(site == "1"), aes(x = march_stem_height_cm, y = may_alive), alpha = 0.25)+
+  geom_line(data = stem_height_site_1_prediction, aes(x = march_stem_height_cm, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Stem Height (cm)",
+       y = "Probability of Survival",
+       title = "Site 1")
+
+site_2_sh_plot <- ggplot()+
+  geom_point(data = height_march_surv_may_2019 %>%  filter(site == "2"), aes(x = march_stem_height_cm, y = may_alive), alpha = 0.25)+
+  geom_line(data = stem_height_site_2_prediction, aes(x = march_stem_height_cm, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Stem Height (cm)",
+       y = "Probability of Survival",
+       title = "Site 2")
+
+site_1_sh_plot + site_2_sh_plot
+```
+
 
 ```{r MAY 2019 - join data, include=FALSE}
-
-# subsetting data for May 2019 survival
-# survmortnospp = may 2019
-# par = may 2019
-# tdr = march 2019
-# nncover = may 2019
-
-survmortnospp_t2 <- dplyr::filter(survmortnospp, month_count =="16") # <-- missing data for plots 1-6, 13, etc.
-#view(survmortnospp_t2)
-par_t2 <- dplyr::filter(par, year == "2019" & month =="5")
-tdr_t2 <- tdr %>% 
-  dplyr::filter(year == "2019" & month =="3")
-nncover_t2 <- dplyr::filter(exotic_cover_all, year == "2019")
-
-# left join data for Jan-May 2019 (t2) survival
-#survmortnospp_t2_mod <- survmortnospp_t2 %>% 
-#  dplyr::left_join(par_t2, by = c("year", "site", "plot_number", "treatment"), na.rm = F) %>%    #left join par
-#  rename(month_survival = month.x, 
-#         month_par = month.y) %>% 
-#  select(!date) %>% 
-#  dplyr::left_join(tdr_t2, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join tdr
-#  rename(treatment = treatment.x, 
-#         month_tdr = month) %>% 
-#  select(!treatment.y) %>% 
-#   dplyr::left_join(nncover_t2, by = c("year", "site", "plot_number"), na.rm = F) %>%   # left join exotic percent cover
-#  rename(exotic_percentcover = cover_percent) %>% 
-#  select(!treatment.y) %>% 
-#  select(!date)
-#view(survmortnospp_t2_mod)
 
 ```
 
