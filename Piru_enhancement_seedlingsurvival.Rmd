@@ -229,7 +229,7 @@ height_march <- height_raw %>%
   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
   rename(march_stem_height_cm = stem_height_cm)
 
-survival_may <- height_raw %>% 
+survival_may <- height_raw %>%  ## Need to change some of the individual labels to fix NAs when rejoin. 
   filter(date >= "2018-05-01" & date <= "2018-05-31") %>% 
   dplyr::select(plot_number, MAFA_removal, location, species, alive, individual) %>% 
   rename(may_alive = alive) %>% 
@@ -279,7 +279,7 @@ view(survmortnospp_may2018_join)
 
 ```{r MAY 2018 - normality, include =TRUE}
 
-glme.may2018.mod <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|treatment) + (1|plot_number), 
+glme.may2018.mod <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
                          family = binomial,
                          data = height_march_surv_may) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? Now treatment is significant... 
 # plot number not included because only data point per plot (n = 36)
@@ -369,7 +369,6 @@ soil_moisture_site_1_prediction <- c(6:12) %>%
          exotic_percentcover = mean(height_march_surv_may$exotic_percentcover),
          site = "1",
          march_stem_height_cm = mean(height_march_surv_may$march_stem_height_cm, na.rm = TRUE),
-         treatment = "full removal",
          plot_number = "1") %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
@@ -456,6 +455,46 @@ ggplotly(survbox.1)
 
 
 ```
+
+## Repeat each model for each species
+
+```{r}
+ceol_2018 <- height_march_surv_may %>% 
+  filter(species == "CEOL")
+  
+ceol_glme <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
+                         family = binomial,
+                         data = ceol_2018)
+summary(ceol_glme)
+
+rhov_2018 <- height_march_surv_may %>% 
+  filter(species == "RHOV")
+
+rhov_glme <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
+                         family = binomial,
+                         data = rhov_2018)
+
+summary(rhov_glme)
+
+hear_2018 <- height_march_surv_may %>% 
+  filter(species == "HEAR")
+
+hear_glme <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
+                         family = binomial,
+                         data = hear_2018)
+
+summary(hear_glme)
+
+saap_2018 <- height_march_surv_may %>% 
+  filter(species == "SAAP")
+
+saap_glme <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
+                         family = binomial,
+                         data = saap_2018)
+
+summary(saap_glme)
+```
+
 
 
 # May 2019 Seedling survival 
