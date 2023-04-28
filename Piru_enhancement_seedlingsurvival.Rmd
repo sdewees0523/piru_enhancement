@@ -105,7 +105,7 @@ survmortnospp %>% # check number of data points
 height_raw <- read.csv(here("data", "survival_data.csv")) %>% 
   mutate(date = mdy(date)) #having R recognize date as a date
 
-#
+
 
 # PAR data
 par_load <- read_csv("data/processed/par.csv",
@@ -207,6 +207,26 @@ print(exotic_cover_all)
 # END OF CREATING A WIDER DF
 ```
 
+### How are site 1 and site 2 different? 
+
+```{r}
+par_april2018 <- dplyr::filter(par, year == "2018" & month =="4") %>% # par april 2018 
+  select(site, plot_number, treatment, normalized_par) %>% 
+  mutate(treatment = case_when(treatment == "no" ~ "none",
+                               TRUE ~ treatment))
+tdr_april2018 <- tdr %>% dplyr::filter(year == "2018" & month =="4") %>%  #tdr april 2018
+  select(site, plot_number, treatment, soil_moisture) 
+tdr_april2018$site <- factor(tdr_april2018$site, levels = c("1", "2"))
+nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") %>% # nncover may 2018
+  select(site, plot_number, treatment, cover_percent)
+
+site_cond <- full_join(par_april2018, tdr_april2018, by = c("site", "plot_number", "treatment")) %>% 
+  full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
+
+t.test(normalized_par~site, data = site_cond)
+t.test(soil_moisture~site, data = site_cond)
+t.test(cover_percent~site, data = site_cond)
+```
 
 
 ### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
@@ -219,14 +239,37 @@ print(exotic_cover_all)
 # tdr = april 2018
 # nncover = may 2018
 
-par_april2018 <- dplyr::filter(par, year == "2018" & month =="4") # par april 2018
-tdr_april2018 <- tdr %>% dplyr::filter(year == "2018" & month =="4") #tdr april 2018
-nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") # nncover may 2018
+
 
 height_march <- height_raw %>% 
   filter(date >= "2018-02-23" & date <= "2018-03-31") %>% # filtering to only have rows of data taken in March 
   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
   rename(march_stem_height_cm = stem_height_cm)
+
+height_may <- height_raw %>% 
+  filter(date >= "2018-05-01" & date <= "2018-05-31") %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
+  rename(may_stem_height_cm = stem_height_cm) %>% 
+  mutate(individual = case_when(individual == "s" ~ "S",
+                                individual == "c" ~ "C",
+                                individual == "r" ~ "R",
+                                TRUE ~ individual),
+         may_stem_height_cm = as.numeric(may_stem_height_cm))  %>% 
+  drop_na()
+
+growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
+  mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% 
+  drop_na() %>% 
+  mutate(rgr = (log(may_stem_height_cm) - log(march_stem_height_cm))/60,
+         plot_number = as.character(plot_number)) %>% 
+  left_join(par_april2018, by = "plot_number") %>% 
+  select(plot_number, MAFA_removal, location, species, individual, rgr, normalized_par) %>% 
+  left_join(tdr_april2018, by = "plot_number") %>% 
+  select(!site & !treatment) %>% 
+  left_join(nncover_may2018, by = "plot_number") %>% 
+  select(!treatment) %>% 
+  rename(exotic_percentcover = cover_percent) %>% 
+  rename(treatment = MAFA_removal)
 
 survival_may <- height_raw %>%  ## Need to change some of the individual labels to fix NAs when rejoin. 
   filter(date >= "2018-05-01" & date <= "2018-05-31") %>% 
@@ -245,11 +288,15 @@ height_march_surv_may <- full_join(height_march, survival_may, by = c("plot_numb
   left_join(par_april2018, by = "plot_number") %>% 
   select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% 
-  select(!year & !site & !month & !treatment) %>% 
+  select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>% 
-  select(!year & !date & !treatment) %>% 
+  select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
-  rename(treatment = MAFA_removal) 
+  rename(treatment = MAFA_removal) %>% 
+  mutate(normalized_par = scale(normalized_par),
+         soil_moisture = scale(soil_moisture),
+         exotic_percentcover = scale(exotic_percentcover),
+         march_stem_height_cm = scale(march_stem_height_cm))
 
 ```
 
@@ -257,9 +304,11 @@ height_march_surv_may <- full_join(height_march, survival_may, by = c("plot_numb
 
 ```{r MAY 2018 - normality, include =TRUE}
 
-glme.may2018.mod <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm  + (1|plot_number), 
+glme.may2018.mod <- glmer(as.factor(may_alive) ~ normalized_par * soil_moisture + exotic_percentcover + site + march_stem_height_cm  + (1|plot_number), 
                          family = binomial,
                          data = height_march_surv_may) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? Now treatment is significant... 
+glme_rgr_may2018 <- lmer(rgr ~ normalized_par*soil_moisture + exotic_percentcover + site + (1|plot_number),
+                         data = growth_march_may)
 # plot number not included because only data point per plot (n = 36)
                          
 
@@ -295,8 +344,8 @@ boxplot(E1 ~ site, data = height_march_surv_may) # <---- make sure to change to 
 abline(h = 0)
 
 # Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
-qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
-qqline(ranef(MOD)$treatment[,1]) # unique dates
+#qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
+#qqline(ranef(MOD)$treatment[,1]) # unique dates
 
 ```
 
@@ -316,70 +365,13 @@ anova(glme.may2018.mod) # A significant p-value indicates that one or more signi
 #exotic_percentcover  1.7381  1.7381     1 25.546  0.2417 0.62718  
 #site                22.9048 22.9048     1 30.273  3.1850 0.08434 .
 
-# post-hoc Tukey test
-# get stats on interactions
-emmeans(glme.may2018.mod, list(pairwise ~ site), adjust = "tukey")
-# site is not significantly different (p = 0.0923)
-
-# calculate mean survival at Site 1 and Site 2
-height_march_surv_may %>% 
-  group_by(site) %>% 
-  summarise(MEAN_totalsurvival=mean(may_alive, na.rm = TRUE),
-            SD = sd(may_alive, na.rm = TRUE), 
-            N = length(may_alive), 
-            SE = ((sd(may_alive, na.rm = TRUE))/sqrt(length((may_alive))))
-  )
-#  site  MEAN_totalsurvival    SD     N    SE
-#  <chr>              <dbl> <dbl> <int> <dbl>
-#   1                   6.67  3.36    18 0.792
-#   2                   3.89  1.94    18 0.457
+summary(glme_rgr_may2018)
 ```
 
 - figures 
 ```{r MAY 2018 - figures, include=TRUE}
-
-## Soil moisture
-
-soil_moisture_site_1_prediction <- c(6:12) %>% 
-  as.data.frame() %>% 
-  rename(soil_moisture = ".") %>% 
-  mutate(normalized_par = mean(height_march_surv_may$normalized_par),
-         exotic_percentcover = mean(height_march_surv_may$exotic_percentcover),
-         site = "1",
-         march_stem_height_cm = mean(height_march_surv_may$march_stem_height_cm, na.rm = TRUE),
-         plot_number = "1") %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
-
-soil_moisture_site_2_prediction <- c(6:12) %>% 
-  as.data.frame() %>% 
-  rename(soil_moisture = ".") %>% 
-  mutate(normalized_par = mean(height_march_surv_may$normalized_par),
-         exotic_percentcover = mean(height_march_surv_may$exotic_percentcover),
-         site = "2",
-         march_stem_height_cm = mean(height_march_surv_may$march_stem_height_cm, na.rm = TRUE),
-         treatment = "full removal",
-         plot_number = "1") %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
-
-site_1_sm_plot <- ggplot()+
-  geom_point(data = height_march_surv_may %>%  filter(site == "1"), aes(x = soil_moisture, y = may_alive), alpha = 0.25)+
-  geom_line(data = soil_moisture_site_1_prediction, aes(x = soil_moisture, y = alive), linewidth = 1)+
-  theme_classic()+
-  labs(x = "Soil Moisture (%)",
-       y = "Probability of Survival",
-       title = "Site 1")
-
-site_2_sm_plot <- ggplot()+
-  geom_point(data = height_march_surv_may %>%  filter(site == "2"), aes(x = soil_moisture, y = may_alive), alpha = 0.25)+
-  geom_line(data = soil_moisture_site_2_prediction, aes(x = soil_moisture, y = alive), linewidth = 1)+
-  theme_classic()+
-  labs(x = "Soil Moisture (%)",
-       y = "Probability of Survival",
-       title = "Site 2")
-
-site_1_sm_plot + site_2_sm_plot
 ## stem height
-stem_height_site_1_prediction <- seq(from = 0.2, to = 14, by = 0.1) %>% 
+stem_height_site_1_prediction <- seq(from = -1.2, to = 4, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(march_stem_height_cm = ".") %>% 
   mutate(normalized_par = mean(height_march_surv_may$normalized_par),
@@ -390,7 +382,7 @@ stem_height_site_1_prediction <- seq(from = 0.2, to = 14, by = 0.1) %>%
          plot_number = "1") %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
-stem_height_site_2_prediction <- seq(from = 0.2, to = 14, by = 0.1) %>% 
+stem_height_site_2_prediction <- seq(from = -1.2, to = 4, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(march_stem_height_cm = ".") %>% 
   mutate(normalized_par = mean(height_march_surv_may$normalized_par),
@@ -418,10 +410,181 @@ site_2_sh_plot <- ggplot()+
        title = "Site 2")
 
 site_1_sh_plot + site_2_sh_plot
+
+ggplot(growth_march_may, aes(x = site, y = rgr))+
+  geom_boxplot()+
+  theme_classic()+
+  labs(x = "Planting Site",
+       y = "Relative Growth Rate")
+
+moisture_low_par_site_1 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = min(height_march_surv_may$normalized_par),
+         exotic_percentcover = 0,
+         site = "1",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+moisture_low_par_site_2 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = min(height_march_surv_may$normalized_par),
+         exotic_percentcover = 0,
+         site = "2",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+moisture_mean_par_site_1 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = 0,
+         exotic_percentcover = 0,
+         site = "1",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+moisture_mean_par_site_2 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = 0,
+         exotic_percentcover = 0,
+         site = "2",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+moisture_max_par_site_1 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = max(height_march_surv_may$normalized_par),
+         exotic_percentcover = 0,
+         site = "1",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+moisture_max_par_site_2 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = max(height_march_surv_may$normalized_par),
+         exotic_percentcover = 0,
+         site = "2",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+moisture_prediction_site_1 <- rbind(moisture_low_par_site_1, moisture_mean_par_site_1, moisture_max_par_site_1)
+
+moisture_prediction_site_2 <- rbind(moisture_low_par_site_2, moisture_mean_par_site_2, moisture_max_par_site_2)
+
+moisture_site_1_graph <- ggplot()+
+  geom_point(data = height_march_surv_may %>% filter(site == "1"), aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25)+
+  geom_line(data = moisture_prediction_site_1, aes(x = soil_moisture, y = alive, col = normalized_par, group = normalized_par), linewidth = 1) +
+  theme_classic() +
+  labs(x = "Soil Moisture", 
+       y = "Survival Probability",
+       title = "Site 1")
+
+moisture_site_2_graph <- ggplot()+
+  geom_point(data = height_march_surv_may %>% filter(site == "2"), aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25)+
+  geom_line(data = moisture_prediction_site_2, aes(x = soil_moisture, y = alive, col = normalized_par, group = normalized_par), linewidth = 1) +
+  theme_classic() +
+  labs(x = "Soil Moisture", 
+       y = "Survival Probability",
+       title = "Site 2")
+
+moisture_site_1_graph + moisture_site_2_graph
+
+par_low_moisture_site_1 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(plot_number = "1",
+         soil_moisture = min(height_march_surv_may$soil_moisture),
+         exotic_percentcover = 0,
+         site = "1",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+par_low_moisture_site_2 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(plot_number = "2",
+         soil_moisture = min(height_march_surv_may$soil_moisture),
+         exotic_percentcover = 0,
+         site = "1",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+par_mean_moisture_site_1 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(plot_number = "1",
+         soil_moisture = 0,
+         exotic_percentcover = 0,
+         site = "1",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+par_mean_moisture_site_2 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(plot_number = "2",
+         soil_moisture = 0,
+         exotic_percentcover = 0,
+         site = "1",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+par_max_moisture_site_1 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(plot_number = "1",
+         soil_moisture = max(height_march_surv_may$soil_moisture),
+         exotic_percentcover = 0,
+         site = "1",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+par_max_moisture_site_2 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(plot_number = "2",
+         soil_moisture = max(height_march_surv_may$soil_moisture),
+         exotic_percentcover = 0,
+         site = "1",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+par_prediction_site_1 <- rbind(par_low_moisture_site_1, par_mean_moisture_site_1, par_max_moisture_site_1)
+
+par_prediction_site_2 <- rbind(par_low_moisture_site_2, par_mean_moisture_site_2, par_max_moisture_site_2)
+
+par_site_1_graph <- ggplot()+
+  geom_point(data = height_march_surv_may %>% filter(site == "1"), aes(x = normalized_par, y = may_alive, col = soil_moisture), alpha = 0.25)+
+  geom_line(data = par_prediction_site_1, aes(x = normalized_par, y = alive, col = soil_moisture, group = soil_moisture), linewidth = 1) +
+  theme_classic() +
+  labs(x = "Normalized PAR", 
+       y = "Survival Probability",
+       title = "Site 1")
+
+par_site_2_graph <- ggplot()+
+  geom_point(data = height_march_surv_may %>% filter(site == "2"), aes(x = normalized_par, y = may_alive, col = soil_moisture), alpha = 0.25)+
+  geom_line(data = par_prediction_site_2, aes(x = normalized_par, y = alive, col = soil_moisture, group = soil_moisture), linewidth = 1) +
+  theme_classic() +
+  labs(x = "Normalized PAR", 
+       y = "Survival Probability",
+       title = "Site 2")
+
+par_site_1_graph + par_site_2_graph
 ```
 
 ## Repeat each model for each species
 
+### CEOL 
 ```{r}
 ceol_2018 <- height_march_surv_may %>% 
   filter(species == "CEOL")
@@ -462,26 +625,17 @@ AIC(glmer(as.factor(may_alive) ~ site + march_stem_height_cm + (1|plot_number),
           family = binomial,
           data = ceol_2018))
 
-summary(glmer(as.factor(may_alive) ~ normalized_par +  (1|plot_number), 
-                         family = binomial,
-                         data = ceol_2018))
-
-summary(glmer(as.factor(may_alive) ~ soil_moisture + (1|plot_number),
-          family = binomial,
-          data = ceol_2018))
-
-summary(glmer(as.factor(may_alive) ~ exotic_percentcover + (1|plot_number),
-          family = binomial, 
-          data = ceol_2018))
 
 summary(glmer(as.factor(may_alive) ~ site + (1|plot_number), 
           family = binomial,
           data = ceol_2018))
 
-summary(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
-          family = binomial,
-          data = ceol_2018))
+## Add Figure
+``` 
 
+### RHOV
+
+```{r} 
 rhov_2018 <- height_march_surv_may %>% 
   filter(species == "RHOV")
 
@@ -501,68 +655,35 @@ AIC(glmer(as.factor(may_alive) ~ site + (1|plot_number),
           family = binomial,
           data = rhov_2018))
 
-AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
-          family = binomial,
-          data = rhov_2018))
-
-AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + normalized_par + (1|plot_number),
-          family = binomial,
-          data = rhov_2018))
-
 AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + soil_moisture + (1|plot_number),
           family = binomial,
           data = rhov_2018))
 
-AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + exotic_percentcover + (1|plot_number),
+rhov_model <- glmer(as.factor(may_alive) ~ march_stem_height_cm + soil_moisture + (1|plot_number),
           family = binomial,
-          data = rhov_2018))
+          data = rhov_2018)
+summary(rhov_model)
 
-AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + site + (1|plot_number),
-          family = binomial,
-          data = rhov_2018))
+stem_height_rhov_prediction <- seq(from = 0.5, to = 5, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(march_stem_height_cm = ".") %>% 
+  mutate(plot_number = "1",
+         soil_moisture = mean(rhov_2018$soil_moisture)) %>% 
+  mutate(alive = predict(rhov_model, newdata = . , type = "response"))
 
-AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + exotic_percentcover + normalized_par + (1|plot_number),
-          family = binomial,
-          data = rhov_2018))
+ggplot()+
+  geom_point(data = rhov_2018, aes(x = march_stem_height_cm, y = may_alive), alpha = 0.25)+
+  geom_line(data = stem_height_rhov_prediction, aes(x = march_stem_height_cm, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Stem Height (cm)",
+       y = "Probability of Survival")
 
-AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + exotic_percentcover + soil_moisture + (1|plot_number),
-          family = binomial,
-          data = rhov_2018))
 
-AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + exotic_percentcover + site + (1|plot_number),
-          family = binomial,
-          data = rhov_2018))
+```
 
-summary(glmer(as.factor(may_alive) ~ normalized_par +  (1|plot_number), 
-                         family = binomial,
-                         data = rhov_2018))
+### HEAR
 
-summary(glmer(as.factor(may_alive) ~ soil_moisture + (1|plot_number),
-          family = binomial,
-          data = rhov_2018))
-
-summary(glmer(as.factor(may_alive) ~ exotic_percentcover + (1|plot_number),
-          family = binomial, 
-          data = rhov_2018))
-
-summary(glmer(as.factor(may_alive) ~ site + (1|plot_number), 
-          family = binomial,
-          data = rhov_2018))
-
-summary(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
-          family = binomial,
-          data = rhov_2018))
-
-summary(glmer(as.factor(may_alive) ~ march_stem_height_cm + exotic_percentcover + (1|plot_number),
-          family = binomial,
-          data = rhov_2018))
-
-rhov_glme <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
-                         family = binomial,
-                         data = rhov_2018)
-
-summary(rhov_glme)
-
+```{r}
 hear_2018 <- height_march_surv_may %>% 
   filter(species == "HEAR")
 
@@ -586,7 +707,7 @@ AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
           family = binomial,
           data = hear_2018))
 
-AIC(glmer(as.factor(may_alive) ~ soil_moisture + normalized_par + (1|plot_number),
+AIC(glmer(as.factor(may_alive) ~ soil_moisture*normalized_par + (1|plot_number),
           family = binomial,
           data = hear_2018))
 
@@ -602,32 +723,78 @@ AIC(glmer(as.factor(may_alive) ~ soil_moisture + march_stem_height_cm + (1|plot_
           family = binomial,
           data = hear_2018))
 
-summary(glmer(as.factor(may_alive) ~ normalized_par +  (1|plot_number), 
-                         family = binomial,
-                         data = hear_2018))
-
-summary(glmer(as.factor(may_alive) ~ soil_moisture + (1|plot_number),
-          family = binomial,
-          data = hear_2018))
-
-summary(glmer(as.factor(may_alive) ~ exotic_percentcover + (1|plot_number),
-          family = binomial, 
-          data = hear_2018))
-
-summary(glmer(as.factor(may_alive) ~ site + (1|plot_number), 
-          family = binomial,
-          data = hear_2018))
-
-summary(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
-          family = binomial,
-          data = hear_2018))
-
-hear_glme <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
+hear_model <- glmer(as.factor(may_alive) ~ soil_moisture* normalized_par + (1|plot_number), 
                          family = binomial,
                          data = hear_2018)
 
-summary(hear_glme)
+summary(hear_model)
 
+
+moisture_hear_low_par <- seq(from = 6, to = 12, by = 0.5) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = min(hear_2018$normalized_par)) %>% 
+  mutate(alive = predict(hear_model, newdata = . , type = "response"))
+
+moisture_hear_mid_par <- seq(from = 6, to = 12, by = 0.5) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = mean(hear_2018$normalized_par)) %>% 
+  mutate(alive = predict(hear_model, newdata = . , type = "response"))
+
+moisture_hear_max_par <- seq(from = 6, to = 12, by = 0.5) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = max(hear_2018$normalized_par)) %>% 
+  mutate(alive = predict(hear_model, newdata = . , type = "response"))
+
+moisture_hear_prediction <- rbind(moisture_hear_low_par, moisture_hear_max_par, moisture_hear_mid_par) 
+
+ggplot()+
+  geom_point(data = hear_2018, aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25)+
+  geom_line(data = moisture_hear_prediction, aes(x = soil_moisture, y = alive, col = normalized_par, group= normalized_par), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Soil Moisture",
+       y = "Probability of Survival")
+
+par_hear_low_moisture <- seq(from = 0.1, to = 0.65, by = 0.01) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(plot_number = "1",
+         soil_moisture = min(hear_2018$soil_moisture)) %>% 
+  mutate(alive = predict(hear_model, newdata = . , type = "response"))
+
+par_hear_mid_moisture <- seq(from = 0.1, to = 0.65, by = 0.01) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(plot_number = "1",
+         soil_moisture = mean(hear_2018$soil_moisture)) %>% 
+  mutate(alive = predict(hear_model, newdata = . , type = "response"))
+
+par_hear_max_moisture <- seq(from = 0.1, to = 0.65, by = 0.01) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(plot_number = "1",
+         soil_moisture = max(hear_2018$soil_moisture)) %>% 
+  mutate(alive = predict(hear_model, newdata = . , type = "response"))
+
+par_hear_prediction <- rbind(par_hear_low_moisture, par_hear_max_moisture, par_hear_mid_moisture) 
+
+ggplot()+
+  geom_point(data = hear_2018, aes(x = normalized_par, y = may_alive, col = soil_moisture), alpha = 0.25)+
+  geom_line(data = par_hear_prediction, aes(x = normalized_par, y = alive, col = soil_moisture, group= soil_moisture), linewidth = 1)+
+  theme_classic()+
+  labs(x = "Normalized PAR",
+       y = "Probability of Survival")
+
+```
+
+
+
+```{r}
 saap_2018 <- height_march_surv_may %>% 
   filter(species == "SAAP")
 
@@ -651,21 +818,160 @@ AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
           family = binomial,
           data = saap_2018))
 
-saap_glme <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number),
+AIC(glmer(as.factor(may_alive) ~ site + normalized_par + (1|plot_number), 
+          family = binomial,
+          data = saap_2018))
+
+AIC(glmer(as.factor(may_alive) ~ site + soil_moisture + (1|plot_number), 
+          family = binomial,
+          data = saap_2018))
+
+AIC(glmer(as.factor(may_alive) ~ site + exotic_percentcover + (1|plot_number), 
+          family = binomial,
+          data = saap_2018))
+
+AIC(glmer(as.factor(may_alive) ~ site + march_stem_height_cm + (1|plot_number), 
+          family = binomial,
+          data = saap_2018))
+
+
+saap_model <- glmer(as.factor(may_alive) ~ site + (1|plot_number),
                          family = binomial,
                          data = saap_2018)
 
-summary(saap_glme)
-
-hear_saap <- height_march_surv_may %>% 
-  filter(species %in% c("SAAP", "HEAR"))
-
-glme <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number),
-                         family = binomial,
-                         data = hear_saap)
-summary(glme)
+summary(saap_model)
 ```
 
+## Individual species for RGR 
+
+### CEOL 
+
+```{r}
+ceol_rgr_2018 <- growth_march_may %>% 
+  filter(species == "CEOL")
+  
+AIC(lmer(rgr ~ normalized_par +  (1|plot_number),
+                         data = ceol_rgr_2018))
+
+AIC(lmer(rgr ~ soil_moisture*normalized_par + (1|plot_number),
+          data = ceol_rgr_2018))
+
+AIC(lmer(rgr ~ exotic_percentcover + (1|plot_number), 
+          data = ceol_rgr_2018))
+
+AIC(lmer(rgr ~ site + (1|plot_number),
+          data = ceol_rgr_2018))
+
+AIC(lmer(rgr ~ normalized_par +  soil_moisture + (1|plot_number),
+                         data = ceol_rgr_2018))
+
+AIC(lmer(rgr ~ normalized_par + exotic_percentcover + (1|plot_number),
+                         data = ceol_rgr_2018))
+
+AIC(lmer(rgr ~ normalized_par + site + (1|plot_number),
+                         data = ceol_rgr_2018))
+
+ceol_2018rgr_model <- lmer(rgr ~ normalized_par +  (1|plot_number),
+                         data = ceol_rgr_2018)
+
+summary(ceol_2018rgr_model)
+```
+### Rhov
+
+```{r}
+rhov_rgr_2018 <- growth_march_may %>% 
+  filter(species == "RHOV")
+  
+AIC(lmer(rgr ~ normalized_par+  (1|plot_number),
+                         data = rhov_rgr_2018))
+
+AIC(lmer(rgr ~ soil_moisture + (1|plot_number),
+          data = rhov_rgr_2018))
+
+AIC(lmer(rgr ~ exotic_percentcover + (1|plot_number), 
+          data = rhov_rgr_2018))
+
+AIC(lmer(rgr ~ site + (1|plot_number),
+          data = rhov_rgr_2018))
+
+AIC(lmer(rgr ~ site + normalized_par + (1|plot_number),
+          data = rhov_rgr_2018))
+AIC(lmer(rgr ~ site + soil_moisture + (1|plot_number),
+          data = rhov_rgr_2018))
+AIC(lmer(rgr ~ site + exotic_percentcover + (1|plot_number),
+          data = rhov_rgr_2018))
+
+rhov_2018rgr_model <- lmer(rgr ~ site + (1|plot_number),
+          data = rhov_rgr_2018)
+summary(rhov_2018rgr_model)
+
+```
+
+### HEAR
+
+```{r}
+hear_rgr_2018 <- growth_march_may %>% 
+  filter(species == "RHOV")
+  
+AIC(lmer(rgr ~ normalized_par +  (1|plot_number),
+                         data = hear_rgr_2018))
+
+AIC(lmer(rgr ~ soil_moisture + (1|plot_number),
+          data = hear_rgr_2018))
+
+AIC(lmer(rgr ~ exotic_percentcover + (1|plot_number), 
+          data = hear_rgr_2018))
+
+AIC(lmer(rgr ~ site + (1|plot_number),
+          data = hear_rgr_2018))
+
+AIC(lmer(rgr ~ site + normalized_par + (1|plot_number),
+          data = hear_rgr_2018))
+
+AIC(lmer(rgr ~ site + soil_moisture + (1|plot_number),
+          data = hear_rgr_2018))
+
+AIC(lmer(rgr ~ site + exotic_percentcover + (1|plot_number),
+          data = hear_rgr_2018))
+
+hear_2018rgr_model <- lmer(rgr ~ site + (1|plot_number),
+          data = hear_rgr_2018)
+
+summary(hear_2018rgr_model)
+```
+
+## SAAP
+
+```{r}
+saap_rgr_2018 <- growth_march_may %>% 
+  filter(species == "SAAP")
+  
+AIC(lmer(rgr ~ normalized_par +  (1|plot_number),
+                         data = saap_rgr_2018))
+
+AIC(lmer(rgr ~ soil_moisture + (1|plot_number),
+          data = saap_rgr_2018))
+
+AIC(lmer(rgr ~ exotic_percentcover + (1|plot_number), 
+          data = saap_rgr_2018))
+
+AIC(lmer(rgr ~ site + (1|plot_number),
+          data = saap_rgr_2018))
+
+AIC(lmer(rgr ~ normalized_par + soil_moisture + (1|plot_number),
+                         data = saap_rgr_2018))
+
+AIC(lmer(rgr ~ normalized_par + exotic_percentcover + (1|plot_number),
+                         data = saap_rgr_2018))
+
+AIC(lmer(rgr ~ normalized_par + site + (1|plot_number),
+                         data = saap_rgr_2018))
+
+saap_2018rgr_model <- lmer(rgr ~ normalized_par +  (1|plot_number),
+                         data = saap_rgr_2018)
+
+summary(saap_2018rgr_model)
+```
 
 
 # May 2019 Seedling survival 
@@ -701,18 +1007,22 @@ height_march_surv_may_2019 <- full_join(height_march_2019, survival_may_2019, by
   left_join(par_april2018, by = "plot_number") %>% 
   select(plot_number, MAFA_removal, location, species, march_stem_height_cm, may_alive, normalized_par) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% 
-  select(!year & !site & !month & !treatment) %>% 
+  select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>% 
-  select(!year & !date & !treatment) %>% 
+  select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
-  rename(treatment = MAFA_removal)
+  rename(treatment = MAFA_removal) %>% 
+  mutate(normalized_par = scale(normalized_par),
+         soil_moisture = scale(soil_moisture),
+         exotic_percentcover = scale(exotic_percentcover),
+         march_stem_height_cm = scale(march_stem_height_cm))
 
 
 
 ```
 
 ```{r}
-glme.may2019.mod <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
+glme.may2019.mod <- glmer(as.factor(may_alive) ~ normalized_par * soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
                          family = binomial,
                          data = height_march_surv_may_2019)
                          
@@ -749,8 +1059,8 @@ boxplot(E1 ~ site, data = height_march_surv_may_2019) # <---- make sure to chang
 abline(h = 0)
 
 # Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
-qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
-qqline(ranef(MOD)$treatment[,1]) # unique dates
+#qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
+#qqline(ranef(MOD)$treatment[,1]) # unique dates
 
 ```
 
@@ -781,37 +1091,80 @@ height_march_surv_may_2019 %>%
 ```{r}
 ## Soil moisture
 
-soil_moisture_site_1_prediction <- c(6:12) %>% 
+moisture_site_1_low_par_2019 <- seq(from = -1.6 , to = 1.8 , by = 0.1) %>% 
   as.data.frame() %>% 
   rename(soil_moisture = ".") %>% 
-  mutate(normalized_par = mean(height_march_surv_may_2019$normalized_par),
+  mutate(normalized_par = min(height_march_surv_may_2019$normalized_par),
          exotic_percentcover = mean(height_march_surv_may_2019$exotic_percentcover),
          site = "1",
          march_stem_height_cm = mean(height_march_surv_may_2019$march_stem_height_cm, na.rm = TRUE),
          plot_number = "1") %>% 
   mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
 
-soil_moisture_site_2_prediction <- c(6:12) %>% 
+moisture_site_2_low_par_2019 <- seq(from = -1.6 , to = 1.8 , by = 0.1) %>% 
   as.data.frame() %>% 
   rename(soil_moisture = ".") %>% 
-  mutate(normalized_par = mean(height_march_surv_may_2019$normalized_par),
+  mutate(normalized_par = min(height_march_surv_may_2019$normalized_par),
          exotic_percentcover = mean(height_march_surv_may_2019$exotic_percentcover),
          site = "2",
          march_stem_height_cm = mean(height_march_surv_may_2019$march_stem_height_cm, na.rm = TRUE),
          plot_number = "1") %>% 
   mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
 
+moisture_site_1_mean_par_2019 <- seq(from = -1.6 , to = 1.8 , by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(normalized_par = 0,
+         exotic_percentcover = mean(height_march_surv_may_2019$exotic_percentcover),
+         site = "1",
+         march_stem_height_cm = mean(height_march_surv_may_2019$march_stem_height_cm, na.rm = TRUE),
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
+
+moisture_site_2_mean_par_2019 <- seq(from = -1.6 , to = 1.8 , by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(normalized_par = 0,
+         exotic_percentcover = mean(height_march_surv_may_2019$exotic_percentcover),
+         site = "2",
+         march_stem_height_cm = mean(height_march_surv_may_2019$march_stem_height_cm, na.rm = TRUE),
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
+
+moisture_site_1_max_par_2019 <- seq(from = -1.6 , to = 1.8 , by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(normalized_par = max(height_march_surv_may_2019$normalized_par),
+         exotic_percentcover = mean(height_march_surv_may_2019$exotic_percentcover),
+         site = "1",
+         march_stem_height_cm = mean(height_march_surv_may_2019$march_stem_height_cm, na.rm = TRUE),
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
+
+moisture_site_2_max_par_2019 <- seq(from = -1.6 , to = 1.8 , by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(normalized_par = max(height_march_surv_may_2019$normalized_par),
+         exotic_percentcover = mean(height_march_surv_may_2019$exotic_percentcover),
+         site = "2",
+         march_stem_height_cm = mean(height_march_surv_may_2019$march_stem_height_cm, na.rm = TRUE),
+         plot_number = "1") %>% 
+  mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
+
+moisture_site_1_prediction_2019 <- rbind(moisture_site_1_low_par_2019, moisture_site_1_mean_par_2019, moisture_site_1_max_par_2019)
+moisture_site_2_prediction_2019 <- rbind(moisture_site_2_low_par_2019, moisture_site_2_mean_par_2019, moisture_site_2_max_par_2019)
+
 site_1_sm_plot <- ggplot()+
-  geom_point(data = height_march_surv_may_2019 %>%  filter(site == "1"), aes(x = soil_moisture, y = may_alive), alpha = 0.25)+
-  geom_line(data = soil_moisture_site_1_prediction, aes(x = soil_moisture, y = alive), linewidth = 1)+
+  geom_point(data = height_march_surv_may_2019 %>%  filter(site == "1"), aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25) +
+  geom_line(data = moisture_site_1_prediction_2019, aes(x = soil_moisture, y = alive, col = normalized_par, group = normalized_par), linewidth = 1)+
   theme_classic()+
   labs(x = "Soil Moisture (%)",
        y = "Probability of Survival",
        title = "Site 1")
 
 site_2_sm_plot <- ggplot()+
-  geom_point(data = height_march_surv_may_2019 %>%  filter(site == "2"), aes(x = soil_moisture, y = may_alive), alpha = 0.25)+
-  geom_line(data = soil_moisture_site_2_prediction, aes(x = soil_moisture, y = alive), linewidth = 1)+
+  geom_point(data = height_march_surv_may_2019 %>%  filter(site == "2"), aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25)+
+  geom_line(data = moisture_site_2_prediction_2019, aes(x = soil_moisture, y = alive, col = normalized_par, group = normalized_par), linewidth = 1)+
   theme_classic()+
   labs(x = "Soil Moisture (%)",
        y = "Probability of Survival",
@@ -819,7 +1172,7 @@ site_2_sm_plot <- ggplot()+
 
 site_1_sm_plot + site_2_sm_plot
 ## stem height
-stem_height_site_1_prediction <- seq(from = 0.05, to = 11, by = 0.1) %>% 
+stem_height_site_1_prediction <- seq(from = -1.7, to = 3.2, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(march_stem_height_cm = ".") %>% 
   mutate(normalized_par = mean(height_march_surv_may_2019$normalized_par),
@@ -829,7 +1182,7 @@ stem_height_site_1_prediction <- seq(from = 0.05, to = 11, by = 0.1) %>%
          plot_number = "1") %>% 
   mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
 
-stem_height_site_2_prediction <- seq(from = 0.05, to = 11, by = 0.1) %>% 
+stem_height_site_2_prediction <- seq(from = -1.7, to = 3.2, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(march_stem_height_cm = ".") %>% 
   mutate(normalized_par = mean(height_march_surv_may_2019$normalized_par),
@@ -859,6 +1212,218 @@ site_1_sh_plot + site_2_sh_plot
 ```
 
 
+## Repeat each model for each species
+
+### CEOL 
+```{r}
+ceol_2019 <- height_march_surv_may_2019 %>% 
+  filter(species == "CEOL")
+  
+AIC(glmer(as.factor(may_alive) ~ normalized_par +  (1|plot_number), 
+                         family = binomial,
+                         data = ceol_2019))
+
+AIC(glmer(as.factor(may_alive) ~ soil_moisture + (1|plot_number),
+          family = binomial,
+          data = ceol_2019))
+
+AIC(glmer(as.factor(may_alive) ~ exotic_percentcover + (1|plot_number),
+          family = binomial, 
+          data = ceol_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = ceol_2019))
+
+AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = ceol_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + normalized_par + (1|plot_number),
+          family = binomial,
+          data = ceol_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + soil_moisture + (1|plot_number),
+          family = binomial,
+          data = ceol_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + exotic_percentcover + (1|plot_number),
+          family = binomial,
+          data = ceol_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + march_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = ceol_2019))
+
+
+summary(glmer(as.factor(may_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = ceol_2019))
+
+## Add Figure
+``` 
+
+### RHOV
+
+```{r} 
+rhov_2019 <- height_march_surv_may_2019 %>% 
+  filter(species == "RHOV")
+
+AIC(glmer(as.factor(may_alive) ~ normalized_par +  (1|plot_number), 
+                         family = binomial,
+                         data = rhov_2019))
+
+AIC(glmer(as.factor(may_alive) ~ soil_moisture + (1|plot_number),
+          family = binomial,
+          data = rhov_2019))
+
+AIC(glmer(as.factor(may_alive) ~ exotic_percentcover + (1|plot_number),
+          family = binomial, 
+          data = rhov_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = rhov_2019))
+
+AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = rhov_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + normalized_par +(1|plot_number), 
+          family = binomial,
+          data = rhov_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + soil_moisture + (1|plot_number), 
+          family = binomial,
+          data = rhov_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + exotic_percentcover + (1|plot_number), 
+          family = binomial,
+          data = rhov_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + march_stem_height_cm + (1|plot_number), 
+          family = binomial,
+          data = rhov_2019))
+
+rhov_model <- glmer(as.factor(may_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = rhov_2019)
+summary(rhov_model)
+```
+
+### HEAR
+
+```{r}
+hear_2019 <- height_march_surv_may_2019 %>% 
+  filter(species == "HEAR")
+
+AIC(glmer(as.factor(may_alive) ~ normalized_par +  (1|plot_number), 
+                         family = binomial,
+                         data = hear_2019))
+
+AIC(glmer(as.factor(may_alive) ~ soil_moisture + (1|plot_number),
+          family = binomial,
+          data = hear_2019))
+
+AIC(glmer(as.factor(may_alive) ~ exotic_percentcover + (1|plot_number),
+          family = binomial, 
+          data = hear_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = hear_2019))
+
+AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = hear_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + soil_moisture + (1|plot_number),
+          family = binomial,
+          data = hear_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + exotic_percentcover + (1|plot_number),
+          family = binomial,
+          data = hear_2019))
+
+AIC(glmer(as.factor(may_alive) ~ normalized_par + site + (1|plot_number),
+          family = binomial,
+          data = hear_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + march_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = hear_2019))
+
+hear_moisture_model_2019 <- glmer(as.factor(may_alive) ~ soil_moisture + (1|plot_number), 
+                         family = binomial,
+                         data = hear_2019)
+
+summary(hear_moisture_model_2019)
+
+hear_moisture_pred_2019 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = 1) %>% 
+  mutate(alive = predict(hear_moisture_model_2019, newdata = ., type = "response"))
+
+ggplot()+
+  geom_point(data = hear_2019, aes(x = soil_moisture, y = may_alive), alpha = 0.5) +
+  geom_line(data = hear_moisture_pred_2019, aes(x = soil_moisture, y = alive), linewidth = 1) +
+  theme_classic()
+
+
+```
+
+
+
+```{r}
+saap_2019 <- height_march_surv_may %>% 
+  filter(species == "SAAP")
+
+AIC(glmer(as.factor(may_alive) ~ normalized_par +  (1|plot_number), 
+                         family = binomial,
+                         data = saap_2019))
+
+AIC(glmer(as.factor(may_alive) ~ soil_moisture + (1|plot_number),
+          family = binomial,
+          data = saap_2019))
+
+AIC(glmer(as.factor(may_alive) ~ exotic_percentcover + (1|plot_number),
+          family = binomial, 
+          data = saap_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = saap_2019))
+
+AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = saap_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + normalized_par + (1|plot_number), 
+          family = binomial,
+          data = saap_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + soil_moisture + (1|plot_number), 
+          family = binomial,
+          data = saap_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + exotic_percentcover + (1|plot_number), 
+          family = binomial,
+          data = saap_2019))
+
+AIC(glmer(as.factor(may_alive) ~ site + march_stem_height_cm + (1|plot_number), 
+          family = binomial,
+          data = saap_2019))
+
+
+saap_model <- glmer(as.factor(may_alive) ~ site + (1|plot_number),
+                         family = binomial,
+                         data = saap_2018)
+
+summary(saap_model)
+```
+## Survival May - September
+
 ```{r MAY 2019 - join data, include=FALSE}
 par_may2019 <- dplyr::filter(par, year == "2019" & month =="5")
 tdr_july2019 <- tdr %>% 
@@ -884,11 +1449,15 @@ height_may_surv_sep_2019 <- full_join(height_may_2019, survival_sep_2019, by = c
   left_join(par_april2018, by = "plot_number") %>% 
   select(plot_number, MAFA_removal, location, species, may_stem_height_cm, sep_alive, normalized_par) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% 
-  select(!year & !site & !month & !treatment) %>% 
+  select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>% 
-  select(!year & !date & !treatment) %>% 
+  select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
-  rename(treatment = MAFA_removal)
+  rename(treatment = MAFA_removal) %>% 
+  mutate(normalized_par = scale(normalized_par),
+         soil_moisture = scale(soil_moisture),
+         exotic_percentcover = scale(exotic_percentcover), 
+         may_stem_height_cm = scale(may_stem_height_cm))
 ```
 
 ```{r}
@@ -929,16 +1498,436 @@ boxplot(E1 ~ site, data = height_march_surv_may_2019) # <---- make sure to chang
 abline(h = 0)
 
 # Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
-qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
-qqline(ranef(MOD)$treatment[,1]) # unique dates
+#qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
+#qqline(ranef(MOD)$treatment[,1]) # unique dates
 
 ```
 
 ```{r}
 print(glme.sep2019.mod)
 summary(glme.sep2019.mod)
+
+exotic_site1_2019 <- seq(from = -2.2, to = 2.2, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(exotic_percentcover = ".") %>% 
+  mutate(normalized_par = 0,
+         soil_moisture = 0, 
+         site = "1",
+         may_stem_height_cm = 0, 
+         plot_number = 1) %>% 
+  mutate(alive = predict(glme.sep2019.mod, newdata = ., type = "response"))
+
+exotic_site2_2019 <- seq(from = -2.2, to = 2.2, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(exotic_percentcover = ".") %>% 
+  mutate(normalized_par = 0,
+         soil_moisture = 0, 
+         site = "2",
+         may_stem_height_cm = 0, 
+         plot_number = 1) %>% 
+  mutate(alive = predict(glme.sep2019.mod, newdata = ., type = "response"))
+
+exotic_site1_plot_2019 <- ggplot() +
+  geom_point(data = height_may_surv_sep_2019 %>%  filter(site == "1"), aes(x = exotic_percentcover, y = sep_alive), alpha = 0.25)+
+  geom_line(data = exotic_site1_2019, aes(x= exotic_percentcover, y = alive), linewidth = 1)+
+  theme_classic() +
+  labs(title = "Site 1",
+       x = "Exotic Percent Cover",
+       y = "Survival Probability")
+
+exotic_site2_plot_2019 <- ggplot() +
+  geom_point(data = height_may_surv_sep_2019 %>%  filter(site == "2"), aes(x = exotic_percentcover, y = sep_alive), alpha = 0.25)+
+  geom_line(data = exotic_site2_2019, aes(x= exotic_percentcover, y = alive), linewidth = 1)+
+  theme_classic() +
+  labs(title = "Site 2",
+       x = "Exotic Percent Cover",
+       y = "Survival Probability")
+
+exotic_site1_plot_2019 + exotic_site2_plot_2019
+
+height_site1_2019 <- seq(from = -1.6, to = 4, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(may_stem_height_cm = ".") %>% 
+  mutate(normalized_par = 0, 
+         soil_moisture = 0,
+         exotic_percentcover = 0,
+         site = "1",
+         plot_number = 1) %>% 
+  mutate(alive = predict(glme.sep2019.mod, newdata = ., type = "response"))
+
+height_site2_2019 <- seq(from = -1.6, to = 4, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(may_stem_height_cm = ".") %>% 
+  mutate(normalized_par = 0, 
+         soil_moisture = 0,
+         exotic_percentcover = 0,
+         site = "2",
+         plot_number = 1) %>% 
+  mutate(alive = predict(glme.sep2019.mod, newdata = ., type = "response"))
+
+height_site1_plot_2019 <- ggplot()+
+  geom_point(data = height_may_surv_sep_2019 %>%  filter(site == "1"), aes(x = may_stem_height_cm, y = sep_alive), alpha = 0.25) +
+  geom_line(data = height_site1_2019, aes(x = may_stem_height_cm, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(title = "Site 1",
+       x = "Stem Height (cm)",
+       y = "Survival Probability")
+
+height_site2_plot_2019 <- ggplot()+
+  geom_point(data = height_may_surv_sep_2019 %>%  filter(site == "2"), aes(x = may_stem_height_cm, y = sep_alive), alpha = 0.25) +
+  geom_line(data = height_site2_2019, aes(x = may_stem_height_cm, y = alive), linewidth = 1)+
+  theme_classic()+
+  labs(title = "Site 2",
+       x = "Stem Height (cm)",
+       y = "Survival Probability")
+
+height_site1_plot_2019 + height_site2_plot_2019
+
 ```
 
-### May-sep or Nov 2019
+## Repeat each model for each species
+
+### CEOL 
+```{r}
+ceol_2019_sep <- height_may_surv_sep_2019 %>% 
+  filter(species == "CEOL")
+  
+AIC(glmer(as.factor(sep_alive) ~ normalized_par +  (1|plot_number), 
+                         family = binomial,
+                         data = ceol_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ soil_moisture + (1|plot_number),
+          family = binomial,
+          data = ceol_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ exotic_percentcover + (1|plot_number),
+          family = binomial, 
+          data = ceol_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = ceol_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ may_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = ceol_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ soil_moisture + normalized_par + (1|plot_number),
+          family = binomial,
+          data = ceol_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + soil_moisture + (1|plot_number),
+          family = binomial,
+          data = ceol_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ soil_moisture + exotic_percentcover + (1|plot_number),
+          family = binomial,
+          data = ceol_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ soil_moisture + may_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = ceol_2019_sep))
+
+ceol_2019_sep_model <- glmer(as.factor(sep_alive) ~ soil_moisture + (1|plot_number), 
+          family = binomial,
+          data = ceol_2019_sep)
+
+summary(ceol_2019_sep_model)
+
+ceol_moisture_2019 <- seq(from = -1.7, to = 1.7, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = 1) %>% 
+  mutate(alive = predict(ceol_2019_sep_model, newdata = ., type = "response"))
+
+ggplot()+
+  geom_point(data = ceol_2019_sep, aes(x = soil_moisture, y = sep_alive), alpha = 0.25) +
+  geom_line(data = ceol_moisture_2019, aes(x = soil_moisture, y = alive), linewidth = 1)+
+  theme_classic() +
+  labs(x = "Soil Moisture", 
+       y = "Survival Probability")
+
+``` 
+
+### RHOV
+
+```{r} 
+rhov_2019_sep <- height_may_surv_sep_2019 %>% 
+  filter(species == "RHOV")
+
+AIC(glmer(as.factor(sep_alive) ~ normalized_par +  (1|plot_number), 
+                         family = binomial,
+                         data = rhov_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ soil_moisture + (1|plot_number),
+          family = binomial,
+          data = rhov_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ exotic_percentcover + (1|plot_number),
+          family = binomial, 
+          data = rhov_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = rhov_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ may_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = rhov_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + normalized_par +(1|plot_number), 
+          family = binomial,
+          data = rhov_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + soil_moisture + (1|plot_number), 
+          family = binomial,
+          data = rhov_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + exotic_percentcover + (1|plot_number), 
+          family = binomial,
+          data = rhov_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + may_stem_height_cm + (1|plot_number), 
+          family = binomial,
+          data = rhov_2019_sep))
+
+rhov_2019_sep_model <- glmer(as.factor(may_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = rhov_2019)
+summary(rhov_2019_sep_model)
+```
+
+### HEAR
+
+```{r}
+hear_2019_sep <- height_may_surv_sep_2019 %>% 
+  filter(species == "HEAR")
+
+AIC(glmer(as.factor(sep_alive) ~ normalized_par +  (1|plot_number), 
+                         family = binomial,
+                         data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ soil_moisture + (1|plot_number),
+          family = binomial,
+          data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ exotic_percentcover + (1|plot_number),
+          family = binomial, 
+          data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ may_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + soil_moisture + (1|plot_number),
+          family = binomial,
+          data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + exotic_percentcover + (1|plot_number),
+          family = binomial,
+          data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ normalized_par + site + (1|plot_number),
+          family = binomial,
+          data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + may_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + exotic_percentcover + soil_moisture + (1|plot_number),
+          family = binomial,
+          data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + exotic_percentcover + normalized_par + (1|plot_number),
+          family = binomial,
+          data = hear_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + exotic_percentcover + may_stem_height_cm + (1|plot_number),
+          family = binomial,
+          data = hear_2019_sep))
+
+hear_2019_sep_model <- glmer(as.factor(sep_alive) ~ site + exotic_percentcover + (1|plot_number), 
+                         family = binomial,
+                         data = hear_2019_sep)
+
+summary(hear_2019_sep_model)
+
+hear_exotic_site1_2019 <- seq(from = -2.2, to = 2.2, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(exotic_percentcover = ".") %>% 
+  mutate(site = "1",
+         plot_number = 1) %>% 
+  mutate(alive = predict(hear_2019_sep_model, newdata = ., type = "response"))
+
+hear_exotic_site2_2019 <- seq(from = -2.2, to = 2.2, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(exotic_percentcover = ".") %>% 
+  mutate(site = "2",
+         plot_number = 1) %>% 
+  mutate(alive = predict(hear_2019_sep_model, newdata = ., type = "response"))
+
+hear_exotic_site1_plot_2019 <- ggplot()+
+  geom_point(data = hear_2019_sep %>% filter(site == "1"), aes(x = exotic_percentcover, y = sep_alive), alpha = 0.5) +
+  geom_line(data = hear_exotic_site1_2019, aes(x = exotic_percentcover, y = alive), linewidth = 1) +
+  theme_classic() +
+  labs(title = "Site 1",
+       x = "Exotic Percent Cover",
+       y = "Survival Probability")
+
+hear_exotic_site2_plot_2019 <- ggplot()+
+  geom_point(data = hear_2019_sep %>% filter(site == "2"), aes(x = exotic_percentcover, y = sep_alive), alpha = 0.5) +
+  geom_line(data = hear_exotic_site2_2019, aes(x = exotic_percentcover, y = alive), linewidth = 1) +
+  theme_classic() +
+  labs(title = "Site 2",
+       x = "Exotic Percent Cover",
+       y = "Survival Probability")
+
+hear_exotic_site1_plot_2019 + hear_exotic_site2_plot_2019
+
+```
+
+
+
+```{r}
+saap_2019_sep <- height_may_surv_sep_2019 %>%
+  filter(species == "SAAP")
+
+AIC(glmer(as.factor(sep_alive) ~ normalized_par +  (1|plot_number), 
+                         family = binomial,
+                         data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ soil_moisture + (1|plot_number),
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ exotic_percentcover + (1|plot_number),
+          family = binomial, 
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~  + (1|plot_number),
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ may_stem_height_cm + normalized_par + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ may_stem_height_cm + soil_moisture + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ may_stem_height_cm + exotic_percentcover + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + may_stem_height_cm + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + may_stem_height_cm + normalized_par + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + may_stem_height_cm + soil_moisture + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + may_stem_height_cm + exotic_percentcover + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + may_stem_height_cm + normalized_par + soil_moisture + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep))
+
+AIC(glmer(as.factor(sep_alive) ~ site + may_stem_height_cm + normalized_par + exotic_percentcover + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep))
+
+saap_2019_sep_model <- glmer(as.factor(sep_alive) ~ site + may_stem_height_cm + normalized_par + (1|plot_number), 
+          family = binomial,
+          data = saap_2019_sep)
+
+summary(saap_2019_sep_model)
+
+saap_height_site1_2019 <- seq(from = -1.4, to = 4, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(may_stem_height_cm = ".") %>% 
+  mutate(site = "1",
+         normalized_par = 0, 
+         plot_number = 1) %>% 
+  mutate(alive = predict(saap_2019_sep_model, newdata = ., type = "response"))
+
+saap_height_site2_2019 <- seq(from = -1.4, to = 4, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(may_stem_height_cm = ".") %>% 
+  mutate(site = "2",
+         normalized_par = 0, 
+         plot_number = 1) %>% 
+  mutate(alive = predict(saap_2019_sep_model, newdata = ., type = "response"))
+
+
+saap_height_site1_plot_2019 <- ggplot()+
+  geom_point(data = saap_2019_sep %>% filter(site == "1"), aes(x = may_stem_height_cm, y = sep_alive), alpha = 0.5) +
+  geom_line(data = saap_height_site1_2019, aes(x = may_stem_height_cm, y = alive), linewidth = 1) +
+  theme_classic()+
+  labs(title = "Site 1",
+       x = "Stem Height (cm)",
+       y = "Survival Probability")
+
+saap_height_site2_plot_2019 <- ggplot()+
+  geom_point(data = saap_2019_sep %>% filter(site == "2"), aes(x = may_stem_height_cm, y = sep_alive), alpha = 0.5) +
+  geom_line(data = saap_height_site2_2019, aes(x = may_stem_height_cm, y = alive), linewidth = 1) +
+  theme_classic()+
+  labs(title = "Site 2",
+       x = "Stem Height (cm)",
+       y = "Survival Probability")
+
+saap_height_site1_plot_2019 + saap_height_site2_plot_2019
+
+saap_par_site1_2019 <- seq(from = -1.7, to = 2.3, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(site = "1",
+         may_stem_height_cm = 0, 
+         plot_number = 1) %>% 
+  mutate(alive = predict(saap_2019_sep_model, newdata = ., type = "response"))
+
+saap_par_site2_2019 <- seq(from = -1.7, to = 2.3, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(site = "2",
+         may_stem_height_cm = 0, 
+         plot_number = 1) %>% 
+  mutate(alive = predict(saap_2019_sep_model, newdata = ., type = "response"))
+
+
+saap_par_site1_plot_2019 <- ggplot()+
+  geom_point(data = saap_2019_sep %>% filter(site == "1"), aes(x = normalized_par, y = sep_alive), alpha = 0.5) +
+  geom_line(data = saap_par_site1_2019, aes(x = normalized_par, y = alive), linewidth = 1) +
+  theme_classic()+
+  labs(title = "Site 1",
+       x = "Normalized PAR",
+       y = "Survival Probability")
+
+saap_par_site2_plot_2019 <- ggplot()+
+  geom_point(data = saap_2019_sep %>% filter(site == "2"), aes(x = normalized_par, y = sep_alive), alpha = 0.5) +
+  geom_line(data = saap_par_site2_2019, aes(x = normalized_par, y = alive), linewidth = 1) +
+  theme_classic()+
+  labs(title = "Site 2",
+       x = "Normalized PAR",
+       y = "Survival Probability")
+
+saap_par_site1_plot_2019 + saap_par_site2_plot_2019
+```
   
   
