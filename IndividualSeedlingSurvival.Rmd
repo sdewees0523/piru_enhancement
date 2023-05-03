@@ -504,7 +504,7 @@ march_ceol2019_aov <- aov((alive_marchH ~ aliveinmay) , data = ceol2019)
 summary.aov(march_ceol2019_aov)
 ```
 
-May 2019
+May 2019 - seedling survival from May to September 2019 by species
 ```{r all seedlings may 2019 aov, include=TRUE}
 
 # mean and SD of march height ~ alive or dead in may
