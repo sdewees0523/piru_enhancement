@@ -137,7 +137,7 @@ ceol_prep <- seedlingsurvival %>%
   #select(!date) %>% 
  # select(!month) %>% 
   filter(species == "CEOL") %>% 
-  select("seedlingID", "timepoint_status", "stem_height_cm") %>% 
+  dplyr::select("seedlingID", "timepoint_status", "stem_height_cm") %>% 
   mutate(stem_height_cm = as.numeric(stem_height_cm))
          
 str(ceol_prep)
@@ -173,7 +173,7 @@ write.csv(ceol_wide, "data/processed/ceol_wide_2018.csv")
 as.tibble(ceol_prep)
 ceol_prep_2 <- seedlingsurvival %>% 
   filter(species == "CEOL") %>% 
-  select("timepoint", "alive", "seedlingID", "stem_height_cm") %>% 
+  dplyr::select("timepoint", "alive", "seedlingID", "stem_height_cm") %>% 
   mutate(stem_height_cm = as.numeric(stem_height_cm))
 ceol_prep_2 <- as.tibble(ceol_prep_2)
 view(ceol_prep_2)
@@ -202,7 +202,7 @@ seedling_prep <- seedlingsurvival %>%
   #select(!date) %>% 
  # select(!month) %>% 
   #filter(species == "CEOL") %>% 
-  select("timepoint", "alive", "species", "seedlingID", "stem_height_cm") %>% 
+  dplyr::select("timepoint", "alive", "species", "seedlingID", "stem_height_cm") %>% 
   mutate(stem_height_cm = as.numeric(stem_height_cm))
 seedling_prep_2 <- as.tibble(seedling_prep)
 view(seedling_prep_2)
@@ -275,7 +275,7 @@ seedlingsurvival_2019$timepoint_status <- paste(seedlingsurvival_2019$timepoint,
 view(seedlingsurvival_2019)
 
 seedlingsurvival_2019_prep <- seedlingsurvival_2019 %>% 
-  select("species", "seedlingID", "timepoint_status", "status", "timepoint", "stem_height_cm") %>% 
+  dplyr::select("species", "seedlingID", "timepoint_status", "status", "timepoint", "stem_height_cm") %>% 
   mutate(stem_height_cm = as.numeric(stem_height_cm))
          
 str(seedlingsurvival_2019_prep)
@@ -533,7 +533,7 @@ view(ceol_may2018)
 
 
 ceol_aliveinmarch <- ceol_wide %>% 
-  select("seedlingID", "1_1", "2_0", "2_1")
+  dplyr::select("seedlingID", "1_1", "2_0", "2_1")
   
 print(ceol_aliveinmarch)
 dplyr::summarize(seedlings_planted = n_distinct(seedlingID))
