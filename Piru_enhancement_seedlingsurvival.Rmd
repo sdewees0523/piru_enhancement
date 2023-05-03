@@ -228,9 +228,20 @@ nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") %>% # nncover
 site_cond <- full_join(par_april2018, tdr_april2018, by = c("site", "plot_number", "treatment")) %>% 
   full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
 
-t.test(normalized_par~site, data = site_cond)
-t.test(soil_moisture~site, data = site_cond)
-t.test(cover_percent~site, data = site_cond)
+t.test(normalized_par~site, data = site_cond) 
+# not sig diff
+# data:  normalized_par by site
+# t = -1.2109, df = 29.972, p-value = 0.2354
+
+t.test(soil_moisture~site, data = site_cond) 
+# yes sig diff
+# data:  soil_moisture by site
+# t = 5.0592, df = 33.993, p-value = 1.44e-05
+
+t.test(cover_percent~site, data = site_cond) #nn cover
+# not sig diff
+# data:  cover_percent by site
+# t = 0.2511, df = 33.554, p-value = 0.8033
 ```
 
 
