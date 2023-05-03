@@ -189,7 +189,7 @@ print(exotic_cover_all)
 # 
 # 
 # t1 = jan 2019- march 2019
-# t2 = march 2018 - may 2019
+# t2 = march 2019 - may 2019
 # t3 = may 2019 - sept 2019
 # t4 = sept 2019 - nov 2019
 
@@ -211,14 +211,19 @@ print(exotic_cover_all)
 
 ```{r}
 par_april2018 <- dplyr::filter(par, year == "2018" & month =="4") %>% # par april 2018 
-  select(site, plot_number, treatment, normalized_par) %>% 
+  dplyr::select(site, plot_number, treatment, normalized_par) %>% 
   mutate(treatment = case_when(treatment == "no" ~ "none",
                                TRUE ~ treatment))
+
 tdr_april2018 <- tdr %>% dplyr::filter(year == "2018" & month =="4") %>%  #tdr april 2018
-  select(site, plot_number, treatment, soil_moisture) 
+  dplyr::select(site, plot_number, treatment, soil_moisture)  %>% 
+  mutate(treatment = case_when(treatment == "nonene" ~ "none",
+                               TRUE ~ treatment))
+
 tdr_april2018$site <- factor(tdr_april2018$site, levels = c("1", "2"))
+
 nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") %>% # nncover may 2018
-  select(site, plot_number, treatment, cover_percent)
+  dplyr::select(site, plot_number, treatment, cover_percent)
 
 site_cond <- full_join(par_april2018, tdr_april2018, by = c("site", "plot_number", "treatment")) %>% 
   full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
