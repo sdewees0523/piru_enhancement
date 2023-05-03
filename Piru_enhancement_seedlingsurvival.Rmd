@@ -279,11 +279,11 @@ growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "
   mutate(rgr = (log(may_stem_height_cm) - log(march_stem_height_cm))/60,
          plot_number = as.character(plot_number)) %>% 
   left_join(par_april2018, by = "plot_number") %>% 
-  select(plot_number, MAFA_removal, location, species, individual, rgr, normalized_par) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, individual, rgr, normalized_par) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% 
-  select(!site & !treatment) %>% 
+  dplyr::select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>% 
-  select(!treatment) %>% 
+  dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal)
 
@@ -302,14 +302,14 @@ height_march_surv_may <- full_join(height_march, survival_may, by = c("plot_numb
   drop_na() %>% 
   mutate(plot_number = as.character(plot_number)) %>% 
   left_join(par_april2018, by = "plot_number") %>% 
-  select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% 
-  select(!site & !treatment) %>% 
+  dplyr::select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>% 
-  select(!treatment) %>% 
+  dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal) %>% 
-  mutate(normalized_par = scale(normalized_par),
+  mutate(normalized_par = scale(normalized_par), #Q - why scale?
          soil_moisture = scale(soil_moisture),
          exotic_percentcover = scale(exotic_percentcover),
          march_stem_height_cm = scale(march_stem_height_cm))
