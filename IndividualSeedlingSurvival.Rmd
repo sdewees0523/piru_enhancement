@@ -336,6 +336,8 @@ seedlingsurvival2019_jan_meanSD <- seedlingsurvival2019_sml_2 %>%
   filter(aliveinmarch == "Y" | aliveinmarch == "N")
 view(seedlingsurvival2019_jan_meanSD)
 ```
+
+January 2018
 ```{r jan 2018 - normality, include=TRUE}
 # omitting NAs in January height data, this way all heights are paired with a Y or N (aka. equal values in columns used in analysis)
 seedlingsurvival2019_sml_2_najan <- seedlingsurvival2019_sml_2[!is.na(seedlingsurvival2019_sml_2$alive_janH),]
@@ -389,6 +391,8 @@ abline(h = 0)
 # test normality of January 2019 residuals by species and aliveinmarch
 model_jan_sppaliveinmarch <- lm(alive_janH ~ species + aliveinmarch, seedlingsurvival2019_sml_2_najan)
 ```
+
+January 2019 - height of alive seedlings
 ```{r jan 2019 - stats, include=TRUE}
 
 print(lm.alive_janH)
@@ -396,6 +400,7 @@ summary(lm.alive_janH) # p-values
 anova(lm.alive_janH)
 # species is significant
 # aliveinmarch is not significant
+# what we learned: survival from Jan to March in 2018 was dependent on species, not on height of the seedling at time of planting (i.e., Jan 2019)
 
 # post-hoc on lm to get stats on interactions
 emmeans(lm.alive_janH, pairwise ~ species)
@@ -469,6 +474,7 @@ summary.aov(jan2019_ceol_aov)
 
 ```
 
+March 2019
 ```{r all seedlings march 2019 aov, include=TRUE}
 
 # mean and SD of march height ~ alive or dead in may
@@ -498,6 +504,7 @@ march_ceol2019_aov <- aov((alive_marchH ~ aliveinmay) , data = ceol2019)
 summary.aov(march_ceol2019_aov)
 ```
 
+May 2019
 ```{r all seedlings may 2019 aov, include=TRUE}
 
 # mean and SD of march height ~ alive or dead in may
@@ -523,6 +530,7 @@ seedlingsurvival2019_may_meanSD_plot + scale_x_discrete(limits=c("Y", "N"),
 may_ceol2019_aov <- aov((alive_mayH ~ aliveinsept) , data = ceol2019)
 summary.aov(may_ceol2019_aov)
 ```
+
 
 ```{r alive or dead in may dependent on height in march}
 
