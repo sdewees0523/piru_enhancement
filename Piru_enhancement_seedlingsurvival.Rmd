@@ -320,7 +320,7 @@ height_march_surv_may <- full_join(height_march, survival_may, by = c("plot_numb
 
 ```{r MAY 2018 - normality, include =TRUE}
 
-glme.may2018.mod <- glmer(as.factor(may_alive) ~ normalized_par * soil_moisture + exotic_percentcover + site + march_stem_height_cm  + (1|plot_number), 
+glme.may2018.mod <- glmer(as.factor(may_alive) ~ normalized_par * soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + (1|plot_number), 
                          family = binomial,
                          data = height_march_surv_may) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? Now treatment is significant... 
 glme_rgr_may2018 <- lmer(rgr ~ normalized_par*soil_moisture + exotic_percentcover + site + (1|plot_number),
@@ -642,7 +642,7 @@ AIC(glmer(as.factor(may_alive) ~ site + march_stem_height_cm + (1|plot_number),
           data = ceol_2018))
 
 
-summary(glmer(as.factor(may_alive) ~ site + (1|plot_number), 
+summary(glmer(as.factor(may_alive) ~ soil_moisture + normalized_par + exotic_percentcover + march_stem_height_cm + site + (1|plot_number), 
           family = binomial,
           data = ceol_2018))
 
@@ -675,7 +675,7 @@ AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + soil_moisture + (1|plot_
           family = binomial,
           data = rhov_2018))
 
-rhov_model <- glmer(as.factor(may_alive) ~ march_stem_height_cm + soil_moisture + (1|plot_number),
+rhov_model <- glmer(as.factor(may_alive) ~ march_stem_height_cm + soil_moisture + normalized_par + exotic_percentcover + site + (1|plot_number),
           family = binomial,
           data = rhov_2018)
 summary(rhov_model)
@@ -1021,11 +1021,11 @@ height_march_surv_may_2019 <- full_join(height_march_2019, survival_may_2019, by
   drop_na() %>%  # removing na's for now. But should an NA in alive be assumed as dead? 
   mutate(plot_number = as.character(plot_number)) %>% 
   left_join(par_april2018, by = "plot_number") %>% 
-  select(plot_number, MAFA_removal, location, species, march_stem_height_cm, may_alive, normalized_par) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, march_stem_height_cm, may_alive, normalized_par) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% 
-  select(!site & !treatment) %>% 
+  dplyr::select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>% 
-  select(!treatment) %>% 
+  dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal) %>% 
   mutate(normalized_par = scale(normalized_par),
@@ -1038,7 +1038,7 @@ height_march_surv_may_2019 <- full_join(height_march_2019, survival_may_2019, by
 ```
 
 ```{r}
-glme.may2019.mod <- glmer(as.factor(may_alive) ~ normalized_par * soil_moisture + exotic_percentcover + site + march_stem_height_cm + (1|plot_number), 
+glme.may2019.mod <- glmer(as.factor(may_alive) ~ normalized_par * soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + (1|plot_number), 
                          family = binomial,
                          data = height_march_surv_may_2019)
                          
@@ -1441,7 +1441,7 @@ summary(saap_model)
 ## Survival May - September
 
 ```{r MAY 2019 - join data, include=FALSE}
-par_may2019 <- dplyr::filter(par, year == "2019" & month =="5")
+par_may2019 <- dplyr::filter(par, year == "2019" & month =="9")
 tdr_july2019 <- tdr %>% 
   dplyr::filter(year == "2019" & month == "7")
 
@@ -1463,11 +1463,11 @@ height_may_surv_sep_2019 <- full_join(height_may_2019, survival_sep_2019, by = c
   drop_na() %>%  # removing na's for now. But should an NA in alive be assumed as dead? 
   mutate(plot_number = as.character(plot_number)) %>% 
   left_join(par_april2018, by = "plot_number") %>% 
-  select(plot_number, MAFA_removal, location, species, may_stem_height_cm, sep_alive, normalized_par) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, may_stem_height_cm, sep_alive, normalized_par) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% 
-  select(!site & !treatment) %>% 
+  dplyr::select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>% 
-  select(!treatment) %>% 
+  dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal) %>% 
   mutate(normalized_par = scale(normalized_par),
@@ -1477,7 +1477,7 @@ height_may_surv_sep_2019 <- full_join(height_may_2019, survival_sep_2019, by = c
 ```
 
 ```{r}
-glme.sep2019.mod <- glmer(as.factor(sep_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + may_stem_height_cm + (1|plot_number), 
+glme.sep2019.mod <- glmer(as.factor(sep_alive) ~ normalized_par +  soil_moisture  + exotic_percentcover + site + may_stem_height_cm  + species + (1|plot_number), 
                          family = binomial,
                          data = height_may_surv_sep_2019)
                          
