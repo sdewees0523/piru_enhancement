@@ -3,8 +3,7 @@ title: "Piru_enchancement-Models"
 author: "Kit Swift"
 date: "2022-12-15"
 output: html_document
-editor_options: 
-  chunk_output_type: console
+
 ---
 
 # Load libraries
@@ -59,7 +58,7 @@ treatmentcolors <- c(treatment1color, treatment2color, treatment3color)
 
 ```
 
-# Question 1: How do environmental conditions change by a) canopy treatment and b) canopy cover?
+# Question 1: How do environmental conditions change with canopy cover? Considering (a) canopy treatment and (b) canopy cover.
 
 Is canopy treatment or canopy cover a stronger predictor of the environmental conditions below the shrub canopy?
 
@@ -69,7 +68,7 @@ Notes: - **response variable**: The variable you want to test. (e.g.,. PAR, TDR,
 
 ### Saved as a csv in the "Processed" data folder.
 
-```{r load data, include=TRUE}
+```{r load data par tdr nncover csv, include=TRUE}
 # variables as characters
 # data as double numbers
 mafa_cover_all_load <- read_csv("data/processed/mafa_cover_all.csv",
@@ -144,7 +143,8 @@ summary(survmort)
 
 ```
 
-```{r, include=TRUE}
+Create dfs for PAR, TDR, and NNcover models: parmod, tdrmod, nnmod
+```{r create parmod tdrmod nnmod dfs, include=TRUE}
 # PAR
 parmod <- par %>%
   left_join(mafa_cover_all, by = c("year", "site", "plot_number")) %>% 
@@ -159,7 +159,7 @@ tdrmod <- tdr %>%
   left_join(mafa_cover_all, by = c("year", "site", "plot_number")) %>% 
   rename(mafacover = cover_percent) %>% 
   filter(year <= 2019)
-print(tdrmod)
+#print(tdrmod)
 tdrmod %>% 
   group_by(year, treatment) %>% 
   summarise(N = length(soil_moisture))
@@ -192,10 +192,12 @@ nnmod %>%  # check number of data points
 
 2.  testing the residuals for normality
 
-```{r par model - normality, include = TRUE}
+```{r parmod normality, include = TRUE}
 parmod$treatment <- as.factor(parmod$treatment)
 parmod$month <- factor(parmod$month, levels = c(1,3,4,5,7,9,11))
 parmod$site <- as.factor(parmod$site)
+
+# lmer model
 lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|date) + (1|plot_number) + (1|year),
                    data = parmod)
 
@@ -242,18 +244,35 @@ qqline(ranef(MOD)$date[,1]) # unique dates
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1]) # unique plots
 
-#qqnorm(ranef(MOD)$year[,1], main = "Plot Residuals") # year doesn't run becuase only 2 numbers
-#qqline(ranef(MOD)$year[,1]) # unique plots
+# year doesn't run becuase only 2 numbers
+qqnorm(ranef(MOD)$year[,1], main = "Plot Residuals") 
+qqline(ranef(MOD)$year[,1]) # unique plots
 ```
 
 3.  statistics
 
-```{r par model - stats, include = TRUE}
+```{r parmod anova, include = TRUE}
 # print 
 print(lme.parmod)
 
-summary(lme.parmod) # p-values
-anova(lme.parmod) # fixed level effects, pvalues, etc.
+# p-values
+summary(lme.parmod) 
+#Fixed effects:
+#                Estimate Std. Error         df t value Pr(>|t|)    
+#(Intercept)    3.030e-01  4.799e-02  6.792e+01   6.313 2.40e-08 ***
+#treatmenthalf -3.299e-03  4.580e-02  3.465e+01  -0.072 0.942996    
+#treatmentnone -9.332e-03  4.829e-02  3.874e+01  -0.193 0.847789    
+#mafacover     -3.251e-03  9.261e-04  1.377e+02  -3.510 0.000606 *** 
+#site2          3.360e-02  4.016e-02  4.019e+01   0.837 0.407691    
+#month3         2.274e-01  3.079e-02  2.447e+02   7.384 2.40e-12 ***
+#month4         8.682e-02  3.315e-02  2.688e+02   2.619 0.009318 ** 
+#month5         1.981e-01  3.079e-02  2.447e+02   6.432 6.54e-10 ***
+#month7         1.662e-01  3.079e-02  2.447e+02   5.398 1.59e-07 ***
+#month9         2.151e-01  2.736e-02  2.549e+02   7.859 1.09e-13 ***
+#month11        7.380e-02  3.079e-02  2.447e+02   2.397 0.017288 *  
+
+# fixed level effects, pvalues, etc.
+anova(lme.parmod) 
 # par is significant by mafa cover and month
 #Type III Analysis of Variance Table with Satterthwaite's method
 #           Sum Sq  Mean Sq NumDF   DenDF F value    Pr(>F)    
@@ -262,13 +281,16 @@ anova(lme.parmod) # fixed level effects, pvalues, etc.
 #site      0.01195 0.011947     1  40.192  0.7001 0.4076914    
 #month     1.77375 0.295624     6 250.588 17.3240 < 2.2e-16 ***
 
+```
+
+```{r parmod posthoc, include=TRUE}
 # post-hoc Tukey test
 # visualize significant factors from anova(lme.parrmod)
 
 emmip(lme.parmod, mafacover ~ month)
 # mafacover is 26.32... that values must be from the model
 
-# testing the differnce between slopes
+# testing the difference between slopes
 parmod.interaction <- lm(normalized_par ~ mafacover*month, data = parmod)
 anova(parmod.interaction) # p-values for the interaction
 # Analysis of Variance Table
@@ -278,7 +300,9 @@ anova(parmod.interaction) # p-values for the interaction
 #month             6 1.7738 0.29563 12.0973 4.632e-12 ***
 #mafacover:month   6 0.4450 0.07416  3.0346  0.006871 ** 
 #Residuals       274 6.6960 0.02444     
+```
 
+```{r parmod posthoc slope per month, include=TRUE}
 # Obtain R2 slopes
 parmod.interaction$coefficients
 parmod.lst <- lstrends(parmod.interaction, "month", var="mafacover")
@@ -320,8 +344,29 @@ parmod %>%
             N = length(normalized_par), 
             SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
             )
+```
 
-# mean, SE: year x month
+```{r parmod means SD SE, include=TRUE}
+# mean, SE: normpar x month
+parmod %>% 
+  group_by(month) %>% 
+  summarise(MEAN_par=mean(normalized_par, na.rm = TRUE),
+            SD = sd(normalized_par, na.rm = TRUE),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
+            )
+# A tibble: 7 × 5
+#  month MEAN_par    SD     N     SE
+#  <fct>    <dbl> <dbl> <int>  <dbl>
+#1 1        0.219 0.156    36 0.0260
+#2 3        0.447 0.167    36 0.0279
+#3 4        0.349 0.139    36 0.0231
+#4 5        0.417 0.223    36 0.0371
+#5 7        0.385 0.192    36 0.0320
+#6 9        0.456 0.158    72 0.0187
+#7 11       0.293 0.172    36 0.0286
+
+# mean, SE: normpar x year x month
 parmod %>% 
   group_by(year, month) %>% 
   summarise(MEAN_par=mean(normalized_par, na.rm = TRUE),
@@ -330,7 +375,7 @@ parmod %>%
             SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
             )
 
-# mean, SE: year x treatment
+# mean, SE: normpar x year x treatment
 parmod %>% 
   group_by(year, treatment) %>% 
   summarise(MEAN_par=mean(normalized_par, na.rm = TRUE),
@@ -339,7 +384,8 @@ parmod %>%
             SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
             )
 ```
-```{r par extra stats code, include=FALSE}
+
+```{r parmod extra stats code, include=FALSE}
 # get stats on interactions
 #emmeans(lme.parmod, list(pairwise ~ month), adjust = "tukey")
 #emmeans(lme.parmod, list(pairwise ~ mafacover), adjust = "tukey")
@@ -367,9 +413,36 @@ summary(m)
 
 4.  figures
 
-```{r par model - figures, include=TRUE}
+```{r parmod figures, include=TRUE}
 
-# scatterplot: PAR x date
+# boxplot: normpar x month
+parbox.1 <- ggplot(data = parmod, 
+       aes(x = month, y = normalized_par, color = month)) +
+  labs(title = "Normalized PAR over time", x = "Month", y = "Normalized PAR") +
+  geom_boxplot() +
+  theme_bw() 
+ggplotly(parbox.1)
+
+# scatterplot: normpar x mafacover
+parscatter.6 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
+  geom_point() +
+labs(title = "Normalized PAR by Mature Shrub cover (%)", x = "MAFA cover (%)", y = "Nomalized PAR") +
+  geom_smooth(method="lm")+
+  theme_bw()
+ggplotly(parscatter.6)
+
+# scatterplot: normpar x mafacover (%) x month
+parscatter.2 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
+  geom_point(aes(color = month)) +
+  labs(title = "Normalized PAR by MAFA cover (%)", x = "MAFA canopy cover (%)", y = "Normalized PAR") +
+  geom_smooth(method="lm", se = FALSE, fullrange = TRUE, 
+             aes(color=month)) +
+  theme_bw()
+ggplotly(parscatter.2)
+```
+
+```{r parmod additional figures, include=TRUE}
+# scatterplot: normpar x date per treatment
 parscatter.1 <- ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
   geom_point(aes(color = treatment)) +
   scale_color_manual(values=c(treatmentcolors)) +
@@ -378,15 +451,22 @@ labs(title = "Normalized PAR over time", x = "Date", y = "Nomalized PAR") +
   theme_bw()
 ggplotly(parscatter.1)
 
+# scatterplot: PAR x month <-- make site not continuous
+parscatter.5 <- ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
+  geom_point(aes(color = site)) +
+  scale_color_manual(values=c(sitecolors)) +
+  labs(title = "Normalized PAR over time", x = "Date", y = "Normalized PAR") +
+  theme_bw() 
+ggplotly(parscatter.5)
 
-# scatterplot: PAR x mafacover (%) x month
-parscatter.2 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
-  geom_point(aes(color = month)) +
-  labs(title = "Normalized PAR by MAFA cover (%)", x = "MAFA canopy cover (%)", y = "PAR") +
-  geom_smooth(method="lm", se = FALSE, fullrange = TRUE, 
-             aes(color=month)) +
-  theme_bw()
-ggplotly(parscatter.2)
+# boxplot: PAR by site x treatment <-- broken and
+parbox.2 <- ggplot(data = parmod, aes(x = treatment, y = normalized_par)) +
+  geom_boxplot(aes(color = treatment)) +
+  scale_color_manual(values=c(treatmentcolors)) +
+  labs(title = "Normalized PAR over time", x = "MAFA canopy cover (%)", y = "Date") +
+  theme_bw() 
+ggplotly(parbox.2)
+
 
 # scatterplot: PAR x mafacover x treatment <-- use treatmentcolor instead of default
 parscatter.3 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
@@ -404,38 +484,6 @@ parscatter.4 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) +
   theme_bw() 
 ggplotly(parscatter.4)
 
-# scatterplot: PAR x nncover (%) x month
-
-
-#ggplot(crab_data, aes(x = size)) +
-#   geom_histogram(binwidth = 1, aes(fill = site)) +
-#   scale_fill_manual(values = cal_palette("superbloom")
-```
-
-```{r par model - additional figures, include=TRUE}
-# scatterplot: PAR x month <-- make site not continuous
-parscatter.5 <- ggplot(data = parmod, aes(x = date, y = normalized_par)) + 
-  geom_point(aes(color = site)) +
-  scale_color_manual(values=c(sitecolors)) +
-  labs(title = "Normalized PAR over time", x = "Date", y = "Normalized PAR") +
-  theme_bw() 
-ggplotly(parscatter.5)
-
-# boxplot: PAR by month 
-parbox.1 <- ggplot(data = parmod, 
-       aes(x = month, y = normalized_par, color = month)) +
-  labs(title = "Normalized PAR over time", x = "Month", y = "Normalized PAR") +
-  geom_boxplot() +
-  theme_bw() 
-ggplotly(parbox.1)
-
-# boxplot: PAR by site x treatment <-- broken and
-parbox.2 <- ggplot(data = parmod, aes(x = treatment, y = normalized_par)) +
-  geom_boxplot(aes(color = treatment)) +
-  scale_color_manual(values=c(treatmentcolors)) +
-  labs(title = "Normalized PAR over time", x = "MAFA canopy cover (%)", y = "Date") +
-  theme_bw() 
-ggplotly(parbox.2)
 ```
 
 ------------------------------------------------------------------------
@@ -445,7 +493,7 @@ ggplotly(parbox.2)
 1.  lmer
 2.  testing the residuals for normality
 
-```{r tdrmod - normality, include = TRUE}
+```{r tdrmod test for normality, include = TRUE}
 
 lme.tdrmod <- lmer(soil_moisture ~ treatment + mafacover + site + year + month + (1|date) +(1|plot_number),
                    data = tdrmod)
@@ -499,31 +547,130 @@ qqline(ranef(MOD)$plot_number[,1])
 
 3.  statistics
 
-```{r tdrmod - stats, include = TRUE}
+```{r tdrmod stats, include = TRUE}
+
 # print 
 print(lme.tdrmod)
+
 summary(lme.tdrmod)
+#Fixed effects:
+#                 Estimate Std. Error        df t value Pr(>|t|)    
+#(Intercept)      25.69631    1.73601   1.15489  14.802  0.02936 *  
+#treatmenthalf    -0.87077    0.82968  35.77702  -1.050  0.30098    
+#treatmentnonene  -3.17243    0.92201  41.74084  -3.441  0.00133 ** 
+#mafacover         0.01871    0.02544  79.69326   0.735  0.46428    
+#site2            -3.93896    0.82107  51.47138  -4.797 1.42e-05 ***
+#year2019         -3.98446    2.26483   0.84068  -1.759  0.36250    
+#month4          -14.05069    1.95754   0.83420  -7.178  0.11976    
+
 anova(lme.tdrmod) # A significant p-value indicates that one or more significant differences exist between group means.
-# site and treatment are significant. mafacover, year, month are not significant.
+#Type III Analysis of Variance Table with Satterthwaite's method
+#           Sum Sq Mean Sq NumDF  DenDF F value    Pr(>F)    
+#treatment  67.396  33.698     2 36.094  6.6602  0.003452 ** 
+#mafacover   2.736   2.736     1 79.693  0.5408  0.464279    
+#site      116.444 116.444     1 51.471 23.0143 1.418e-05 ***
+#year       15.660  15.660     1  0.841  3.0951  0.362497    
+#month     260.672 260.672     1  0.834 51.5197  0.119763 
+# site and treatment are significant. 
+# mafacover, year, month are not significant.
+
+```
+
+```{r tdrmod posthoc, include=TRUE}
 
 # visualize significant factors from anova(lme.tdrmod)
 emmip(lme.tdrmod, site ~ treatment)
 # emmip(lme.tdrmod, month ~ treatment | site)
 
-# get stats on interactions
+# stats on site treatment interactions
+tdrmod.interaction <- lm(soil_moisture ~ site*treatment, data = tdrmod)
+anova(tdrmod.interaction) # p-values for the interaction
+#Response: soil_moisture
+#                Df Sum Sq Mean Sq F value  Pr(>F)   
+#site             1  344.6  344.57  7.7568 0.00638 **
+#treatment        2  154.9   77.45  1.7434 0.18009   
+#site:treatment   2    4.6    2.29  0.0516 0.94971   
+
+# For TDR and nn cover, the significant plots may explain results we see later, but the fact that there are 2-3 plots that are significantly different from each other doesn't tell us the sites or treatments are significantly different from each other. 
+
+# stats on individual plots: emmeans
 emmeans(lme.tdrmod, list(pairwise ~ site*treatment), adjust = "tukey")
 #lsmeans(lme.tdrmod, pairwise~site*treatment, adjust="tukey") # emmeans and lsmeans give the same results
 
+#$`pairwise differences of site, treatment`
+# 1                           estimate    SE   df t.ratio p.value
+# site1 full - site2 full        3.939 0.875 50.9   4.500  0.0005
+# site1 full - site1 half        0.871 0.833 35.3   1.045  0.8991
+# site1 full - site2 half        4.810 1.076 36.6   4.472  0.0010
+# site1 full - site1 nonene      3.172 0.930 41.2   3.411  0.0171
+# site1 full - site2 nonene      7.111 1.063 36.2   6.690  <.0001
+# site2 full - site1 half       -3.068 1.328 47.5  -2.311  0.2101
+# site2 full - site2 half        0.871 0.833 35.3   1.045  0.8991
+# site2 full - site1 nonene     -0.767 1.460 52.1  -0.525  0.9949
+# site2 full - site2 nonene      3.172 0.930 41.2   3.411  0.0171
+# site1 half - site2 half        3.939 0.875 50.9   4.500  0.0005
+# site1 half - site1 nonene      2.302 0.798 33.0   2.883  0.0688
+# site1 half - site2 nonene      6.241 1.098 37.6   5.684  <.0001
+# site2 half - site1 nonene     -1.637 1.266 45.0  -1.294  0.7869
+# site2 half - site2 nonene      2.302 0.798 33.0   2.883  0.0688
+# site1 nonene - site2 nonene    3.939 0.875 50.9   4.500  0.0005
+
+```
+
+```{r tdrmod means SD SE, include = TRUE}
+
+# mean, SE: tdr x treatment
 tdrmod %>% 
-  group_by(year, month) %>% 
-  summarise(MEAN_soil_moisture=mean(soil_moisture, na.rm = TRUE),
+  group_by(treatment) %>% 
+  summarise(MEAN_tdr = mean(soil_moisture, na.rm = TRUE),
+            SD = sd(soil_moisture, na.rm = TRUE),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture, na.rm = TRUE))/sqrt(length((soil_moisture))))
+  )
+# A tibble: 3 × 5
+#  treatment MEAN_tdr    SD     N    SE
+#  <chr>        <dbl> <dbl> <int> <dbl>
+#1 full          17.9  7.31    36 1.22 
+#2 half          17.3  7.11    36 1.19 
+#3 nonene        15.1  5.95    36 0.992
+            
+# mean, SE: tdr x site
+tdrmod %>% 
+  group_by(site) %>% 
+  summarise(MEAN_tdr=mean(soil_moisture, na.rm = TRUE),
             SD = sd(soil_moisture, na.rm = TRUE),
             N = length(soil_moisture), 
             SE = ((sd(soil_moisture, na.rm = TRUE))/sqrt(length((soil_moisture))))
             )
+# A tibble: 2 × 5
+#  site  MEAN_par    SD     N    SE
+#  <chr>    <dbl> <dbl> <int> <dbl>
+#1 1         18.5  7.07    54 0.962
+#2 2         15.0  6.20    54 0.844
+
+# mean, SD, SE for tdrmod x site x treatment interaction
+tdrmod %>% 
+  group_by(site, treatment) %>% 
+  summarise(MEAN_tdr=mean(soil_moisture, na.rm = TRUE),
+            SD = sd(soil_moisture, na.rm = TRUE),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture, na.rm = TRUE))/sqrt(length((soil_moisture))))
+            )
+# A tibble: 6 × 6
+# Groups:   site [2]
+#  site  treatment MEAN_tdr    SD     N    SE
+#  <chr> <chr>        <dbl> <dbl> <int> <dbl>
+#1 1     full          20.0  7.45    18  1.76
+#2 1     half          18.9  7.46    18  1.76
+#3 1     nonene        16.7  6.24    18  1.47
+#4 2     full          15.8  6.74    18  1.59
+#5 2     half          15.6  6.53    18  1.54
+#6 2     nonene        13.5  5.33    18  1.26
+
 ```
 
-```{r tdrmod - additional stats, include=TRUE}
+```{r tdrmod additional stats, include=TRUE}
+
 # TDR by Site and Treatment
 # tdrmod$site  <- as.factor(tdrmod$site) # to make site a factor
 tdrmod_site_treat <- aov(soil_moisture ~ site*treatment, data = tdrmod) 
@@ -546,15 +693,33 @@ anova(tdrmod_treat)
 
 4.  figures
 
-```{r tdrmod - figures, include = TRUE}
+```{r tdrmod figures, include=TRUE}
+# boxplot: tdr x treatment (continuous x categorical)
+tdrbox.3 <- ggplot(data = tdrmod, aes(x = treatment, y = soil_moisture)) +
+  geom_boxplot(aes(fill = treatment)) +
+  scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
+  labs(title = "Soil Moisture by Site", x = "MAFA canopy treatment", y = "Soil Moisture (%)") +
+  theme_bw() 
+ggplotly(tdrbox.3) %>% layout(boxmode = "group")
 
-# boxplot: TDR by site by treatment
-tdrbox <- ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
+# boxplot: tdr x site (continuous x categorical)
+tdrbox.2 <- ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
+  geom_boxplot(aes(fill = site)) +
+  scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
+  labs(title = "Soil Moisture by Site", x = "Site", y = "Soil Moisture (%)") +
+  theme_bw() 
+ggplotly(tdrbox.2) %>% layout(boxmode = "group")
+
+# boxplot: tdr x site x treatment (continuous x categorical x categorical)
+tdrbox.1 <- ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
   geom_boxplot(aes(fill = treatment)) +
   scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
   labs(title = "Soil Moisture by Site and Treatment", x = "Site", y = "Soil Moisture (%)") +
   theme_bw() 
-ggplotly(tdrbox) %>% layout(boxmode = "group")
+ggplotly(tdrbox.1) %>% layout(boxmode = "group")
+```
+
+```{r tdrmod extra figures, include = TRUE}
 
 # scatterplot: tdr x mafacover 
 tdrscatter <- ggplot(data = tdrmod, aes(x = mafacover, y = soil_moisture)) + 
@@ -574,7 +739,7 @@ ggplotly(tdrscatter)
 1.  lmer
 2.  testing the residuals for normality
 
-```{r nnmod - normality, include = TRUE}
+```{r nnmod test for normality, include = TRUE}
 
 #need to convert df to a tibble
 #as_tibble(nnmod)
@@ -631,14 +796,31 @@ qqline(ranef(MOD)$plot_number[,1])
 
 3.  statistics
 
-```{r nnmod - stats, include=TRUE}
+```{r nnmod stats, include=TRUE}
 # print 
 print(lme.nnmod)
+
 summary(lme.nnmod)
+#Fixed effects:
+#              Estimate Std. Error      df t value Pr(>|t|)    
+#(Intercept)    44.9303     4.4321 43.5515  10.138 4.92e-13 ***
+#treatmenthalf  -9.7929     4.9691 34.9540  -1.971   0.0567 .  
+#treatmentnone  -4.1434     5.4522 39.3004  -0.760   0.4518    
+#mafacover      -0.2244     0.1391 62.2760  -1.613   0.1117    
+#site2          -1.1405     4.4980 39.7610  -0.254   0.8011    
+#year2019        6.1591     3.2678 49.5824   1.885   0.0653 . 
+
 anova(lme.nnmod) # A significant p-value indicates that one or more significant differences exist between group means.
 # non-native cover is not correlated with mafa cover, treatment, site, or year.
+#Type III Analysis of Variance Table with Satterthwaite's method
+#          Sum Sq Mean Sq NumDF  DenDF F value  Pr(>F)  
+#treatment 542.01  271.01     2 34.887  2.0696 0.14145  
+#mafacover 340.88  340.88     1 62.276  2.6033 0.11170  
+#site        8.42    8.42     1 39.761  0.0643 0.80114  
+#year      465.19  465.19     1 49.582  3.5525 0.06532 .
+```
 
-
+```{r nnmod posthoc, include=TRUE}
 # visualize significant factors from anova(lme.tdrmod)
 emmip(lme.nnmod, site ~ year)
 # emmip(lme.tdrmod, month ~ treatment | site)
@@ -657,14 +839,21 @@ emmeans(lme.tdrmod, pairwise~year, adjust="tukey")
 # year is NOT significant p=0.3811
 
 #lsmeans(lme.tdrmod, pairwise~site*treatment, adjust="tukey") # emmeans and lsmeans give the same results
+```
 
+```{r nnmod mean SD SE, include=TRUE}
 nnmod %>% 
-  group_by(year, site, treatment) %>% 
+  group_by(year) %>% 
   summarise(mean_nncover=mean(nncover, na.rm = TRUE),
             sd_nncover = sd(nncover, na.rm = TRUE), 
             N = length(nncover),
             SE_nncover=((sd(nncover, na.rm = TRUE))/sqrt(length((nncover))))
             )
+# A tibble: 2 × 5
+#  year  mean_nncover sd_nncover     N SE_nncover
+#  <chr>        <dbl>      <dbl> <int>      <dbl>
+#1 2018          36.0       12.9    36       2.16
+#2 2019          39.2       16.6    36       2.76
 ```
 
 ```{r nnmod - additional stats, include=TRUE}
