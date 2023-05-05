@@ -842,6 +842,7 @@ emmeans(lme.tdrmod, pairwise~year, adjust="tukey")
 ```
 
 ```{r nnmod mean SD SE, include=TRUE}
+
 nnmod %>% 
   group_by(year) %>% 
   summarise(mean_nncover=mean(nncover, na.rm = TRUE),
@@ -874,7 +875,7 @@ plot(TukeyHSD(nnmod_treat_site))
 
 4.  figures
 
-```{r nnmod - figures, include=TRUE}
+```{r nnmod figures, include=TRUE}
 
 # nnmod$site = as.factor(nnmod$site)
 
@@ -923,22 +924,24 @@ ggplotly(nnscatter.1)
 
 ### PAR
 
--   PAR is significantly correlated with MAFA cover and month.
+-   PAR is significantly correlated with MAFA cover and month and mafacover*month.
 -   PAR is not correlated with treatment, year, or site.
--   The slope of par x mafa cover is significantly different in May and July (or March and July?) than in the other months.
+-   The slope of par x mafa cover is significantly different in May and July than January.
 -   More canopy cover does mean more shade, and less canopy cover means more sun.
 
 
 ### TDR
 
--   soil moisture is significantly correlated with site and treatment
--   There are no effects of MAFA canopy cover, year, or month on soil moisture.
--   Soil moisture is greater at Site 1 than at Site 2 by treatment (e.g., full removal at Site 1 has more soil moisture than full removal at Site 2)
+-   soil moisture is significantly correlated with site 
+-   There are no effects of treatment, MAFA canopy cover, year, or month on soil moisture.
+-   Soil moisture is significantly greater at Site 1 than at Site 2 
+- Soil moisture is significantly greater at some plots vs others (e.g., full removal at Site 1 has more soil moisture than full removal at Site 2) but the trends are not consistant, hence no significant difference by treatment or treatment*site.
 
 ### Non-native cover
 
 -   Non-native cover is not correlated with Treatment, Site, MAFA cover (%), or year.
--   This could be because we measured non-native cover once a year at peak biomass/peak growth in May-June
+-   This could be because we measured non-native cover once a year at peak biomass/peak growth in May-June and % cover is a 2D metric 
+- We collected density and grass height data within each plot in 2018 but not in 2019 and could at least discuss if there are differences between the average nn grass density or nn grass height between treatments as a way to "get at" the nn biomass or nn 3D-ness of the competition from nn grasses. 
 
 # Question 2: How does seedling survival change by PAR, TDR, and mafacover?
 
