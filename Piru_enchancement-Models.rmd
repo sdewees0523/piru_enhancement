@@ -635,7 +635,7 @@ tdrmod %>%
 #3 nonene        15.1  5.95    36 0.992
             
 # mean, SE: tdr x site
-tdrmod %>% 
+tdrsite_mean <- tdrmod %>% 
   group_by(site) %>% 
   summarise(MEAN_tdr=mean(soil_moisture, na.rm = TRUE),
             SD = sd(soil_moisture, na.rm = TRUE),
@@ -694,6 +694,18 @@ anova(tdrmod_treat)
 4.  figures
 
 ```{r tdrmod figures, include=TRUE}
+# boxplot: tdr mean and SD by site "+"
+tdrbox.4 <- ggplot(data = tdrsite_mean, aes(x = site, y = MEAN_tdr)) + 
+  geom_boxplot(aes(lower=MEAN_tdr, upper=MEAN_tdr, middle=MEAN_tdr, ymin=MEAN_tdr-SE, ymax=MEAN_tdr+SE), stat="identity") +
+  labs(title = "Average Soil Moisture by Site", x = "Site", y = "Average Soil Moisture (%)")
+tdrbox.4
+
+# boxplot: tdr mean and SD by site "square"
+tdrbox.5 <- ggplot(data = tdrsite_mean, aes(x = site, y = MEAN_tdr)) + 
+  geom_boxplot(aes(lower=MEAN_tdr-SE, upper=MEAN_tdr+SE, middle=MEAN_tdr, ymin=MEAN_tdr-SE, ymax=MEAN_tdr+SE), stat="identity") +
+  labs(title = "Average Soil Moisture by Site", x = "Site", y = "Average Soil Moisture (%)")
+tdrbox.5
+
 # boxplot: tdr x treatment (continuous x categorical)
 tdrbox.3 <- ggplot(data = tdrmod, aes(x = treatment, y = soil_moisture)) +
   geom_boxplot(aes(fill = treatment)) +
@@ -708,7 +720,7 @@ tdrbox.2 <- ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
   scale_fill_manual(values = c('#F6EECF', '#B09175', '#291611')) +
   labs(title = "Soil Moisture by Site", x = "Site", y = "Soil Moisture (%)") +
   theme_bw() 
-ggplotly(tdrbox.2) %>% layout(boxmode = "group")
+ggplotly(tdrbox.2) #%>% layout(boxmode = "group")
 
 # boxplot: tdr x site x treatment (continuous x categorical x categorical)
 tdrbox.1 <- ggplot(data = tdrmod, aes(x = site, y = soil_moisture)) +
