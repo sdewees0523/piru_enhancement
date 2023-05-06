@@ -264,13 +264,13 @@ t.test(cover_percent~site, data = site_cond) #nn cover
 # tdr = april 2018
 # nncover = may 2018
 
-#seedling height in March 2018 - START
+#seedling height in March 2018 - STARTING HEIGHT
 height_march <- height_raw %>% 
   filter(date >= "2018-02-23" & date <= "2018-03-31") %>% # filtering to only have rows of data taken in March 
   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
   rename(march_stem_height_cm = stem_height_cm)
 
-#seedling height in May 2018 - END
+#seedling height in May 2018 - ENDING HEIGHT
 height_may <- height_raw %>% 
   filter(date >= "2018-05-01" & date <= "2018-05-31") %>% 
   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
@@ -282,7 +282,7 @@ height_may <- height_raw %>%
          may_stem_height_cm = as.numeric(may_stem_height_cm))  %>% 
   drop_na()
 
-# growth rate from March to May 2018
+# growth rate from March to May 2018 - GROWTH RATE
 growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
   mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% 
   drop_na() %>% 
@@ -297,20 +297,21 @@ growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal)
 
+# seedling survival or dead in May 2018
 survival_may <- height_raw %>%  ## Need to change some of the individual labels to fix NAs when rejoin. 
-  filter(date >= "2018-05-01" & date <= "2018-05-31") %>% 
+  filter(date >= "2018-05-01" & date <= "2018-05-31") %>% # select for may 2018 data collection
   dplyr::select(plot_number, MAFA_removal, location, species, alive, individual) %>% 
-  rename(may_alive = alive) %>% 
-  mutate(may_alive = replace_na(may_alive, 0),
+  rename(may_alive = alive) %>% # 1 = alive
+  mutate(may_alive = replace_na(may_alive, 0), # replace NAs with 0 = dead
          individual = case_when(individual == "s" ~ "S",
                                 individual == "c" ~ "C",
                                 individual == "r" ~ "R",
-                                TRUE ~ individual))  # 0= dead 1 = alive
+                                TRUE ~ individual))  # 0 = dead 1 = alive
 
-# stephanie start here - start with height_march and survival_may and figure out the code to the output of height_march_surv_may
+# March to May 2018 join
 height_march_surv_may <- full_join(height_march, survival_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
-  mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% 
-  drop_na() %>% 
+  mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% # warning: one height "didn't plant"
+  drop_na() %>% # drops nas 
   mutate(plot_number = as.character(plot_number)) %>% 
   left_join(par_april2018, by = "plot_number") %>% 
   dplyr::select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par) %>% 
@@ -329,11 +330,14 @@ height_march_surv_may <- full_join(height_march, survival_may, by = c("plot_numb
 
 - testing if the residuals are normally distributed
 
-```{r MAY 2018 - normality, include =TRUE}
+```{r MAY 2018 normality, include =TRUE}
 
+# alive in may as dependent variable
 glme.may2018.mod <- glmer(as.factor(may_alive) ~ normalized_par * soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + (1|plot_number), 
                          family = binomial,
                          data = height_march_surv_may) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? Now treatment is significant... 
+
+# relative growth rate as dependent variable
 glme_rgr_may2018 <- lmer(rgr ~ normalized_par*soil_moisture + exotic_percentcover + site + (1|plot_number),
                          data = growth_march_may)
 # plot number not included because only data point per plot (n = 36)
