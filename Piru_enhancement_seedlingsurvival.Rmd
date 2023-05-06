@@ -65,7 +65,7 @@ Notes:
 ### Load PAR, TDR, and non-native percent cover data.
 
 ### Saved as a csv in the "Processed" data folder.
-```{r load data csvs, include=TRUE}
+```{r load survival height par tdr nncover data csv, include=TRUE}
 
 # survival and mortality data
 survmort_load <- read_csv("data/processed/survmort.csv",
@@ -181,7 +181,7 @@ print(exotic_cover_all)
 
 - RUN AFTER "SURVIVAL AT TIME POINTS" AND ONLY MAKE CODE IF IT'S NEEDED
   
-```{r MAY 2018 - rate of change, include=TRUE}
+```{r may 2018 rate of change, include=TRUE}
 
 # YOU DON'T NEED TO CALCULATE SURVIVAL RATE RIGHT NOW
 # JUST RUN MODELS TO SEE WHAT MAKES A DIFFERENCE AT SURVEY TIME POINT. 
@@ -209,35 +209,44 @@ print(exotic_cover_all)
 
 ### How are site 1 and site 2 different? 
 
-```{r}
-par_april2018 <- dplyr::filter(par, year == "2018" & month =="4") %>% # par april 2018 
+```{r may 2018 filter data, include=TRUE}
+
+# par april 2018 
+par_april2018 <- dplyr::filter(par, year == "2018" & month =="4") %>% 
   dplyr::select(site, plot_number, treatment, normalized_par) %>% 
   mutate(treatment = case_when(treatment == "no" ~ "none",
                                TRUE ~ treatment))
 
-tdr_april2018 <- tdr %>% dplyr::filter(year == "2018" & month =="4") %>%  #tdr april 2018
+#tdr april 2018
+tdr_april2018 <- tdr %>% dplyr::filter(year == "2018" & month =="4") %>%  
   dplyr::select(site, plot_number, treatment, soil_moisture)  %>% 
   mutate(treatment = case_when(treatment == "nonene" ~ "none",
                                TRUE ~ treatment))
-
 tdr_april2018$site <- factor(tdr_april2018$site, levels = c("1", "2"))
 
-nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") %>% # nncover may 2018
+# nncover may 2018
+nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") %>% 
   dplyr::select(site, plot_number, treatment, cover_percent)
 
 site_cond <- full_join(par_april2018, tdr_april2018, by = c("site", "plot_number", "treatment")) %>% 
   full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
+```
 
+```{r may2018 site conditions ttest}
+
+#soil moisture
+t.test(soil_moisture~site, data = site_cond) 
+# YES sig diff
+# data:  soil_moisture by site
+# t = 5.0592, df = 33.993, p-value = 1.44e-05
+
+#norm_par
 t.test(normalized_par~site, data = site_cond) 
 # not sig diff
 # data:  normalized_par by site
 # t = -1.2109, df = 29.972, p-value = 0.2354
 
-t.test(soil_moisture~site, data = site_cond) 
-# yes sig diff
-# data:  soil_moisture by site
-# t = 5.0592, df = 33.993, p-value = 1.44e-05
-
+#nncover
 t.test(cover_percent~site, data = site_cond) #nn cover
 # not sig diff
 # data:  cover_percent by site
@@ -248,20 +257,20 @@ t.test(cover_percent~site, data = site_cond) #nn cover
 ### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
   - Add height at March to include in model
 
-```{r MAY 2018 - join data, include=TRUE}
+```{r MAY 2018 join data, include=TRUE}
 # subsetting data for May 2018 survival
 # survmortnospp = may 2018
 # par = april 2018
 # tdr = april 2018
 # nncover = may 2018
 
-
-
+#seedling height in March 2018 - START
 height_march <- height_raw %>% 
   filter(date >= "2018-02-23" & date <= "2018-03-31") %>% # filtering to only have rows of data taken in March 
   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
   rename(march_stem_height_cm = stem_height_cm)
 
+#seedling height in May 2018 - END
 height_may <- height_raw %>% 
   filter(date >= "2018-05-01" & date <= "2018-05-31") %>% 
   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
@@ -273,11 +282,12 @@ height_may <- height_raw %>%
          may_stem_height_cm = as.numeric(may_stem_height_cm))  %>% 
   drop_na()
 
+# growth rate from March to May 2018
 growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
   mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% 
   drop_na() %>% 
   mutate(rgr = (log(may_stem_height_cm) - log(march_stem_height_cm))/60,
-         plot_number = as.character(plot_number)) %>% 
+         plot_number = as.character(plot_number)) %>% # relative growth rate equation
   left_join(par_april2018, by = "plot_number") %>% 
   dplyr::select(plot_number, MAFA_removal, location, species, individual, rgr, normalized_par) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% 
@@ -297,6 +307,7 @@ survival_may <- height_raw %>%  ## Need to change some of the individual labels 
                                 individual == "r" ~ "R",
                                 TRUE ~ individual))  # 0= dead 1 = alive
 
+# stephanie start here - start with height_march and survival_may and figure out the code to the output of height_march_surv_may
 height_march_surv_may <- full_join(height_march, survival_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
   mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% 
   drop_na() %>% 
@@ -309,7 +320,7 @@ height_march_surv_may <- full_join(height_march, survival_may, by = c("plot_numb
   dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal) %>% 
-  mutate(normalized_par = scale(normalized_par), #Q - why scale?
+  mutate(normalized_par = scale(normalized_par), # scale transforms the data; helps when comparing variables with different units
          soil_moisture = scale(soil_moisture),
          exotic_percentcover = scale(exotic_percentcover),
          march_stem_height_cm = scale(march_stem_height_cm))
