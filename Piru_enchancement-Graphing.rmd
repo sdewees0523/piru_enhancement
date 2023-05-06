@@ -20,34 +20,84 @@ surv_all <- read.csv("data/processed/surv_all.csv")
 surv_all <- surv_all[,-1]
 ```
 
-```{r}
+```{r base code, include=FALSE}
 #Replace the following with what you want
 #Y = Year to be looked at; M = month to be looked at; S = species to be looked at; plus any other filter
 #GRAPHNAME = graph name; GRAPHDATA = dataset to be used to make graph
 #GRAPHTITLE = Title on graph; XAXIS = xaxis label; YAXIS = Y axis label
 #XVARIABLE = variable to be checked on x axis; YVARIABLE = variable to be checked on y axis; SORTBY = what regression lines you want
 
-GRAPHDATA <- surv_all %>% 
-  filter(year == "Y", 
-         month == "M", 
-         species == "S"
-         ) %>%
-  #group_by() %>%
-  #summarise_at(vars(r), funs(mean,sd))
+#GRAPHDATA <- surv_all %>% 
+#  filter(year == "Y", 
+#         month == "M", 
+#         species == "S"
+#         ) %>%
+#  #group_by() %>%
+#  #summarise_at(vars(r), funs(mean,sd))
 
 
-GRAPHNAME <- ggplot(
-  data = GRAPHDATA,
-  aes(x = XVARIABLE, y = YVARIABLE, color = SORTBY)) +
-  geom_point(size=2, shape=16) +
-  theme(legend.position="top") +
-  theme_classic() +
-  labs(title="GRAPHTITLE",x="XAXIS", y = "YAXIS") +
-  geom_smooth()
-ggplotly(GRAPHNAME)
+#GRAPHNAME <- ggplot(
+#  data = GRAPHDATA,
+#  aes(x = XVARIABLE, y = YVARIABLE, color = SORTBY)) +
+#  geom_point(size=2, shape=16) +
+#  theme(legend.position="top") +
+#  theme_classic() +
+#  labs(title="GRAPHTITLE",x="XAXIS", y = "YAXIS") +
+#  geom_smooth()
+#ggplotly(GRAPHNAME)
 ```
 
-```{r}
+```{r filter data}
+
+# 2018 seedling survival by plot <-- need to calculate as percent of seedlings alive in month = 0
+surv_18_byplot <- surv_all %>%
+   filter(year == "2018") %>% 
+  group_by(plot_number, month_count) %>% 
+  summarise_at(vars(alive), list(sum,sd)) %>% 
+  drop_na() %>% 
+  rename(sum = fn1) %>% 
+  rename(sd = fn2) %>% 
+  mutate(plot_number = as.character(plot_number))
+
+# 2018 seedling survival all
+surv_18_all <- surv_18_byplot %>%
+  group_by(month_count) %>% 
+  summarise_at(vars(sum), list(mean,sd)) %>% 
+  rename(mean = fn1) %>% 
+  rename(sd = fn2)
+view(surv_18_all)
+
+# 2019 seedling survival by plot <-- need to calculate as percent of seedlings alive in month = 0
+surv_19_byplot <- surv_all %>%
+   filter(year == "2019") %>% 
+  group_by(plot_number, month_count) %>% 
+  summarise_at(vars(alive), list(sum,sd)) %>% 
+  drop_na() %>% 
+  rename(sum = fn1) %>% 
+  rename(sd = fn2) %>% 
+  mutate(plot_number = as.character(plot_number))
+
+# 2018 seedling survival all
+surv_19_all <- surv_19_byplot %>%
+  group_by(month_count) %>% 
+  summarise_at(vars(sum), list(mean,sd)) %>% 
+  rename(mean = fn1) %>% 
+  rename(sd = fn2)
+view(surv_19_all)
+
+```
+
+```{r additional filter data, include=FALSE}
+# 2019 seedling survival by plot 
+survival_plot <- surv_all %>%
+   filter(year == "2019"
+  #        ,month == "M"
+  #        ,species == "S"
+  ) %>%
+  group_by(plot_number, month_count) %>%
+  summarise_at(vars(alive), funs(mean,sd))
+
+# 2019 seedling survival by treatment 
 survival_treatment <- surv_all %>%
    filter(year == "2019"
   #        ,month == "M"
@@ -56,7 +106,39 @@ survival_treatment <- surv_all %>%
   group_by(treatment, month_count) %>%
   summarise_at(vars(alive), funs(mean,sd))
 
+```
 
+```{r figures}
+
+# line: average survival by month 2018
+line1_surv_18_all <- ggplot(
+  data = surv_18_all,
+  aes(x = month_count, y = mean)) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd)) +
+  geom_line(aes()) + 
+  geom_point(size=2, shape=16) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="Average seedling survival in 2018", x="Months Since Planting", y = "Mean number of alive seedlings (absolute)") 
+  #geom_smooth()
+ggplotly(line1_surv_18_all)
+
+# line: average survival by month 2019
+line1_surv_19_all <- ggplot(
+  data = surv_19_all,
+  aes(x = month_count, y = mean)) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd)) +
+  geom_line(aes()) + 
+  geom_point(size=2, shape=16) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="Average seedling survival in 2019", x="Months Since Planting", y = "Mean number of alive seedlings (absolute)") 
+  #geom_smooth()
+ggplotly(line1_surv_19_all)
+
+```
+
+```{r additional figures, include=FALSE}
 survival_treatment_G <- ggplot(
   data = survival_treatment,
   aes(x = month_count, y = mean, color = treatment)) +
