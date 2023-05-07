@@ -398,18 +398,9 @@ print(may2018mod)
 
 - model with glmer
 
-```{r trial MAY 2018 glmer, include=FALSE}
-glme.may2018.mod <- glmer(may_alive ~ normalized_par + soil_moisture + exotic_percentcover + site + rgr + march_stem_height_cm + species + (1|plot_number),
-                                family = binomial, 
-                         data = height_march_surv_may) 
-# treatment and location cause error messages
-# don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
+```{r trial and extra code MAY 2018 glmer, include=FALSE}
 
-```
-
-```{r MAY 2018 test normality glmer, include =TRUE}
-
-# individual seedling survival in May 2018 as dependent variable
+# individual seedling survival in May 2018 as dependent variable - Shane's code
 glme.may2018.mod <- glmer(may_alive ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + rgr + (1|plot_number) + (1|treatment) + (1|location) + (1|individual), 
                           # QUESTION -- why normalized_par * soil_moisture instead of +?
                           # treatment as independent because treatment wasn't significant in Q1
@@ -419,7 +410,7 @@ glme.may2018.mod <- glmer(may_alive ~ normalized_par + soil_moisture + exotic_pe
 # error message with scaled data --> Warning: Model failed to converge with max|grad| = 0.0958267 (tol = 0.002, component 1)
 # error message with un-scaled data --> Warning: Some predictor variables are on very different scales: consider rescaling
 
-# relative growth rate as dependent variable - don't run
+# relative growth rate as dependent variable - Shane's code
 glme_rgr_may2018 <- lmer(rgr ~ normalized_par*soil_moisture + exotic_percentcover + site + (1|plot_number),
                          data = growth_march_may)
 # plot number not included because only data point per plot (n = 36)
@@ -431,6 +422,22 @@ glme_rgr_may2018 <- lmer(rgr ~ normalized_par*soil_moisture + exotic_percentcove
 #                          # treatment as independent because treatment wasn't significant #in Q1
 #                         data = height_march_surv_may) 
 
+# trial - Stephanie's code
+glme.may2018.mod <- glmer(may_alive ~ normalized_par * soil_moisture + exotic_percentcover + site + rgr + march_stem_height_cm + species + (1|plot_number),
+                                family = binomial, 
+                         data = height_march_surv_may) 
+# treatment and location cause error messages
+# don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
+
+```
+
+```{r MAY 2018 test normality glmer, include =TRUE}
+
+glme.may2018.mod <- glmer(may_alive ~ normalized_par * soil_moisture + exotic_percentcover + site + rgr + march_stem_height_cm + species + (1|plot_number),
+                                family = binomial, 
+                         data = height_march_surv_may) # 11 columns in df
+# treatment and location cause error messages
+# don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
 MOD <- glme.may2018.mod
 
 # Calculate model's residual and fitted values
@@ -496,6 +503,35 @@ qqline(ranef(MOD)$plot_number[,1]) # plot number
 
 print(glme.may2018.mod)
 summary(glme.may2018.mod)
+# when normalized_par + soil_moisture
+#Fixed effects:
+#                     Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)           3.06593    0.61814   4.960 7.05e-07 ***
+#normalized_par       -0.47379    0.19966  -2.373   0.0176 *  
+#soil_moisture         0.60512    0.27015   2.240   0.0251 *  
+#exotic_percentcover  -0.52274    0.21463  -2.436   0.0149 *  
+#site2                -2.61512    0.53223  -4.913 8.95e-07 ***
+#rgr                   0.17486    0.18525   0.944   0.3452    
+#march_stem_height_cm  0.01186    0.23245   0.051   0.9593    
+#speciesHEAR          -0.13926    0.60828  -0.229   0.8189    
+#speciesRHOV          -0.80500    0.56642  -1.421   0.1553    
+#speciesSAAP          -1.49677    0.61320  -2.441   0.0147 *  
+
+# when normalized_par * soil_moisture
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                   3.14554    0.62088   5.066 4.06e-07 ***
+#normalized_par               -0.04689    0.24992  -0.188  0.85117    
+#soil_moisture                 0.70144    0.26578   2.639  0.00831 ** 
+#exotic_percentcover          -0.47463    0.19730  -2.406  0.01615 *  
+#site2                        -2.71065    0.51212  -5.293 1.20e-07 ***
+#rgr                           0.15780    0.18477   0.854  0.39309    
+#march_stem_height_cm          0.03284    0.24099   0.136  0.89162    
+#speciesHEAR                  -0.20153    0.61868  -0.326  0.74463    
+#speciesRHOV                  -0.79117    0.56505  -1.400  0.16146    
+#speciesSAAP                  -1.52418    0.61178  -2.491  0.01272 *  
+#normalized_par:soil_moisture  0.64328    0.27406   2.347  0.01891 *  
+
 anova(glme.may2018.mod) # A significant p-value indicates that one or more significant differences exist between group means.
 # seedling survival is not correlated with par, tdr, exotic percent cover, or site.
 # SITE may be ecologically interesting (p = 0.0843)
