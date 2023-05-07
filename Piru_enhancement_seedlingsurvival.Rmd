@@ -100,12 +100,13 @@ print(survmortnospp) # :) yay! it worked!
 survmortnospp %>% # check number of data points
   group_by(year, treatment) %>% 
   summarise(N = length(totalsurvival))
+```
+
+```{r load height par tdr nncover data csv, include=TRUE}
 
 # loading in height data
 height_raw <- read.csv(here("data", "survival_data.csv")) %>% 
   mutate(date = mdy(date)) #having R recognize date as a date
-
-
 
 # PAR data
 par_load <- read_csv("data/processed/par.csv",
@@ -151,7 +152,6 @@ exotic_cover_all_load <- read_csv("data/processed/exotic_cover_all.csv",
     cover_percent = col_double()
   )
 )
-
 
 exotic_cover_all <- exotic_cover_all_load %>% 
   dplyr::select(date, year, site, plot_number, MAFA_removal, cover_percent) %>% 
@@ -209,7 +209,7 @@ print(exotic_cover_all)
 
 ### How are site 1 and site 2 different? 
 
-```{r may 2018 filter data, include=TRUE}
+```{r may 2018 filter environmental data, include=TRUE}
 
 # par april 2018 
 par_april2018 <- dplyr::filter(par, year == "2018" & month =="4") %>% 
@@ -257,7 +257,7 @@ t.test(cover_percent~site, data = site_cond) #nn cover
 ### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
   - Add height at March 2018 to include in model
 
-```{r MAY 2018 join data, include=TRUE}
+```{r MAY 2018 subset start end height rgr survival, include=TRUE}
 # subsetting data for May 2018 survival
 # survmortnospp = may 2018
 # par = april 2018
@@ -268,7 +268,12 @@ t.test(cover_percent~site, data = site_cond) #nn cover
 height_march <- height_raw %>% 
   filter(date >= "2018-02-23" & date <= "2018-03-31") %>% # filtering to only have rows of data taken in March 
   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
-  rename(march_stem_height_cm = stem_height_cm)
+  rename(march_stem_height_cm = stem_height_cm) 
+
+print(height_march %>%  # check number of individuals per plot
+  group_by(plot_number) %>% 
+  summarise(N = length(march_stem_height_cm))
+)
 
 #seedling height in May 2018 - ENDING HEIGHT
 height_may <- height_raw %>% 
@@ -297,7 +302,7 @@ growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal)
 
-# seedling survival or dead in May 2018 - MAY 2018 0-1
+# seedling survival or dead in May 2018 - SURVIVAL 0-1
 survival_may <- height_raw %>%  ## Need to change some of the individual labels to fix NAs when rejoin. 
   filter(date >= "2018-05-01" & date <= "2018-05-31") %>% # select for may 2018 data collection
   dplyr::select(plot_number, MAFA_removal, location, species, alive, individual) %>% 
@@ -310,7 +315,7 @@ survival_may <- height_raw %>%  ## Need to change some of the individual labels 
 ```
 
 
-```{r join march to may 2018 transform data}
+```{r MAY 2018 join march to may data, include=TRUE}
 
 # March to May 2018 join - JOIN 
 # starting height, 0-1 may 2018, april 2018 normPAR, april 2018 tdr, nncover april 2018
@@ -325,10 +330,20 @@ height_march_surv_may_notransf <- full_join(height_march, survival_may, by = c("
   left_join(nncover_may2018, by = "plot_number") %>%  # join April 2018 nncover
   dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
-  rename(treatment = MAFA_removal) %>% 
- # left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover")) %>% 
+  rename(treatment = MAFA_removal) # %>% 
+ # left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover"))
     # mutate(site = as.factor(site))
 print(height_march_surv_may_notransf)
+
+view(height_march_surv_may_notransf %>%  # check number of individuals per plot
+  group_by(site, plot_number) %>% 
+  summarise(N = length(individual))
+)
+
+
+```
+
+```{r MAY 2018 transform data, include=TRUE}
 
 # scale transform data: normPAR, tdr, nncover, starting height - SCALE
 height_march_surv_may <- height_march_surv_may_notransf %>% 
