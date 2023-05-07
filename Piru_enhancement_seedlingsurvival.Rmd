@@ -111,7 +111,10 @@ height_raw <- read.csv(here("data", "survival_data.csv")) %>%
   mutate(stem_height_cm = as.numeric(stem_height_cm)) %>% 
   mutate(width_1_cm = as.numeric(width_1_cm)) %>% 
   mutate(width_2_cm = as.numeric(width_2_cm))
-  
+# In 2018 - Plot 26 - 1 SAAP not planted - right blue
+# In 2018 - Plot 36 - 1 SAAP not planted - right green
+
+
 # PAR data
 par_load <- read_csv("data/processed/par.csv",
   col_types = cols(
@@ -256,12 +259,12 @@ t.test(cover_percent~site, data = site_cond) #nn cover
 # data:  cover_percent by site
 # t = 0.2511, df = 33.554, p-value = 0.8033
 ```
-
+- soil moiture is sig diff by Site
 
 ### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
   - Add height at March 2018 to include in model
-
-```{r MAY 2018 subset start end height rgr survival, include=TRUE}
+  
+```{r MAY 2018 subset start end height, include=TRUE}
 # subsetting data for May 2018 survival
 # survmortnospp = may 2018
 # par = april 2018
@@ -272,12 +275,14 @@ t.test(cover_percent~site, data = site_cond) #nn cover
 height_march <- height_raw %>% 
   filter(date >= "2018-02-23" & date <= "2018-03-31") %>% # filtering to only have rows of data taken in March 
   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
-  rename(march_stem_height_cm = stem_height_cm) 
+  rename(march_stem_height_cm = stem_height_cm) %>% 
+  drop_na()
 
-print(height_march %>%  # check number of individuals per plot
+print(height_march %>%  # check number of individuals per plot in March 2018
   group_by(plot_number) %>% 
-  summarise(N = length(march_stem_height_cm))
-)
+  summarise(N = length(march_stem_height_cm)))
+# not all plots had 18 seedlings planted in 2018 - Plot 26 and 36
+# not all plots have 18 seedling height measurements
 
 #seedling height in May 2018 - ENDING HEIGHT
 height_may <- height_raw %>% 
@@ -290,13 +295,20 @@ height_may <- height_raw %>%
                                 TRUE ~ individual),
          may_stem_height_cm = as.numeric(may_stem_height_cm))  %>% 
   drop_na()
+print(height_may %>%  # check number of individuals per plot in March 2018
+  group_by(plot_number) %>% 
+  summarise(N = length(may_stem_height_cm)))
 
+```
+
+  - Add rgr at March 2018 to include in model
+```{r MAY 2018 relative growth rate, include=TRUE}
 # growth rate from March to May 2018 - GROWTH RATE
 growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
   mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% 
   drop_na() %>% 
-  mutate(rgr = (log(may_stem_height_cm) - log(march_stem_height_cm))/60,
-         plot_number = as.character(plot_number)) %>% # relative growth rate equation
+  mutate(rgr = (log(may_stem_height_cm) - log(march_stem_height_cm))/60, # relative growth rate per day equation; 60 days between March and May
+         plot_number = as.character(plot_number)) %>% 
   left_join(par_april2018, by = "plot_number") %>% 
   dplyr::select(plot_number, MAFA_removal, location, species, individual, rgr, normalized_par) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% 
@@ -305,7 +317,10 @@ growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "
   dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal)
+```
 
+  - Add individual survival at March 2018 to include in model
+```{r MAY 2018 individual survival, include=TRUE}
 # seedling survival or dead in May 2018 - SURVIVAL 0-1
 survival_may <- height_raw %>%  ## Need to change some of the individual labels to fix NAs when rejoin. 
   filter(date >= "2018-05-01" & date <= "2018-05-31") %>% # select for may 2018 data collection
@@ -318,7 +333,7 @@ survival_may <- height_raw %>%  ## Need to change some of the individual labels 
                                 TRUE ~ individual))  # 0 = dead 1 = alive
 ```
 
-
+### Join May 2018 data
 ```{r MAY 2018 join march to may data, include=TRUE}
 
 # March to May 2018 join - JOIN 
@@ -334,8 +349,8 @@ height_march_surv_may_notransf <- full_join(height_march, survival_may, by = c("
   left_join(nncover_may2018, by = "plot_number") %>%  # join April 2018 nncover
   dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
-  rename(treatment = MAFA_removal) # %>% 
- # left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover"))
+  rename(treatment = MAFA_removal) %>% 
+ left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover"))
     # mutate(site = as.factor(site))
 print(height_march_surv_may_notransf)
 
@@ -354,7 +369,9 @@ height_march_surv_may <- height_march_surv_may_notransf %>%
   mutate(normalized_par = scale(normalized_par), # scale transforms the data; helps when comparing variables with different units; changes column names
          soil_moisture = scale(soil_moisture),
          exotic_percentcover = scale(exotic_percentcover),
-         march_stem_height_cm = scale(march_stem_height_cm)) 
+         march_stem_height_cm = scale(march_stem_height_cm),
+         rgr = scale(rgr),
+         may_alive = as.factor(may_alive)) 
 print(height_march_surv_may)
 ```
 
@@ -368,30 +385,36 @@ may2018mod <- height_march_surv_may_notransf %>%
   dplyr::select(plot_number, treatment, may_alive, site, normalized_par, soil_moisture, exotic_percentcover)
 print(may2018mod)
 ```
- 
-```{r may2018mod test normality, include=FALSE}
-# test if residuals are normally distributed on total_survival by plot and using non-transformed normPAR, tdr, nncover
 
-
-```
- 
 - testing if the residuals are normally distributed
 ```{r notes lmer vs glmer, include=FALSE}
 
-# lmer is used to fit linear mixed-effect models, so it assumes that the residual error has a Gaussian distribution. If your dependent variable A is a binary outcome (e.g. a yes/no response), then the error distribution is binomial and not Gaussian. In this case you have to use glmer, which allow to fit a generalized linear mixed-effects model: these models include a link function that allows to predict response variables with non-Gaussian distributions. 
+# lmer is used to fit linear mixed-effect models, so it assumes that the residual error has a Gaussian distribution. 
+
+# If your dependent variable A is a binary outcome (e.g. a yes/no response), then the error distribution is binomial and not Gaussian. In this case you have to use glmer, which allow to fit a generalized linear mixed-effects model: these models include a link function that allows to predict response variables with non-Gaussian distributions. 
 
 # One example of link function that could work in your case is the logistic function, which takes an input with any value from negative to positive infinity and return an output that always takes values between zero and one, which is interpretable as the probability of the binary outcome (e.g. the probability of the subject responding 'yes').
 ```
 
 - model with glmer
+
+```{r trial MAY 2018 glmer, include=FALSE}
+glme.may2018.mod <- glmer(may_alive ~ normalized_par + soil_moisture + exotic_percentcover + site + rgr + march_stem_height_cm + species + (1|plot_number),
+                                family = binomial, 
+                         data = height_march_surv_may) 
+# treatment and location cause error messages
+# don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
+
+```
+
 ```{r MAY 2018 test normality glmer, include =TRUE}
 
 # individual seedling survival in May 2018 as dependent variable
-glme.may2018.mod <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + (1|plot_number) + (1|treatment) + (1|location) + (1|individual), 
+glme.may2018.mod <- glmer(may_alive ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + rgr + (1|plot_number) + (1|treatment) + (1|location) + (1|individual), 
                           # QUESTION -- why normalized_par * soil_moisture instead of +?
                           # treatment as independent because treatment wasn't significant in Q1
                           # QUESTION - add rgr as variable? the issue is not all rows have rgr value
-                         family = binomial, # QUESTION -- what is family?
+                         family = binomial, 
                          data = height_march_surv_may) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? Now treatment is significant... 
 # error message with scaled data --> Warning: Model failed to converge with max|grad| = 0.0958267 (tol = 0.002, component 1)
 # error message with un-scaled data --> Warning: Some predictor variables are on very different scales: consider rescaling
@@ -415,7 +438,7 @@ F1 <- fitted(MOD)
 E1 <- residuals(MOD, "pearson")
 
 # See residuals as a histogram, look for normal distribution
-hist(E1) # looks normal!
+hist(E1) # looks normal-ish...
 
 # Graph residuals against a normal distribution, look for all points to be on 1:1 line
 #need to call next two lines together
@@ -439,10 +462,31 @@ plot(cooks.distance(MOD))
 boxplot(E1 ~ site, data = height_march_surv_may) # <---- make sure to change to df, not the lme
 abline(h = 0)
 # error message - variable lengths differ
+print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
+  group_by(site) %>% 
+  summarise(N = length(site)))
+# site N
+# 1	  318			
+# 2 	288	
+
+boxplot(E1 ~ species, data = height_march_surv_may) # <---- make sure to change to df, not the lme
+abline(h = 0)
+# error message - variable lengths differ
+print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
+  group_by(species) %>% 
+  summarise(N = length(species)))
+# species N
+# CEOL	  130			
+# HEAR	  215			
+# RHOV	  136			
+# SAAP	  125	
 
 # Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
-#qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
-#qqline(ranef(MOD)$treatment[,1]) # unique dates
+qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$plot_number[,1]) # plot number
+
+#qqnorm(ranef(MOD)$individual[,1], main = "Plot Residuals")
+#qqline(ranef(MOD)$individual[,1]) # individual: blue, green, S, C, R
 
 ```
 
