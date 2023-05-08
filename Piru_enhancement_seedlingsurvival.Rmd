@@ -264,7 +264,7 @@ t.test(cover_percent~site, data = site_cond) #nn cover
 ### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
   - Add height at March 2018 to include in model
   
-```{r MAY 2018 subset start end height, include=TRUE}
+```{r may 2018 subset start end height, include=TRUE}
 # subsetting data for May 2018 survival
 # survmortnospp = may 2018
 # par = april 2018
@@ -301,8 +301,8 @@ print(height_may %>%  # check number of individuals per plot in March 2018
 
 ```
 
-  - Add rgr at March 2018 to include in model
-```{r MAY 2018 relative growth rate, include=TRUE}
+- Add rgr at March 2018 to include in model
+```{r may 2018 relative growth rate, include=TRUE}
 # growth rate from March to May 2018 - GROWTH RATE
 growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
   mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% 
@@ -320,7 +320,7 @@ growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "
 ```
 
   - Add individual survival at March 2018 to include in model
-```{r MAY 2018 individual survival, include=TRUE}
+```{r may 2018 individual survival, include=TRUE}
 # seedling survival or dead in May 2018 - SURVIVAL 0-1
 survival_may <- height_raw %>%  ## Need to change some of the individual labels to fix NAs when rejoin. 
   filter(date >= "2018-05-01" & date <= "2018-05-31") %>% # select for may 2018 data collection
@@ -334,7 +334,7 @@ survival_may <- height_raw %>%  ## Need to change some of the individual labels 
 ```
 
 ### Join May 2018 data
-```{r MAY 2018 join march to may data, include=TRUE}
+```{r may 2018 join march to may data, include=TRUE}
 
 # March to May 2018 join - JOIN 
 # starting height, 0-1 may 2018, april 2018 normPAR, april 2018 tdr, nncover april 2018
@@ -362,7 +362,7 @@ view(height_march_surv_may_notransf %>%  # check number of individuals per plot
 
 ```
 
-```{r MAY 2018 transform data, include=TRUE}
+```{r may 2018 transform data, include=TRUE}
 
 # scale transform data: normPAR, tdr, nncover, starting height - SCALE
 height_march_surv_may <- height_march_surv_may_notransf %>% 
@@ -398,7 +398,7 @@ print(may2018mod)
 
 - model with glmer
 
-```{r trial and extra code MAY 2018 glmer, include=FALSE}
+```{r trial and extra code may 2018 glmer, include=FALSE}
 
 # individual seedling survival in May 2018 as dependent variable - Shane's code
 glme.may2018.mod <- glmer(may_alive ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + rgr + (1|plot_number) + (1|treatment) + (1|location) + (1|individual), 
@@ -438,19 +438,30 @@ glme.may2018.mod <- glmer(may_alive ~ normalized_par * soil_moisture + exotic_pe
 
 ```
 
-```{r MAY 2018 test normality glmer, include =TRUE}
+### Testing for normality
+```{r may 2018 test normality glmer, include =TRUE}
 
 glme.may2018.mod <- glmer(may_alive ~ 
                             normalized_par * soil_moisture # significant from Q1
                           + exotic_percentcover # not significant from Q1
-                          #+ species 
                           + site + march_stem_height_cm 
                           + (1|plot_number),
                                 family = binomial, 
-                         data = height_march_surv_may) # 11 columns in df
+                         data = height_march_surv_may) # 10 columns in df without species
+
+glme.may2018.modspp <- glmer(may_alive ~ 
+                            normalized_par * soil_moisture # significant from Q1
+                          + exotic_percentcover # not significant from Q1
+                          + species
+                          + site + march_stem_height_cm 
+                          + (1|plot_number),
+                                family = binomial, 
+                         data = height_march_surv_may) # 10 columns in df without species
 # treatment and location cause error messages
 # don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
-MOD <- glme.may2018.mod
+
+MOD <- glme.may2018.mod # or
+MOD <- glme.may2018.modspp
 
 # Calculate model's residual and fitted values
 F1 <- fitted(MOD)
@@ -510,9 +521,9 @@ qqline(ranef(MOD)$plot_number[,1]) # plot number
 
 ```
 
-- statistics on May 2018 model
+### Statistics
 
-```{r MAY 2018 stats, include=TRUE}
+```{r may 2018 stats, include=TRUE}
 
 print(glme.may2018.mod)
 summary(glme.may2018.mod)
@@ -540,6 +551,8 @@ summary(glme.may2018.mod)
 #speciesRHOV          -0.085414   0.292463  -0.292  0.77025   
 #speciesSAAP          -0.673506   0.322808  -2.086  0.03694 * <-- species
 
+print(glme.may2018.modspp)
+summary(glme.may2018.modspp)
 # when normalized_par * soil_moisture and WITHOUT rgr = soil_moisture, norm_par*soil_moisture, species are significant
 #Fixed effects:
 #                             Estimate Std. Error z value Pr(>|z|)    
@@ -609,13 +622,18 @@ summary(glme.may2018.mod)
 #speciesSAAP                  -1.52418    0.61178  -2.491  0.01272 *  
 #normalized_par:soil_moisture  0.64328    0.27406   2.347  0.01891 *  
 
+
 # fixed level effects, pvalues, etc.
 anova(glme.may2018.mod) # A significant p-value indicates that one or more significant differences exist between group means.
 ## not reporting p-values, only F values
 
+anova(glme.may2018.modspp)
+## not reporting p-values, only F values
+
+
 ```
 
-```{r MAY 2018 post hoc, include=TRUE}
+```{r may 2018 post hoc, include=TRUE}
 
 # CODE NOT WORKING
 
@@ -625,8 +643,9 @@ anova(may2018.mod.interaction) # p-values for the interaction
 # error message:   warning("ANOVA F-tests on an essentially perfect fit are unreliable") : missing value where TRUE/FALSE needed
 ```
 
-- figures - prediction of survival in May 2018
-```{r MAY 2018 figures - stem height survival site, include=TRUE}
+### Figures 
+- prediction of survival in May 2018
+```{r May 2018 figures stem height survival site, include=TRUE}
 
 # stem height x survival, paneled by site
 # figure: predict survival (S curve by 0-1)
@@ -652,8 +671,8 @@ stem_height_site_2_prediction <- seq(from = -1.2, to = 4, by = 0.1) %>%
          plot_number = "1") %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
-site_1_sh_plot <- ggplot() +
-  geom_point(data = height_march_surv_may %>% filter(site == "1"), aes(x = march_stem_height_cm, y = may_alive), alpha = 0.25) + 
+site_1_sh_plot <- ggplot()+
+  geom_point(data = height_march_surv_may %>% filter(site == "1"), aes(x = march_stem_height_cm, y = may_alive), alpha = 0.25)+
   geom_line(data = stem_height_site_1_prediction, aes(x = march_stem_height_cm, y = alive), linewidth = 1)+
   theme_classic() +
   labs(x = "Stem Height (cm)",
@@ -671,7 +690,7 @@ site_2_sh_plot <- ggplot()+
 site_1_sh_plot + site_2_sh_plot
 ```
 - box plot of rgr May 2018
-```{r May 2018 box plot rgr figure, include=FALSE}
+```{r may 2018 box plot rgr figure, include=FALSE}
 
 # box.1 rgr x site
 #ggplot(growth_march_may, aes(x = site, y = rgr))+
@@ -681,8 +700,9 @@ site_1_sh_plot + site_2_sh_plot
 #       y = "Relative Growth Rate")
 ```
 
-- figure - prediction of par x moisture by site
-```{r May 2018}
+- figure - prediction of survival x soil moisture x low, mean, and high PAR 
+- BY SITE
+```{r May 2018 figure predict site by levels of par, include=TRUE}
 
 # soil moisture x MIN par x Site 1
 moisture_low_par_site_1 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -739,6 +759,7 @@ moisture_max_par_site_1 <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          march_stem_height_cm = 0) %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
+#soil moisture x MAX par x Site 2
 moisture_max_par_site_2 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(soil_moisture = ".") %>% 
@@ -749,10 +770,13 @@ moisture_max_par_site_2 <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          march_stem_height_cm = 0) %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
+# rbind norm_par min, mean, max at Site 1
 moisture_prediction_site_1 <- rbind(moisture_low_par_site_1, moisture_mean_par_site_1, moisture_max_par_site_1)
 
+# rbind norm_par min, mean, max at Site 2
 moisture_prediction_site_2 <- rbind(moisture_low_par_site_2, moisture_mean_par_site_2, moisture_max_par_site_2)
 
+# prediction figure - site 1
 moisture_site_1_graph <- ggplot()+
   geom_point(data = height_march_surv_may %>% filter(site == "1"), aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25)+
   geom_line(data = moisture_prediction_site_1, aes(x = soil_moisture, y = alive, col = normalized_par, group = normalized_par), linewidth = 1) +
@@ -761,6 +785,7 @@ moisture_site_1_graph <- ggplot()+
        y = "Survival Probability",
        title = "Site 1")
 
+# prediction figure - site 2
 moisture_site_2_graph <- ggplot()+
   geom_point(data = height_march_surv_may %>% filter(site == "2"), aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25)+
   geom_line(data = moisture_prediction_site_2, aes(x = soil_moisture, y = alive, col = normalized_par, group = normalized_par), linewidth = 1) +
@@ -770,27 +795,240 @@ moisture_site_2_graph <- ggplot()+
        title = "Site 2")
 
 moisture_site_1_graph + moisture_site_2_graph
+```
+- by SPECIES
+```{r May 2018 figure predict species by levels of par, include=TRUE}
 
+# glmer(may_alive ~ 
+#     normalized_par * soil_moisture + exotic_percentcover + species + site + march_stem_height_cm + 
+#     (1 | plot_number), data: height_march_surv_may)
+
+# soil moisture x MIN par x HEAR
+moisture_low_par_HEAR <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = min(height_march_surv_may$normalized_par), # calculate norm_par minimum
+         exotic_percentcover = 0,
+         site = "1",
+         species = "HEAR",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# soil moisture x MEAN par x HEAR
+moisture_mean_par_HEAR <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = 0, # mean norm_par, data is scale transformed
+         exotic_percentcover = 0,
+         site = "1",
+         species = "HEAR",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# soil moisture x MAX par x HEAR
+moisture_max_par_HEAR <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = max(height_march_surv_may$normalized_par), 
+         exotic_percentcover = 0,
+         site = "1",
+         species = "HEAR",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+
+# soil moisture x MIN par x CEOL
+moisture_low_par_CEOL <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = min(height_march_surv_may$normalized_par), # calculate norm_par minimum
+         exotic_percentcover = 0,
+         site = "1",
+         species = "CEOL",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# soil moisture x MEAN par x CEOL
+moisture_mean_par_CEOL <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = 0, # mean norm_par, data is scale transformed
+         exotic_percentcover = 0,
+         site = "1",
+         species = "CEOL",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# soil moisture x MAX par x CEOL
+moisture_max_par_CEOL <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = max(height_march_surv_may$normalized_par), 
+         exotic_percentcover = 0,
+         site = "1",
+         species = "CEOL",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# soil moisture x MIN par x RHOV
+moisture_low_par_RHOV <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = min(height_march_surv_may$normalized_par), # calculate norm_par minimum
+         exotic_percentcover = 0,
+         site = "1",
+         species = "RHOV",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# soil moisture x MEAN par x RHOV
+moisture_mean_par_RHOV <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = 0, # mean norm_par, data is scale transformed
+         exotic_percentcover = 0,
+         site = "1",
+         species = "RHOV",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# soil moisture x MAX par x RHOV
+moisture_max_par_RHOV <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = max(height_march_surv_may$normalized_par), 
+         exotic_percentcover = 0,
+         site = "1",
+         species = "RHOV",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# soil moisture x MIN par x SAAP
+moisture_low_par_SAAP <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = min(height_march_surv_may$normalized_par), # calculate norm_par minimum
+         exotic_percentcover = 0,
+         site = "1",
+         species = "SAAP",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# soil moisture x MEAN par x SAAP
+moisture_mean_par_SAAP <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = 0, # mean norm_par, data is scale transformed
+         exotic_percentcover = 0,
+         site = "1",
+         species = "SAAP",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# soil moisture x MAX par x SAAP
+moisture_max_par_SAAP <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(soil_moisture = ".") %>% 
+  mutate(plot_number = "1",
+         normalized_par = max(height_march_surv_may$normalized_par), 
+         exotic_percentcover = 0,
+         site = "1",
+         species = "SAAP",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# rbind norm_par min, mean, max for HEAR
+moisture_prediction_HEAR <- rbind(moisture_low_par_HEAR, moisture_mean_par_HEAR, moisture_max_par_HEAR)
+
+# rbind norm_par min, mean, max for CEOL
+moisture_prediction_CEOL <- rbind(moisture_low_par_CEOL, moisture_mean_par_CEOL, moisture_max_par_CEOL)
+
+# rbind norm_par min, mean, max for RHOV
+moisture_prediction_RHOV <- rbind(moisture_low_par_RHOV, moisture_mean_par_RHOV, moisture_max_par_RHOV)
+
+# rbind norm_par min, mean, max for SAAP
+moisture_prediction_SAAP <- rbind(moisture_low_par_SAAP, moisture_mean_par_SAAP, moisture_max_par_SAAP)
+
+
+# prediction figure - HEAR
+moisture_HEAR_graph <- ggplot()+
+  geom_point(data = height_march_surv_may %>% filter(species == "HEAR"), aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25)+
+  geom_line(data = moisture_prediction_HEAR, aes(x = soil_moisture, y = alive, col = normalized_par, group = normalized_par), linewidth = 1) +
+  theme_classic() +
+  labs(x = "Soil Moisture", 
+       y = "Survival Probability",
+       title = "HEAR")
+
+# prediction figure - CEOL
+moisture_CEOL_graph <- ggplot()+
+  geom_point(data = height_march_surv_may %>% filter(species == "CEOL"), aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25)+
+  geom_line(data = moisture_prediction_CEOL, aes(x = soil_moisture, y = alive, col = normalized_par, group = normalized_par), linewidth = 1) +
+  theme_classic() +
+  labs(x = "Soil Moisture", 
+       y = "Survival Probability",
+       title = "CEOL")
+
+# prediction figure - RHOV
+moisture_RHOV_graph <- ggplot()+
+  geom_point(data = height_march_surv_may %>% filter(species == "RHOV"), aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25)+
+  geom_line(data = moisture_prediction_RHOV, aes(x = soil_moisture, y = alive, col = normalized_par, group = normalized_par), linewidth = 1) +
+  theme_classic() +
+  labs(x = "Soil Moisture", 
+       y = "Survival Probability",
+       title = "RHOV")
+
+# prediction figure - SAAP
+moisture_SAAP_graph <- ggplot()+
+  geom_point(data = height_march_surv_may %>% filter(species == "SAAP"), aes(x = soil_moisture, y = may_alive, col = normalized_par), alpha = 0.25)+
+  geom_line(data = moisture_prediction_SAAP, aes(x = soil_moisture, y = alive, col = normalized_par, group = normalized_par), linewidth = 1) +
+  theme_classic() +
+  labs(x = "Soil Moisture", 
+       y = "Survival Probability",
+       title = "SAAP")
+
+
+moisture_HEAR_graph + moisture_CEOL_graph + moisture_RHOV_graph +moisture_SAAP_graph
+```
+
+
+- figure - prediction of survival x norm_par x low, mean, and high TDR
+```{r May 2018 figure predict by levels of soil moisture, include=TRUE}
+
+# par x MIN tdr x plot 1
+# Site = "1" 
 par_low_moisture_site_1 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
+  as.data.frame() %>% 
+  rename(normalized_par = ".") %>% 
+  mutate(plot_number = "1",
+         soil_moisture = min(height_march_surv_may$soil_moisture), # min TDR
+         exotic_percentcover = 0, # mean nncover
+         site = "1",
+         march_stem_height_cm = 0) %>% 
+  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+
+# par x MIN tdr x plot 2
+par_low_moisture_site_2 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(normalized_par = ".") %>% 
   mutate(plot_number = "1",
          soil_moisture = min(height_march_surv_may$soil_moisture),
          exotic_percentcover = 0,
-         site = "1",
+         site = "2",
          march_stem_height_cm = 0) %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
-par_low_moisture_site_2 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
-  as.data.frame() %>% 
-  rename(normalized_par = ".") %>% 
-  mutate(plot_number = "2",
-         soil_moisture = min(height_march_surv_may$soil_moisture),
-         exotic_percentcover = 0,
-         site = "1",
-         march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
-
+# par x MEAN tdr x plot 1
 par_mean_moisture_site_1 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(normalized_par = ".") %>% 
@@ -801,16 +1039,18 @@ par_mean_moisture_site_1 <- seq(from = -1.7, to = 2.1, by = 0.1) %>%
          march_stem_height_cm = 0) %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
+# par x MEAN tdr x plot 2
 par_mean_moisture_site_2 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(normalized_par = ".") %>% 
-  mutate(plot_number = "2",
+  mutate(plot_number = "1",
          soil_moisture = 0,
          exotic_percentcover = 0,
-         site = "1",
+         site = "2",
          march_stem_height_cm = 0) %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
+# par x MAX tdr x plot 1
 par_max_moisture_site_1 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(normalized_par = ".") %>% 
@@ -821,16 +1061,18 @@ par_max_moisture_site_1 <- seq(from = -1.7, to = 2.1, by = 0.1) %>%
          march_stem_height_cm = 0) %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
+# par x MAX tdr x plot 2
 par_max_moisture_site_2 <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(normalized_par = ".") %>% 
-  mutate(plot_number = "2",
+  mutate(plot_number = "1",
          soil_moisture = max(height_march_surv_may$soil_moisture),
          exotic_percentcover = 0,
-         site = "1",
+         site = "2",
          march_stem_height_cm = 0) %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
+# rbind 
 par_prediction_site_1 <- rbind(par_low_moisture_site_1, par_mean_moisture_site_1, par_max_moisture_site_1)
 
 par_prediction_site_2 <- rbind(par_low_moisture_site_2, par_mean_moisture_site_2, par_max_moisture_site_2)
@@ -857,57 +1099,82 @@ par_site_1_graph + par_site_2_graph
 ## Repeat each model for each species
 
 ### CEOL 
-```{r}
+```{r CEOL may 2018 predict AIC values, include=TRUE}
+
+# filter for ceol May 2018
 ceol_2018 <- height_march_surv_may %>% 
   filter(species == "CEOL")
   
+#ONE FACTOR AIC
+# par
 AIC(glmer(as.factor(may_alive) ~ normalized_par +  (1|plot_number), 
                          family = binomial,
                          data = ceol_2018))
 
+# tdr
 AIC(glmer(as.factor(may_alive) ~ soil_moisture + (1|plot_number),
           family = binomial,
           data = ceol_2018))
 
+# nncover
 AIC(glmer(as.factor(may_alive) ~ exotic_percentcover + (1|plot_number),
           family = binomial, 
           data = ceol_2018))
 
+# site
 AIC(glmer(as.factor(may_alive) ~ site + (1|plot_number), 
           family = binomial,
           data = ceol_2018))
 
+# march 2018 stem height
 AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + (1|plot_number),
           family = binomial,
           data = ceol_2018))
 
+#TWO FACTOR AIC
+# site + norm_par
 AIC(glmer(as.factor(may_alive) ~ site + normalized_par + (1|plot_number),
           family = binomial,
           data = ceol_2018))
 
+# site + tdr <-- lowest AIC
 AIC(glmer(as.factor(may_alive) ~ site + soil_moisture + (1|plot_number),
           family = binomial,
           data = ceol_2018))
+#[1] 143.3071
 
+# site + nncover
 AIC(glmer(as.factor(may_alive) ~ site + exotic_percentcover + (1|plot_number),
           family = binomial,
           data = ceol_2018))
 
+# site + march 2018 stem height
 AIC(glmer(as.factor(may_alive) ~ site + march_stem_height_cm + (1|plot_number),
           family = binomial,
           data = ceol_2018))
-
+```
+```{r CEOL may 2018 predict best model, include=TRUE}
 
 summary(glmer(as.factor(may_alive) ~ soil_moisture + normalized_par + exotic_percentcover + march_stem_height_cm + site + (1|plot_number), 
           family = binomial,
           data = ceol_2018))
 
+#Fixed effects:
+#                      Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)          -0.713440   0.659574  -1.082   0.2794  
+#soil_moisture         0.006624   0.372375   0.018   0.9858  
+#normalized_par        0.505202   0.350863   1.440   0.1499  
+#exotic_percentcover   0.192127   0.311171   0.617   0.5370  
+#march_stem_height_cm -0.545067   0.861848  -0.632   0.5271  
+#site2                -1.984967   0.809519  -2.452   0.0142 *
+
+
 ## Add Figure
 ``` 
 
-### RHOV
+### RHOV May 2018 - predict survival
 
-```{r} 
+```{r RHOV may 2018 AIC values, include=TRUE} 
 rhov_2018 <- height_march_surv_may %>% 
   filter(species == "RHOV")
 
@@ -930,6 +1197,8 @@ AIC(glmer(as.factor(may_alive) ~ site + (1|plot_number),
 AIC(glmer(as.factor(may_alive) ~ march_stem_height_cm + soil_moisture + (1|plot_number),
           family = binomial,
           data = rhov_2018))
+```
+```{r RHOV may 2018 prediction model, include=TRUE}
 
 rhov_model <- glmer(as.factor(may_alive) ~ march_stem_height_cm + soil_moisture + normalized_par + exotic_percentcover + site + (1|plot_number),
           family = binomial,
@@ -940,7 +1209,10 @@ stem_height_rhov_prediction <- seq(from = 0.5, to = 5, by = 0.1) %>%
   as.data.frame() %>% 
   rename(march_stem_height_cm = ".") %>% 
   mutate(plot_number = "1",
-         soil_moisture = mean(rhov_2018$soil_moisture)) %>% 
+         soil_moisture = mean(rhov_2018$soil_moisture), 
+         normalized_par = 0, 
+         exotic_percentcover = 0,
+         site = "1") %>% 
   mutate(alive = predict(rhov_model, newdata = . , type = "response"))
 
 ggplot()+
@@ -1065,6 +1337,7 @@ ggplot()+
 ```
 
 
+SAAP 
 
 ```{r}
 saap_2018 <- height_march_surv_may %>% 
@@ -1218,6 +1491,7 @@ summary(hear_2018rgr_model)
 saap_rgr_2018 <- growth_march_may %>% 
   filter(species == "SAAP")
   
+# 
 AIC(lmer(rgr ~ normalized_par +  (1|plot_number),
                          data = saap_rgr_2018))
 
