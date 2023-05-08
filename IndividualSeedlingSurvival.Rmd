@@ -1,5 +1,5 @@
 ---
-title: "Facilitation - Individual seedling surv"
+title: "Facilitation - Individual seedling survival"
 author: "Stephanie Ma Lucero"
 date: "2023-03-20"
 output: html_document

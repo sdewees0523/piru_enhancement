@@ -21,4 +21,3 @@ library(gmodels)
 library(janitor)
 ```
 
-use t.test then broom::tidy to get mean, pvalue and confidence intervals. 
