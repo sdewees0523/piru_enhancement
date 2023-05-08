@@ -705,7 +705,7 @@ site_1_sh_plot + site_2_sh_plot
 ```{r May 2018 figure predict site by levels of par, include=TRUE}
 
 # soil moisture x MIN par x Site 1
-moisture_low_par_site_1 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+moisture_low_par_site_1 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% # range of soil moisture from height_march_surv_may
   as.data.frame() %>% 
   rename(soil_moisture = ".") %>% 
   mutate(plot_number = "1",
@@ -804,7 +804,7 @@ moisture_site_1_graph + moisture_site_2_graph
 #     (1 | plot_number), data: height_march_surv_may)
 
 # soil moisture x MIN par x HEAR
-moisture_low_par_HEAR <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
+moisture_low_par_HEAR <- seq(from = -1.6, to = 1.8, by = 0.1) %>% # range of soil moisture from height_march_surv_may
   as.data.frame() %>% 
   rename(soil_moisture = ".") %>% 
   mutate(plot_number = "1",
@@ -813,7 +813,7 @@ moisture_low_par_HEAR <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "HEAR",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # soil moisture x MEAN par x HEAR
 moisture_mean_par_HEAR <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -825,7 +825,7 @@ moisture_mean_par_HEAR <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "HEAR",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # soil moisture x MAX par x HEAR
 moisture_max_par_HEAR <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -837,7 +837,7 @@ moisture_max_par_HEAR <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "HEAR",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 
 # soil moisture x MIN par x CEOL
@@ -850,7 +850,7 @@ moisture_low_par_CEOL <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "CEOL",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # soil moisture x MEAN par x CEOL
 moisture_mean_par_CEOL <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -862,7 +862,7 @@ moisture_mean_par_CEOL <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "CEOL",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # soil moisture x MAX par x CEOL
 moisture_max_par_CEOL <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -874,7 +874,7 @@ moisture_max_par_CEOL <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "CEOL",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # soil moisture x MIN par x RHOV
 moisture_low_par_RHOV <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -886,7 +886,7 @@ moisture_low_par_RHOV <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "RHOV",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # soil moisture x MEAN par x RHOV
 moisture_mean_par_RHOV <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -898,7 +898,7 @@ moisture_mean_par_RHOV <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "RHOV",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # soil moisture x MAX par x RHOV
 moisture_max_par_RHOV <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -910,7 +910,7 @@ moisture_max_par_RHOV <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "RHOV",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # soil moisture x MIN par x SAAP
 moisture_low_par_SAAP <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -922,7 +922,7 @@ moisture_low_par_SAAP <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "SAAP",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # soil moisture x MEAN par x SAAP
 moisture_mean_par_SAAP <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -934,7 +934,7 @@ moisture_mean_par_SAAP <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "SAAP",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # soil moisture x MAX par x SAAP
 moisture_max_par_SAAP <- seq(from = -1.6, to = 1.8, by = 0.1) %>% 
@@ -946,7 +946,7 @@ moisture_max_par_SAAP <- seq(from = -1.6, to = 1.8, by = 0.1) %>%
          site = "1",
          species = "SAAP",
          march_stem_height_cm = 0) %>% 
-  mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2018.modspp, newdata = . , type = "response"))
 
 # rbind norm_par min, mean, max for HEAR
 moisture_prediction_HEAR <- rbind(moisture_low_par_HEAR, moisture_mean_par_HEAR, moisture_max_par_HEAR)
@@ -998,7 +998,7 @@ moisture_SAAP_graph <- ggplot()+
        title = "SAAP")
 
 
-moisture_HEAR_graph + moisture_CEOL_graph + moisture_RHOV_graph +moisture_SAAP_graph
+moisture_CEOL_graph + moisture_HEAR_graph + moisture_RHOV_graph +moisture_SAAP_graph
 ```
 
 
