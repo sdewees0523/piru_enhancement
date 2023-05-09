@@ -406,14 +406,21 @@ print(height_march_surv_may_notransf %>%
             height_sd_cm = sd(march_stem_height_cm)))
 
 # soil moisture
-summary(aov(may_alive ~ soil_moisture, data = height_march_surv_may_notransf))
+summary(aov(soil_moisture ~ may_alive, data = height_march_surv_may_notransf))
 #               Df Sum Sq Mean Sq F value   Pr(>F)    
 #soil_moisture   1   2.51  2.5085   11.85 0.000618 ***
 #Residuals     604 127.92  0.2118
 
-summary(aov(soil_moisture ~ may_alive, data = height_march_surv_may_notransf))
- 
-TukeyHSD(aov(soil_moisture ~ may_alive, data = height_march_surv_may_notransf))
+# may 2018 alive x tdr
+height_march_surv_may_notransf %>%  
+  group_by(may_alive) %>% 
+  summarize(avg_tdr = mean(soil_moisture), 
+            SD = sd(soil_moisture),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture))/sqrt(length((soil_moisture)))))
+# may_alive avg_tdr SD  N       SE
+#0	    8.561238	1.488091	416   	0.07295968
+#1	9.001974	1.404786	190	    0.10191389
 
 t.test(soil_moisture ~ may_alive, data = height_march_surv_may_notransf) 
 # Soil moisture is significantly different betweeen alive and dead seedlings
@@ -729,6 +736,8 @@ summary(height_march_surv_may.interaction)
 may2018.mod.interaction <- lm(may_alive ~ normalized_par*soil_moisture + species, data = height_march_surv_may)
 anova(may2018.mod.interaction) # p-values for the interaction
 
+may18_partdr.interaction <- aov(may_alive ~ normalized_par * soil_moisture, data = height_march_surv_may)
+summary(may18_partdr.interaction)
 ```
 
 ### Figures 
@@ -742,9 +751,10 @@ maybox.1 <- ggplot(data = height_march_surv_may,
   theme_bw() 
 ggplotly(maybox.1)
 
-mayscatter.1 <- ggplot(data = height_march_surv_may, aes(x = soil_moisture, y = normalized_par)) +
-  geom_point(aes(shape = may_alive)) +
-  geom_line(aes(color = species)) +
+mayscatter.1 <- ggplot(data = height_march_surv_may, 
+                       aes(x = soil_moisture, y = normalized_par)) +
+  geom_point(aes(color = factor(may_alive))) +
+  geom_jitter(width = 0.0, height = 0.0) +
   theme_classic()
 mayscatter.1
 
