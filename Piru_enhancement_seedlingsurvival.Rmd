@@ -64,7 +64,7 @@ Notes:
 
 ### Load PAR, TDR, and non-native percent cover data.
 
-### Saved as a csv in the "Processed" data folder.
+### Loaded csvs from the "Processed" data folder.
 ```{r load survival height par tdr nncover data csv, include=TRUE}
 
 # survival and mortality data
@@ -100,6 +100,8 @@ print(survmortnospp) # :) yay! it worked!
 survmortnospp %>% # check number of data points
   group_by(year, treatment) %>% 
   summarise(N = length(totalsurvival))
+
+
 ```
 
 ```{r load height par tdr nncover data csv, include=TRUE}
@@ -237,6 +239,8 @@ nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") %>%
 
 site_cond <- full_join(par_april2018, tdr_april2018, by = c("site", "plot_number", "treatment")) %>% 
   full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
+
+# save joined data as csv
 ```
 
 ```{r may2018 site conditions ttest}
@@ -349,16 +353,17 @@ height_march_surv_may_notransf <- full_join(height_march, survival_may, by = c("
   left_join(nncover_may2018, by = "plot_number") %>%  # join April 2018 nncover
   dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
-  rename(treatment = MAFA_removal) %>% 
- left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover"))
+  rename(treatment = MAFA_removal) #%>% 
+ #left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover")) # join rgr
     # mutate(site = as.factor(site))
-print(height_march_surv_may_notransf)
+view(height_march_surv_may_notransf)
+
+write.csv(height_march_surv_may_notransf, "data/processed/height_march_surv_may_notransf.csv")
 
 view(height_march_surv_may_notransf %>%  # check number of individuals per plot
   group_by(site, plot_number) %>% 
   summarise(N = length(individual))
 )
-
 
 ```
 
@@ -370,21 +375,15 @@ height_march_surv_may <- height_march_surv_may_notransf %>%
          soil_moisture = scale(soil_moisture),
          exotic_percentcover = scale(exotic_percentcover),
          march_stem_height_cm = scale(march_stem_height_cm),
-         rgr = scale(rgr),
-         may_alive = as.factor(may_alive)) 
+      #   rgr = scale(rgr),
+         may_alive = as.factor(may_alive),
+      species = as.factor(species)) 
 print(height_march_surv_may)
-```
+
+write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 
 
-```{r join march to may 2018 data not transformed, include=TRUE}
 
-# take height_march_surv_may %>%  
-# group_by(plot) %>% 
-# summarize by(sum(may_alive)) # to get total seedling survival 
-
-may2018mod <- height_march_surv_may_notransf %>% 
-  dplyr::select(plot_number, treatment, may_alive, site, normalized_par, soil_moisture, exotic_percentcover)
-print(may2018mod)
 ```
 
 - testing if the residuals are normally distributed
@@ -399,7 +398,7 @@ print(may2018mod)
 
 - model with glmer
 
-```{r trial and extra code may 2018 glmer, include=FALSE}
+```{r may 2018 glmer SANDBOX, include=FALSE}
 
 # individual seedling survival in May 2018 as dependent variable - Shane's code
 glme.may2018.mod <- glmer(may_alive ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + rgr + (1|plot_number) + (1|treatment) + (1|location) + (1|individual), 
@@ -439,30 +438,26 @@ glme.may2018.mod <- glmer(may_alive ~ normalized_par * soil_moisture + exotic_pe
 
 ```
 
-### Testing for normality
-```{r may 2018 test normality glmer, include =TRUE}
+### Testing for normality - DON'T check normality. CHECK DISPERSION instead
+```{r may 2018 test normality glmer no spp, include =TRUE}
+# glmer - yes/no = binomial distribution
+# 1.0 is perfect
+# 1.7 is getting dicy
+# >1.7 is not a good fit
 
-glme.may2018.mod <- glmer(may_alive ~ 
+glme.may2018.mod <- glmer(may_alive ~ # not normally distributed because bimodal 
+                            # only need to check for normality if expect normally distributed
+                            # don't need to check if other distribution: gamma (biomass, concentrations, things that can't be 0 or less than 0), binomial, ... 
                             normalized_par * soil_moisture # significant from Q1
                           + exotic_percentcover # not significant from Q1
-                          + site + march_stem_height_cm 
-                          + (1|plot_number),
-                                family = binomial, 
+                          + site + march_stem_height_cm * species
+                          + (1|plot_number), # don't add right/left or individual code (blue, green, )
+                                family = binomial, # not normally distributed
                          data = height_march_surv_may) # 10 columns in df without species
-
-glme.may2018.modspp <- glmer(may_alive ~ 
-                            normalized_par * soil_moisture # significant from Q1
-                          + exotic_percentcover # not significant from Q1
-                          + species
-                          + site + march_stem_height_cm 
-                          + (1|plot_number),
-                                family = binomial, 
-                         data = height_march_surv_may) # 11 columns 
 # treatment and location cause error messages
 # don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
 
-MOD <- glme.may2018.mod # or
-MOD <- glme.may2018.modspp
+MOD <- glme.may2018.mod 
 
 # Calculate model's residual and fitted values
 F1 <- fitted(MOD)
@@ -470,7 +465,7 @@ E1 <- residuals(MOD, "pearson")
 
 # See residuals as a histogram, look for normal distribution
 hist(E1) 
-# looks bimodal... 
+# modal modal bimodal... 
 
 # Graph residuals against a normal distribution, look for all points to be on 1:1 line
 #need to call next two lines together
@@ -528,6 +523,24 @@ qqline(ranef(MOD)$plot_number[,1]) # plot number
 
 print(glme.may2018.mod)
 summary(glme.may2018.mod)
+# when normalized_par * soil_moisture + nncover + species * march_stem_height_cm
+#Fixed effects:
+#                                 Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                      -1.01340    0.49204  -2.060   0.0394 *  
+#normalized_par                    0.22136    0.14018   1.579   0.1143    
+#soil_moisture                     0.40087    0.15856   2.528   0.0115 *  <-- soil moisture
+#exotic_percentcover               0.06039    0.12550   0.481   0.6304    
+#site2                            -0.51549    0.29315  -1.758   0.0787 .  
+#march_stem_height_cm             -0.38527    0.71407  -0.540   0.5895    
+#speciesHEAR                       1.08268    0.51634   2.097   0.0360 *  <-- spp hear
+#speciesRHOV                       1.04482    0.70018   1.492   0.1356    
+#speciesSAAP                      -0.09353    0.56593  -0.165   0.8687    
+#normalized_par:soil_moisture      0.55959    0.14347   3.901  9.6e-05 *** <-- par x tdr
+#march_stem_height_cm:speciesHEAR  0.49651    0.73104   0.679   0.4970    
+#march_stem_height_cm:speciesRHOV  1.88603    1.06792   1.766   0.0774 .  
+#march_stem_height_cm:speciesSAAP  1.20488    0.86272   1.397   0.1625 
+
+
 # when normalized_par * soil_moisture + nncover and WITHOUT rgr or species
 #Fixed effects:
 #                             Estimate Std. Error z value Pr(>|z|)    
@@ -641,12 +654,24 @@ anova(glme.may2018.modspp)
 
 ```{r may 2018 post hoc, include=TRUE}
 
-# CODE NOT WORKING
+#height_march_surv_may$species <- factor(height_march_surv_may$species, levels = c("RHOV", "CEOL", "HEAR", "SAAP"))
+levels(height_march_surv_may$species)
 
+#height_march_surv_may$may_alive <- factor(height_march_surv_may$may_alive)
+levels(height_march_surv_may$may_alive)
+# [1] "0" "1"
+
+#factor_variable <- factor(categories)
+
+#height_march_surv_may$species <- factor(height_march_surv_may$species)
+#levels(height_march_surv_may$species)
+
+height_march_surv_may.interaction <- aov(may_alive ~ normalized_par * soil_moisture * species, data = height_march_surv_may)
+summary(height_march_surv_may.interaction) 
 # testing the difference between slopes
-may2018.mod.interaction <- lm(may_alive ~ normalized_par*soil_moisture * march_stem_height_cm, data = height_march_surv_may)
+may2018.mod.interaction <- lm(may_alive ~ normalized_par*soil_moisture + species, data = height_march_surv_may)
 anova(may2018.mod.interaction) # p-values for the interaction
-# error message:   warning("ANOVA F-tests on an essentially perfect fit are unreliable") : missing value where TRUE/FALSE needed
+
 ```
 
 ### Figures 
