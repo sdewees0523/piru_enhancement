@@ -642,17 +642,55 @@ summary(glme.may2018.modspp_CEOL)
 
 # fixed level effects, pvalues, etc.
 anova(glme.may2018.mod) # A significant p-value indicates that one or more significant differences exist between group means.
-## not reporting p-values, only F values
+# no p-values because no replicates - each individual is an n of 1
 
 anova(glme.may2018.modspp)
-## not reporting p-values, only F values
-
+# no p-values because no replicates - each individual is an n of 1
 
 ```
 
 
 
 ```{r may 2018 post hoc, include=TRUE}
+
+print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
+  group_by(species) %>% 
+  summarise(N = length(may_alive)))
+#species    N
+#<fctr>   <int>
+#CEOL   	130			
+#HEAR	    215			
+#RHOV   	136			
+#SAAP   	125	
+
+print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
+  group_by(species) %>% 
+  summarise(N = sum(may_alive == "1")))
+#species    N
+#<fctr>     <int>
+#CEOL	      35			
+#HEAR	      100			
+#RHOV	      34			
+#SAAP	      21	
+
+
+print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
+  group_by(species) %>% 
+  summarise(N = sum(may_alive == "0")))
+
+#species  N
+#<fctr>   <int>
+#CEOL	    95			
+#HEAR	    115			
+#RHOV	    102			
+#SAAP	    104	
+
+
+
+# CODE DOESN'T WORK.
+# ... may_height is a factor response, which (i think) results in error messages
+
+emmip(height_march_surv_may,  ~ species)
 
 #height_march_surv_may$species <- factor(height_march_surv_may$species, levels = c("RHOV", "CEOL", "HEAR", "SAAP"))
 levels(height_march_surv_may$species)
@@ -675,6 +713,24 @@ anova(may2018.mod.interaction) # p-values for the interaction
 ```
 
 ### Figures 
+
+```{r may 2018 explore figures, include=FALSE}
+
+maybox.1 <- ggplot(data = height_march_surv_may, 
+       aes(x = may_alive, y = soil_moisture, color = may_alive)) +
+  labs(title = "Normalized PAR over time", x = "Month", y = "Normalized PAR") +
+  geom_boxplot() +
+  theme_bw() 
+ggplotly(maybox.1)
+
+mayscatter.1 <- ggplot(data = height_march_surv_may, aes(x = soil_moisture, y = normalized_par)) +
+  geom_point(aes(shape = may_alive)) +
+  geom_line(aes(color = species)) +
+  theme_classic()
+mayscatter.1
+
+```
+
 - prediction of survival in May 2018
 ```{r May 2018 figures stem height survival site, include=TRUE}
 
@@ -923,7 +979,7 @@ par_site_2_graph <- ggplot()+
 par_site_1_graph + par_site_2_graph
 ```
 
-
+- BY SPECIES
 ```{r may 2018 glmer by species, include=TRUE}
 #CEOL
 glme.may2018.modspp_CEOL <- glmer(may_alive ~ 
