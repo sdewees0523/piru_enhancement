@@ -258,10 +258,11 @@ t.test(normalized_par~site, data = site_cond)
 # t = -1.2109, df = 29.972, p-value = 0.2354
 
 #nncover
-t.test(cover_percent~site, data = site_cond) #nn cover
+t.test(cover_percent~site, data = site_cond)
 # not sig diff
 # data:  cover_percent by site
 # t = 0.2511, df = 33.554, p-value = 0.8033
+
 ```
 - soil moiture is sig diff by Site
 
@@ -364,7 +365,60 @@ view(height_march_surv_may_notransf %>%  # check number of individuals per plot
   group_by(site, plot_number) %>% 
   summarise(N = length(individual))
 )
+```
 
+
+
+```{r may 2018 aov height x spp, include=TRUE}
+
+
+#height
+summary(aov(march_stem_height_cm ~ species, data = height_march_surv_may_notransf))
+#          Df Sum Sq Mean Sq F value Pr(>F)    
+#species       3   2990   996.7     313 <2e-16 ***
+#Residuals   602   1917     3.2 
+ 
+print(TukeyHSD(aov(march_stem_height_cm ~ species, data = height_march_surv_may_notransf)))
+#HEAR is significantly taller than all the other species in March 2018
+#SAAP, CEOL, and RHOV are all similar in height
+#$species
+#                diff        lwr        upr     p adj
+#HEAR-CEOL  4.5865165  4.0757534  5.0972795 0.0000000 
+#RHOV-CEOL -0.2545951 -0.8184931  0.3093028 0.6503705
+#SAAP-CEOL  0.1248809 -0.4510153  0.7007772 0.9441751
+#RHOV-HEAR -4.8411116 -5.3448044 -4.3374188 0.0000000 
+#SAAP-HEAR -4.4616355 -4.9787254 -3.9445456 0.0000000
+#SAAP-RHOV  0.3794761 -0.1901589  0.9491110 0.3160699
+
+
+# may 2018 alive vs dead by spp
+print(height_march_surv_may %>%  
+  group_by(species) %>% 
+  summarise(N = length(may_alive), 
+            survived = sum(may_alive == "1"), 
+            died = sum(may_alive == "0"),
+            percent_survived = 100*(sum(may_alive == "1")/length(may_alive))))
+
+# may 2018 height x spp
+print(height_march_surv_may_notransf %>%  
+  group_by(species) %>% 
+  summarise(height_avg_cm = mean(march_stem_height_cm), 
+            height_sd_cm = sd(march_stem_height_cm)))
+
+# soil moisture
+summary(aov(may_alive ~ soil_moisture, data = height_march_surv_may_notransf))
+#               Df Sum Sq Mean Sq F value   Pr(>F)    
+#soil_moisture   1   2.51  2.5085   11.85 0.000618 ***
+#Residuals     604 127.92  0.2118
+
+summary(aov(soil_moisture ~ may_alive, data = height_march_surv_may_notransf))
+ 
+TukeyHSD(aov(soil_moisture ~ may_alive, data = height_march_surv_may_notransf))
+
+t.test(soil_moisture ~ may_alive, data = height_march_surv_may_notransf) 
+# Soil moisture is significantly different betweeen alive and dead seedlings
+#data:  soil_moisture by may_alive
+#t = -3.5164, df = 386.18, p-value = 0.0004895
 ```
 
 ```{r may 2018 transform data, include=TRUE}
@@ -651,42 +705,7 @@ anova(glme.may2018.modspp)
 
 
 
-```{r may 2018 post hoc, include=TRUE}
-
-print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
-  group_by(species) %>% 
-  summarise(N = length(may_alive)))
-#species    N
-#<fctr>   <int>
-#CEOL   	130			
-#HEAR	    215			
-#RHOV   	136			
-#SAAP   	125	
-
-print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
-  group_by(species) %>% 
-  summarise(N = sum(may_alive == "1")))
-#species    N
-#<fctr>     <int>
-#CEOL	      35			
-#HEAR	      100			
-#RHOV	      34			
-#SAAP	      21	
-
-
-print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
-  group_by(species) %>% 
-  summarise(N = sum(may_alive == "0")))
-
-#species  N
-#<fctr>   <int>
-#CEOL	    95			
-#HEAR	    115			
-#RHOV	    102			
-#SAAP	    104	
-
-
-
+```{r may 2018 totals, include=TRUE}
 # CODE DOESN'T WORK.
 # ... may_height is a factor response, which (i think) results in error messages
 
@@ -1000,7 +1019,7 @@ glme.may2018.modspp_HEAR <- glmer(may_alive ~
                          data = (height_march_surv_may %>% filter(species == "HEAR")))
 
 #RHOV
-glme.may2018.modspp_HEAR <- glmer(may_alive ~ 
+glme.may2018.modspp_RHOV <- glmer(may_alive ~ 
                             normalized_par * soil_moisture # significant from Q1
                           + exotic_percentcover # not significant from Q1
                           + site + march_stem_height_cm 
@@ -1115,6 +1134,15 @@ summary(glme.may2018.modspp_HEAR)
 
 print(glme.may2018.modspp_RHOV)
 summary(glme.may2018.modspp_RHOV)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)                  -0.02166    0.55505  -0.039   0.9689  
+#normalized_par               -0.23014    0.25407  -0.906   0.3650  
+#soil_moisture                 0.18378    0.28832   0.637   0.5239  
+#exotic_percentcover          -0.39685    0.23971  -1.656   0.0978 .
+#site2                        -0.46420    0.54116  -0.858   0.3910  
+#march_stem_height_cm          1.44888    0.80218   1.806   0.0709 .
+#normalized_par:soil_moisture  0.26328    0.25373   1.038   0.2994  
 
 print(glme.may2018.modspp_SAAP)
 summary(glme.may2018.modspp_SAAP)
