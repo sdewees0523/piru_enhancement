@@ -518,6 +518,29 @@ glme.may2018.mod <- glmer(may_alive ~ # not normally distributed because bimodal
 # treatment and location cause error messages
 # don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
 
+
+# CHECK FOR NORMALITY
+# Obtain the observed frequencies
+observed <- table(height_march_surv_may$may_alive)
+
+# Set the probability of success for the binomial distribution
+prob_success <- 0.5
+# Calculate the expected frequencies based on the binomial distribution
+expected <- c((1 - prob_success) * sum(observed), prob_success * sum(observed))
+
+# Normalize the expected frequencies to sum to 1
+expected <- expected / sum(expected)
+
+# Perform the chi-square goodness-of-fit test
+chi_sq_test <- chisq.test(observed, p = expected)
+
+# Print the test result
+print(chi_sq_test)
+
+# DOES NOT FOLLOW BINOMIAL DISTRIBUTION
+
+
+
 MOD <- glme.may2018.mod 
 
 # Calculate model's residual and fitted values
