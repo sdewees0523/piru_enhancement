@@ -736,9 +736,87 @@ summary(height_march_surv_may.interaction)
 may2018.mod.interaction <- lm(may_alive ~ normalized_par*soil_moisture + species, data = height_march_surv_may)
 anova(may2018.mod.interaction) # p-values for the interaction
 
-may18_partdr.interaction <- aov(may_alive ~ normalized_par * soil_moisture, data = height_march_surv_may)
-summary(may18_partdr.interaction)
 ```
+
+```{r may 2018 tdr x par interaction on survival, include=TRUE}
+
+# TAKE 1 
+#surv_prediction <- seq(from = -1.6, to = 1.8, by = 0.1) %>% # x = soil moisture 
+#  as.data.frame() %>% 
+#  rename(soil_moisture = ".") %>% 
+#  mutate(normalized_par = min(may18_partdr.interaction$normalized_par)) %>% 
+#  mutate(alive = predict(may18_partdr.interaction, newdata = . , type = "response"))
+#print(surv_prediction)
+
+# glm model
+may18_partdr.interaction <- glm(may_alive ~ normalized_par * soil_moisture, data = height_march_surv_may, family = binomial)
+print(may18_partdr.interaction)
+summary(may18_partdr.interaction)
+
+
+# TAKE 2
+# Create interaction plot
+may18_partdr.interaction.plot <- ggplot(may18_partdr.interaction, aes(x = normalized_par, y = may_alive, color = (soil_moisture))) +
+  geom_point() +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"), se = FALSE) +
+  labs(x = "PAR", y = "Alive", color = "TDR") +
+  scale_color_continuous(name = "TDR") +
+  theme_minimal()
+may18_partdr.interaction.plot
+
+# TAKE 3 
+# Create a data frame with values of TDR and PAR for prediction
+min_value <- min(height_march_surv_may$soil_moisture, na.rm = TRUE)
+max_value <- max(height_march_surv_may$soil_moisture, na.rm = TRUE)
+print(min_value)
+print(max_value)
+
+# Calculate row means of TDR matrix/array
+TDR_row_means <- rowMeans(height_march_surv_may$soil_moisture) 
+PAR_row_means <- rowMeans(height_march_surv_may$normalized_par)
+
+# Create a new dataframe with the row means and other relevant variables
+new_data <- data.frame(soil_moisture = TDR_row_means, normalized_par = PAR_row_means, may_alive = height_march_surv_may$may_alive)
+print(new_data)
+
+### CODE  BELOW HERE DOESN'T RUN
+
+# Generate predicted values
+new_data$alive_predicted <- predict(may18_partdr.interaction, newdata = new_data, type = "response")
+
+# Create the plot
+ggplot(height_may, aes(x = TDR_row_means * PAR, y = as.factor(alive), color = TDR_row_means)) +
+  geom_jitter() +
+  geom_line(data = new_data, aes(y = alive_predicted), color = "blue") +
+  scale_color_continuous() +
+  labs(x = "TDR_row_means * PAR", y = "Alive", color = "TDR_row_means")
+
+partdr_predict <- expand.grid(soil_moisture = seq(min(height_march_surv_may$soil_moisture),
+                                            max(height_march_surv_may$soil_moisture), length.out = 100),
+                        normalized_par = seq(min(height_march_surv_may$normalized_par),
+                                             max(height_march_surv_may$normalized_par), length.out = 100)) %>% 
+  
+
+# Predict probabilities of being "alive" for the new data
+partdr_predict$prob_alive <- predict(may18_partdr.interaction, newdata = partdr_predict, type = "response")
+
+# Create the interaction plot with the predictive line
+ggplot(your_data, aes(x = TDR * PAR, y = alive)) +
+  geom_point() +
+  geom_line(data = new_data, aes(y = prob_alive), color = "red") +
+  labs(x = "TDR * PAR", y = "Alive") +
+  theme_minimal()
+
+# TAKE 4 - shane's code
+partdr_predict <- expand.grid(soil_moisture = seq(min(height_march_surv_may$soil_moisture),
+                                            max(height_march_surv_may$soil_moisture), length.out = 100)) %>% 
+  as.data.frame() %>% 
+  mutate(normalized_par = mean(height_march_surv_may$normalized_par)) %>% 
+  mutate(alive = predict(may18_partdr.interaction, newdata = . , type = "response"))
+
+
+```
+
 
 ### Figures 
 
@@ -760,7 +838,9 @@ mayscatter.1
 
 ```
 
+
 - prediction of survival in May 2018
+
 ```{r May 2018 figures stem height survival site, include=TRUE}
 
 # stem height x survival, paneled by site
@@ -828,7 +908,8 @@ moisture_low_par_site_1 <- seq(from = -1.6, to = 1.8, by = 0.1) %>% # range of s
          normalized_par = min(height_march_surv_may$normalized_par), # calculate norm_par minimum
          exotic_percentcover = 0,
          site = "1",
-         march_stem_height_cm = 0) %>% 
+         march_stem_height_cm = 0, 
+         species = "HEAR" ) %>% 
   mutate(alive = predict(glme.may2018.mod, newdata = . , type = "response"))
 
 # soil moisture x MIN par x Site 2
