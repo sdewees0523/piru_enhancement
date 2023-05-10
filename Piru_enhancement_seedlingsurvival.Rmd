@@ -1104,7 +1104,7 @@ glme.may2018.modspp_CEOL <- glmer(may_alive ~
 glme.may2018.modspp_HEAR <- glmer(may_alive ~ 
                             normalized_par * soil_moisture # significant from Q1
                           + exotic_percentcover # not significant from Q1
-                          + site + march_stem_height_cm 
+                          + site + march_stem_height_cm
                           + (1|plot_number),
                                 family = binomial, 
                          data = (height_march_surv_may %>% filter(species == "HEAR")))
@@ -2070,6 +2070,7 @@ saap_2018rgr_model <- lmer(rgr ~ normalized_par +  (1|plot_number),
 summary(saap_2018rgr_model)
 ```
 
+# March 2019 Seedling survival 
 
 # May 2019 Seedling survival 
   - add height
@@ -2113,16 +2114,29 @@ height_march_surv_may_2019 <- full_join(height_march_2019, survival_may_2019, by
          soil_moisture = scale(soil_moisture),
          exotic_percentcover = scale(exotic_percentcover),
          march_stem_height_cm = scale(march_stem_height_cm))
+view(height_march_surv_may_2019)
 
+write.csv(height_march_surv_may_2019, "data/processed/height_march_surv_may_2019.csv")
 
+print(height_march_surv_may_2019 %>%  # check number of individuals per plot
+  group_by(plot_number) %>% 
+  summarise(N = length(species))
+)
+
+print(height_march_surv_may_2019 %>%  # check number of individuals per plot
+  group_by(species) %>% 
+  summarise(N = length(species))
+)
 
 ```
 
 ```{r}
-glme.may2019.mod <- glmer(as.factor(may_alive) ~ normalized_par * soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + (1|plot_number), 
+
+glme.may2019.mod <- glmer(as.factor(may_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + (1|plot_number), 
                          family = binomial,
                          data = height_march_surv_may_2019)
-                         
+
+
 
 MOD <- glme.may2019.mod
 
@@ -2161,10 +2175,61 @@ abline(h = 0)
 
 ```
 
-```{r}
+```{r may 2019 summary stats, include=TRUE}
 print(glme.may2019.mod)
 summary(glme.may2019.mod)
 anova(glme.may2019.mod) 
+# normalized_par * soil_moisture ... march_stem_height_cm * species
+# error message - doesn't converge
+
+# normalized_par + soil_moisture ... march_stem_height_cm * species
+# AIC = 366.9
+#Fixed effects:
+#                     Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)           1.82868    0.44655   4.095 4.22e-05 ***
+#normalized_par       -0.22331    0.18848  -1.185  0.23612    
+#soil_moisture         0.41984    0.23191   1.810  0.07024 .  
+#exotic_percentcover   0.06226    0.19268   0.323  0.74661    
+#site2                -0.98035    0.46404  -2.113  0.03463 *  <-- SITE
+#march_stem_height_cm  0.29210    0.20325   1.437  0.15067    
+#speciesHEAR           0.11211    0.50023   0.224  0.82266    
+#speciesRHOV          -1.20410    0.43388  -2.775  0.00552 ** <-- RHOV
+#speciesSAAP          -0.32635    0.43837  -0.744  0.45660  
+
+
+# normalized_par * soil_moisture ... march_stem_height_cm + species <-- lowest AIC
+# AIC = 365.4
+# Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                   1.86408    0.44054   4.231 2.32e-05 ***
+#normalized_par               -0.01442    0.21291  -0.068  0.94598    
+#soil_moisture                 0.51504    0.22926   2.247  0.02467 *  <-- soil moisture
+#exotic_percentcover           0.07456    0.18302   0.407  0.68374    
+#site2                        -1.03037    0.44298  -2.326  0.02002 *  <-- site
+#march_stem_height_cm          0.26731    0.20302   1.317  0.18796    
+#speciesHEAR                   0.16642    0.50282   0.331  0.74066    
+#speciesRHOV                  -1.17689    0.43373  -2.713  0.00666 ** <-- RHOV
+#speciesSAAP                  -0.30096    0.44017  -0.684  0.49414    
+#normalized_par:soil_moisture  0.40029    0.21292   1.880  0.06011 . 
+
+# normalized_par + soil_moisture ... march_stem_height_cm * species
+# AIC = 371.3 
+#Fixed effects:
+#                                 Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                       2.18005    0.60443   3.607  0.00031 ***
+#normalized_par                   -0.22993    0.18831  -1.221  0.22207    
+#soil_moisture                     0.41811    0.23142   1.807  0.07080 .  
+#exotic_percentcover               0.04696    0.19173   0.245  0.80651    
+#site2                            -1.02429    0.46323  -2.211  0.02702 *  <-- site
+#march_stem_height_cm              0.81978    0.62169   1.319  0.18730    
+#speciesHEAR                      -0.27766    0.63500  -0.437  0.66192    
+#speciesRHOV                      -1.40843    0.87010  -1.619  0.10551    
+#speciesSAAP                      -0.61612    0.58641  -1.051  0.29341    
+#march_stem_height_cm:speciesHEAR -0.42981    0.69997  -0.614  0.53919    
+#march_stem_height_cm:speciesRHOV -0.38260    0.96066  -0.398  0.69044    
+#march_stem_height_cm:speciesSAAP -0.77526    0.68747  -1.128  0.25945   
+
+
 
 # post-hoc Tukey test
 # get stats on interactions
