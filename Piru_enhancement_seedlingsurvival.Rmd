@@ -457,8 +457,21 @@ write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 # One example of link function that could work in your case is the logistic function, which takes an input with any value from negative to positive infinity and return an output that always takes values between zero and one, which is interpretable as the probability of the binary outcome (e.g. the probability of the subject responding 'yes').
 ```
 
-- model with glmer
+- model may 2018
+- with glmmTMB
 
+```{r may 2018 glmTMB test for distribution, include =TRUE}
+
+
+glmmTMB.may2018.mod <- glmmTMB(may_alive ~ normalized_par * soil_moisture                           + exotic_percentcover + site + march_stem_height_cm + species + (1 | plot_number),
+             family = binomial(link = "logit"),#equivalent to the quasibinomial distribution
+                 data = height_march_surv_may)
+
+print(glmmTMB.may2018.mod)
+summary(glme.may2018.mod)
+```
+
+- with glmer
 ```{r may 2018 glmer SANDBOX, include=FALSE}
 
 # individual seedling survival in May 2018 as dependent variable - Shane's code
@@ -499,27 +512,10 @@ glme.may2018.mod <- glmer(may_alive ~ normalized_par * soil_moisture + exotic_pe
 
 ```
 
-### Testing for normality - DON'T check normality. CHECK DISPERSION instead
-```{r may 2018 test normality glmer no spp, include =TRUE}
-# glmer - yes/no = binomial distribution
-# 1.0 is perfect
-# 1.7 is getting dicy
-# >1.7 is not a good fit
+- Testing DISPERSION 
+```{r}
 
-glme.may2018.mod <- glmer(may_alive ~ # not normally distributed because bimodal 
-                            # only need to check for normality if expect normally distributed
-                            # don't need to check if other distribution: gamma (biomass, concentrations, things that can't be 0 or less than 0), binomial, ... 
-                            normalized_par * soil_moisture # significant from Q1
-                          + exotic_percentcover # not significant from Q1
-                          + site + march_stem_height_cm * species
-                          + (1|plot_number), # don't add right/left or individual code (blue, green, )
-                                family = binomial, # not normally distributed
-                         data = height_march_surv_may) # 10 columns in df without species
-# treatment and location cause error messages
-# don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
-
-
-# CHECK FOR NORMALITY
+# CHECK FOR BINOMIAL DISTRIBUTION
 # Obtain the observed frequencies
 observed <- table(height_march_surv_may$may_alive)
 
@@ -536,8 +532,66 @@ chi_sq_test <- chisq.test(observed, p = expected)
 
 # Print the test result
 print(chi_sq_test)
+# p-value < 2.2e-16
 
 # DOES NOT FOLLOW BINOMIAL DISTRIBUTION
+
+
+# CHECK FOR QUASIBINOMIAL DISTRIBUTION
+install.packages("DHARMa")
+library(DHARMa)
+# Fit a quasibinomial GLM
+model <- glm(may_alive ~ 1, family = quasibinomial, data = height_march_surv_may)
+
+# Test the goodness of fit
+goodness_of_fit <- glm.diag(gamma = model)
+
+# Print the results
+print(goodness_of_fit)
+
+
+
+
+height_march_surv_may$may_alive <- as.integer(height_march_surv_may$may_alive)
+
+# Fit the quasibinomial model
+model <- glm(may_alive ~ 1, family = quasibinomial, data = height_march_surv_may)
+
+# Obtain the predicted probabilities
+predicted_probs <- predict(model, type = "response")
+
+
+# Create observed and expected frequencies
+observed <- table(height_march_surv_may$may_alive)
+expected <- round(predicted_probs * sum(observed))
+
+# Perform the Pearson chi-square test
+chi_squared <- chisq.test(observed, p = expected)
+chi_squared
+
+
+```
+
+
+```{r may 2018 test normality glmer no spp, include =TRUE}
+# glmer - yes/no = binomial distribution
+# 1.0 is perfect
+# 1.7 is getting dicy
+# >1.7 is not a good fit
+
+glme.may2018.mod <- glmer(may_alive ~ # not normally distributed because bimodal 
+                            # only need to check for normality if expect normally distributed
+                            # don't need to check if other distribution: gamma (biomass, concentrations, things that can't be 0 or less than 0), binomial, ... 
+                            normalized_par * soil_moisture # significant from Q1
+                         # + exotic_percentcover # not significant from Q1
+                          + site 
+                         + march_stem_height_cm 
+                         + species
+                          + (1|plot_number), # don't add right/left or individual code (blue, green, )
+                                family = binomial, # not normally distributed
+                         data = height_march_surv_may) # 10 columns in df without species
+# treatment and location cause error messages
+# don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
 
 
 
