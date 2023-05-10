@@ -10,9 +10,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Load libraries
-
-```{r libraries, message=FALSE}
+```{r load libraries, message=FALSE}
 library(here) # similar to set working directory
 library(dplyr) # includes functions:
 library(tidyverse) # data wrangling, includes packages: ggplot2, tibble, tidyr, rear, purrr, stringr, forcats
@@ -23,9 +21,7 @@ library(lubridate)
 library(patchwork)
 ```
 
-# Load colors for graphs
-
-```{r colors, include=TRUE}
+```{r colors for figures, include=TRUE}
 devtools::install_github("an-bui/calecopal")
 
 library(calecopal)
@@ -64,8 +60,8 @@ Notes:
 
 ### Load PAR, TDR, and non-native percent cover data.
 
-### Loaded csvs from the "Processed" data folder.
-```{r load survival height par tdr nncover data csv, include=TRUE}
+- Loaded csvs from the "Processed" data folder.
+```{r load survival csv, include=TRUE}
 
 # survival and mortality data
 survmort_load <- read_csv("data/processed/survmort.csv",
@@ -101,10 +97,9 @@ survmortnospp %>% # check number of data points
   group_by(year, treatment) %>% 
   summarise(N = length(totalsurvival))
 
-
 ```
 
-```{r load height par tdr nncover data csv, include=TRUE}
+```{r load height par tdr nncover csv, include=TRUE}
 
 # loading in height data
 height_raw <- read.csv(here("data", "survival_data.csv")) %>% 
@@ -116,6 +111,8 @@ height_raw <- read.csv(here("data", "survival_data.csv")) %>%
 # In 2018 - Plot 26 - 1 SAAP not planted - right blue
 # In 2018 - Plot 36 - 1 SAAP not planted - right green
 
+# Calculate the volume of the ellipsoid: V = (4/3) * pi * axis a * axis b * axis c
+height_raw$volume_cm3 <- (4/3) * pi * (height_raw$stem_height_cm/2) * (height_raw$width_1_cm/2) * (height_raw$width_2_cm/2)
 
 # PAR data
 par_load <- read_csv("data/processed/par.csv",
@@ -190,17 +187,17 @@ print(exotic_cover_all)
 
 - RUN AFTER "SURVIVAL AT TIME POINTS" AND ONLY MAKE CODE IF IT'S NEEDED
   
-```{r may 2018 rate of change, include=TRUE}
+```{r may 2018 rate of change wider df, include=TRUE}
 
 # YOU DON'T NEED TO CALCULATE SURVIVAL RATE RIGHT NOW
 # JUST RUN MODELS TO SEE WHAT MAKES A DIFFERENCE AT SURVEY TIME POINT. 
 # YOU CAN ALWAYS GO BACK AND CALCULATE RATE ON YOUR SECOND PASS.
 # 
 # 
-# t1 = jan 2019- march 2019
-# t2 = march 2019 - may 2019
-# t3 = may 2019 - sept 2019
-# t4 = sept 2019 - nov 2019
+# t1 = mar 2018 - may 2018 <-- wet months / what we have
+# t2 = jan 2019- may 2019 <-- wet months
+# t3 = may 2019 - nov 2019 <-- dry months
+
 
 # 
 #survmortnospp_2018 <- survmortnospp %>% 
@@ -215,8 +212,6 @@ print(exotic_cover_all)
 
 # END OF CREATING A WIDER DF
 ```
-
-### How are site 1 and site 2 different? 
 
 ```{r may 2018 filter environmental data, include=TRUE}
 
@@ -239,32 +234,62 @@ nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") %>%
 
 site_cond <- full_join(par_april2018, tdr_april2018, by = c("site", "plot_number", "treatment")) %>% 
   full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
+glimpse(site_cond)
 
-# save joined data as csv
+write.csv(site_cond, "data/processed/may2018_site_conditions.csv")
 ```
 
-```{r may2018 site conditions ttest}
+### How are site 1 and site 2 different? 
 
-#soil moisture
+```{r may2018 site conditions ttest, include=TRUE}
+
+#soil moisture 
 t.test(soil_moisture~site, data = site_cond) 
 # YES sig diff
 # data:  soil_moisture by site
-# t = 5.0592, df = 33.993, p-value = 1.44e-05
+# t = 5.0592, df = 33.993, p-value = 1.44e-05  <-- - soil moiture is sig diff by Site 
+site_cond %>%  
+  group_by(site) %>% 
+  summarize(avg_tdr = mean(soil_moisture), 
+            SD = sd(soil_moisture),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture))/sqrt(length((soil_moisture)))))
+# site  mean   SD      N    SE
+#1	9.603704	1.157126	18	0.2727371
+#2	7.665741	1.141167	18	0.2689756
 
 #norm_par
 t.test(normalized_par~site, data = site_cond) 
 # not sig diff
 # data:  normalized_par by site
 # t = -1.2109, df = 29.972, p-value = 0.2354
+site_cond %>%  
+  group_by(site) %>% 
+  summarize(avg_par = mean(normalized_par), 
+            SD = sd(normalized_par),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par))/sqrt(length((normalized_par)))))
+# site  mean   SD      N    SE
+#1	0.3213315	0.1097804	18	0.02587548
+#2	0.3770072	0.1612470	18	0.03800628
 
 #nncover
 t.test(cover_percent~site, data = site_cond)
 # not sig diff
 # data:  cover_percent by site
 # t = 0.2511, df = 33.554, p-value = 0.8033
+site_cond %>%  
+  group_by(site) %>% 
+  summarize(avg_tdr = mean(cover_percent), 
+            SD = sd(cover_percent),
+            N = length(cover_percent), 
+            SE = ((sd(cover_percent))/sqrt(length((cover_percent)))))
+# site  mean   SD      N    SE
+#1	36.58889	12.34307	18	2.909289
+#2	35.49056	13.85799	18	3.266359
 
 ```
-- soil moiture is sig diff by Site
+
 
 ### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
   - Add height at March 2018 to include in model
