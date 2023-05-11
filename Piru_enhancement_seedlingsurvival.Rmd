@@ -304,8 +304,8 @@ site_cond %>%
 #seedling height in March 2018 - STARTING HEIGHT
 height_march <- height_raw %>% 
   filter(date >= "2018-02-23" & date <= "2018-03-31") %>% # filtering to only have rows of data taken in March 
-  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
-  rename(march_stem_height_cm = stem_height_cm) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual, volume_cm3) %>% 
+  rename(march_stem_height_cm = stem_height_cm, march_volume_cm3 = volume_cm3) %>% 
   drop_na()
 
 print(height_march %>%  # check number of individuals per plot in March 2018
@@ -317,8 +317,9 @@ print(height_march %>%  # check number of individuals per plot in March 2018
 #seedling height in May 2018 - ENDING HEIGHT
 height_may <- height_raw %>% 
   filter(date >= "2018-05-01" & date <= "2018-05-31") %>% 
-  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
-  rename(may_stem_height_cm = stem_height_cm) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual, volume_cm3) %>% 
+  rename(may_stem_height_cm = stem_height_cm, 
+         may_volume_cm3 = volume_cm3) %>% 
   mutate(individual = case_when(individual == "s" ~ "S",
                                 individual == "c" ~ "C",
                                 individual == "r" ~ "R",
@@ -355,7 +356,7 @@ growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "
 survival_may <- height_raw %>%  ## Need to change some of the individual labels to fix NAs when rejoin. 
   filter(date >= "2018-05-01" & date <= "2018-05-31") %>% # select for may 2018 data collection
   dplyr::select(plot_number, MAFA_removal, location, species, alive, individual) %>% 
-  rename(may_alive = alive) %>% # 1 = alive
+  rename(may_alive = alive, ) %>% # 1 = alive
   mutate(may_alive = replace_na(may_alive, 0), # replace NAs with 0 = dead
          individual = case_when(individual == "s" ~ "S",
                                 individual == "c" ~ "C",
@@ -373,7 +374,7 @@ height_march_surv_may_notransf <- full_join(height_march, survival_may, by = c("
   drop_na() %>% # drops nas 
   mutate(plot_number = as.character(plot_number)) %>% 
   left_join(par_april2018, by = "plot_number") %>% # join April 2018 PAR
-  dplyr::select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par, march_volume_cm3) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% # join April 2018 TDR
   dplyr::select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>%  # join April 2018 nncover
