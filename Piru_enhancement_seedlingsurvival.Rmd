@@ -397,7 +397,6 @@ view(height_march_surv_may_notransf %>%  # check number of individuals per plot
 
 ```{r may 2018 aov height x spp, include=TRUE}
 
-
 #height
 summary(aov(march_stem_height_cm ~ species, data = height_march_surv_may_notransf))
 #          Df Sum Sq Mean Sq F value Pr(>F)    
@@ -409,27 +408,60 @@ print(TukeyHSD(aov(march_stem_height_cm ~ species, data = height_march_surv_may_
 #SAAP, CEOL, and RHOV are all similar in height
 #$species
 #                diff        lwr        upr     p adj
-#HEAR-CEOL  4.5865165  4.0757534  5.0972795 0.0000000 
+#HEAR-CEOL  4.5865165  4.0757534  5.0972795 0.0000000 <-- HEAR - CEOL
 #RHOV-CEOL -0.2545951 -0.8184931  0.3093028 0.6503705
 #SAAP-CEOL  0.1248809 -0.4510153  0.7007772 0.9441751
-#RHOV-HEAR -4.8411116 -5.3448044 -4.3374188 0.0000000 
-#SAAP-HEAR -4.4616355 -4.9787254 -3.9445456 0.0000000
+#RHOV-HEAR -4.8411116 -5.3448044 -4.3374188 0.0000000 <-- HEAR - RHOV
+#SAAP-HEAR -4.4616355 -4.9787254 -3.9445456 0.0000000 <-- HEAR - SAAP
 #SAAP-RHOV  0.3794761 -0.1901589  0.9491110 0.3160699
 
+#volume
+summary(aov(march_volume_cm3 ~ species, data = height_march_surv_may_notransf))
+#            Df  Sum Sq Mean Sq F value Pr(>F)    
+#species       3 2608825  869608   147.3 <2e-16 ***
+#Residuals   602 3554014    5904       
+print(TukeyHSD(aov(march_volume_cm3 ~ species, data = height_march_surv_may_notransf)))
+#$species
+#                 diff        lwr        upr     p adj
+#HEAR-CEOL  140.309690  118.31777  162.30161 0.0000000 <-- HEAR - CEOL
+#RHOV-CEOL    1.720552  -22.55919   26.00030 0.9978392
+#SAAP-CEOL    8.475339  -16.32102   33.27169 0.8149679
+#RHOV-HEAR -138.589138 -160.27663 -116.90165 0.0000000 <-- HEAR - RHOV
+#SAAP-HEAR -131.834351 -154.09868 -109.57002 0.0000000 <-- HEAR - SAAP
+#SAAP-RHOV    6.754787  -17.77198   31.28155 0.8933340
 
 # may 2018 alive vs dead by spp
 print(height_march_surv_may %>%  
   group_by(species) %>% 
   summarise(N = length(may_alive), 
-            survived = sum(may_alive == "1"), 
-            died = sum(may_alive == "0"),
+            total_survived = sum(may_alive == "1"), 
+            total_died = sum(may_alive == "0"),
             percent_survived = 100*(sum(may_alive == "1")/length(may_alive))))
+#species    N   tot_sur tot_dead percent_surv
+#CEOL	      130	35	    95	        26.92308
+#HEAR	      215	100	    115	        46.51163
+#RHOV	      136	34	    102	        25.00000
+#SAAP	      125	21	    104	        16.80000
 
 # may 2018 height x spp
 print(height_march_surv_may_notransf %>%  
   group_by(species) %>% 
   summarise(height_avg_cm = mean(march_stem_height_cm), 
             height_sd_cm = sd(march_stem_height_cm)))
+
+# may 2018 vol x spp
+print(height_march_surv_may_notransf %>%  
+  group_by(species) %>% 
+  summarise(avg_vol_cm3 = mean(march_volume_cm3), 
+            SD = sd(march_volume_cm3),
+            N = length(march_volume_cm3), 
+            SE = ((sd(march_volume_cm3))/sqrt(length((march_volume_cm3))))))
+#species    avg_vol_cm3   SD          N         SE
+#CEOL	      4.167051	    4.797507	  130	      0.4207692
+#HEAR	      144.476741	  126.600155	215	      8.6340589
+#RHOV	      5.887603	    5.293661	  136	      0.4539277
+#SAAP	      12.642390	    30.763829	  125	      2.7516005
+
 
 # soil moisture
 summary(aov(soil_moisture ~ may_alive, data = height_march_surv_may_notransf))
