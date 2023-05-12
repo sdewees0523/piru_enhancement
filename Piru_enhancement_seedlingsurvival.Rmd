@@ -2345,8 +2345,9 @@ write.csv(site_cond_2019, "data/processed/may2019_site_conditions.csv")
 ```
 
 ```{r join data environmental and survmort data, include=TRUE}
-
 # Making height and survival dataframe
+
+# height for january 2019
 height_jan_2019 <- height_raw %>% 
   filter(date >= "2019-01-25" & date <= "2019-01-30") %>% # filtering to only have rows of data taken in january 2019 
   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, volume_cm3) %>% 
@@ -2361,19 +2362,44 @@ print(height_jan_2019 %>%  # check number of individuals per plot
   summarise(N = length(jan_stem_height_cm)))
 # 11 seedlings per plot
 
+# height may 2019
+height_may_2019 <- height_raw %>% 
+  filter(date >= "2019-04-30" & date <= "2019-05-30") # filtering to only have rows of data taken in january 2019 
+list(unique(height_may_2019$plot_number)) # check captured all 36 plots with dates
+
 survival_may_2019 <- height_raw %>% 
-  filter(date>= "2019-04-30" & date <= "2019-05-01") %>% 
+  filter(date>= "2019-04-30" & date <= "2019-05-30") %>% 
   dplyr::select(plot_number, MAFA_removal, location, species, alive, volume_cm3) %>% 
   rename(may_alive = alive, may_volume_cm3 = volume_cm3) %>% 
   mutate(may_alive = replace_na(may_alive, 0))  # 0= dead 1 = alive
+list(unique(survival_may_2019$plot_number)) # check captured all 36 plots with dates
 
+# growth rate from Jan to May 2019 - GROWTH RATE
+growth_jan_may2019 <- right_join(height_jan_2019, height_may_2019, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
+  mutate(jan_stem_height_cm = as.numeric(jan_stem_height_cm)) %>% 
+  drop_na() %>% 
+  mutate(rgr = (log(may_stem_height_cm) - log(jan_stem_height_cm))/, # relative growth rate per day equation; 60 days between March and May
+         plot_number = as.character(plot_number)) %>% 
+  left_join(par_april2018, by = "plot_number") %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, individual, rgr, normalized_par) %>% 
+  left_join(tdr_april2018, by = "plot_number") %>% 
+  dplyr::select(!site & !treatment) %>% 
+  left_join(nncover_may2018, by = "plot_number") %>% 
+  dplyr::select(!treatment) %>% 
+  rename(exotic_percentcover = cov```er_percent) %>% 
+  rename(treatment = MAFA_removal)
+```
+
+
+```{r may 2019 full join, include=TRUE}
+# full join
 height_jan_surv_may_2019 <- full_join(height_jan_2019, survival_may_2019, by = c("plot_number", "MAFA_removal", "location", "species")) %>% 
   mutate(jan_stem_height_cm = as.numeric(jan_stem_height_cm)) %>% 
   drop_na() %>%  # removing na's for now. But should an NA in alive be assumed as dead? 
-  mutate(plot_number = as.character(plot_number)) %>% 
+  mutate(plot_number = as.character(plot_number))%>% 
   left_join(par_may2019, by = "plot_number") %>% 
   dplyr::select(plot_number, MAFA_removal, location, species, jan_stem_height_cm, may_alive, normalized_par, jan_volume_cm3, may_volume_cm3) %>% 
-  left_join(par_may2019, by = "plot_number") %>% 
+  left_join(tdr_march2019, by = "plot_number") %>% 
   dplyr::select(!site & !treatment) %>% 
   left_join(nncover_may2019, by = "plot_number") %>% 
   dplyr::select(!treatment) %>% 
@@ -2398,6 +2424,7 @@ print(height_march_surv_may_2019 %>%  # check number of individuals per plot
 )
 
 ```
+
 
 ```{r}
 
