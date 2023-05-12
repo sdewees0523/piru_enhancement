@@ -582,6 +582,13 @@ anova(lme.tdrmod) # A significant p-value indicates that one or more significant
 emmip(lme.tdrmod, site ~ treatment)
 # emmip(lme.tdrmod, month ~ treatment | site)
 
+tdrmod.site <- lm(soil_moisture ~ site, data = tdrmod)
+anova(tdrmod.site)
+
+tdrmod.treat <- lm(soil_moisture ~ treatment, data = tdrmod)
+anova(tdrmod.treat)
+
+
 # stats on site treatment interactions
 tdrmod.interaction <- lm(soil_moisture ~ site*treatment, data = tdrmod)
 anova(tdrmod.interaction) # p-values for the interaction
@@ -614,6 +621,7 @@ emmeans(lme.tdrmod, list(pairwise ~ site*treatment), adjust = "tukey")
 # site2 half - site1 nonene     -1.637 1.266 45.0  -1.294  0.7869
 # site2 half - site2 nonene      2.302 0.798 33.0   2.883  0.0688
 # site1 nonene - site2 nonene    3.939 0.875 50.9   4.500  0.0005
+
 
 ```
 
