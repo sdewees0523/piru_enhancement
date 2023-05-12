@@ -355,8 +355,9 @@ growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "
 # seedling survival or dead in May 2018 - SURVIVAL 0-1
 survival_may <- height_raw %>%  ## Need to change some of the individual labels to fix NAs when rejoin. 
   filter(date >= "2018-05-01" & date <= "2018-05-31") %>% # select for may 2018 data collection
-  dplyr::select(plot_number, MAFA_removal, location, species, alive, individual) %>% 
-  rename(may_alive = alive, ) %>% # 1 = alive
+  dplyr::select(plot_number, MAFA_removal, location, species, alive, individual, volume_cm3) %>% 
+  rename(may_alive = alive, 
+         may_volume_cm3 = volume_cm3) %>% # 1 = alive
   mutate(may_alive = replace_na(may_alive, 0), # replace NAs with 0 = dead
          individual = case_when(individual == "s" ~ "S",
                                 individual == "c" ~ "C",
@@ -374,7 +375,7 @@ height_march_surv_may_notransf <- full_join(height_march, survival_may, by = c("
   drop_na() %>% # drops nas 
   mutate(plot_number = as.character(plot_number)) %>% 
   left_join(par_april2018, by = "plot_number") %>% # join April 2018 PAR
-  dplyr::select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par, march_volume_cm3) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par, march_volume_cm3, may_volume_cm3) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% # join April 2018 TDR
   dplyr::select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>%  # join April 2018 nncover
@@ -383,11 +384,11 @@ height_march_surv_may_notransf <- full_join(height_march, survival_may, by = c("
   rename(treatment = MAFA_removal) %>% 
  left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover")) %>%  # join rgr
    mutate(site = as.factor(site))
-glimpse(height_march_surv_may_notransf)
+view(height_march_surv_may_notransf)
 
 write.csv(height_march_surv_may_notransf, "data/processed/height_march_surv_may_notransf.csv")
 
-glimpse(height_march_surv_may_notransf %>%  # check number of individuals per plot
+print(height_march_surv_may_notransf %>%  # check number of individuals per plot
   group_by(site, plot_number) %>% 
   summarise(N = length(individual))
 )
@@ -569,7 +570,7 @@ print(chisq_result)
 
 ```
 
-```{r may 2018 glmer SANDBOX, include=TRUE}
+```{r may 2018 glmer MODELS, include=TRUE}
 
 # FULL MODELS
 
@@ -628,14 +629,14 @@ summary(glme.may2018.mod.3)
 #                                 Estimate Std. Error z value Pr(>|z|)    
 #(Intercept)                      -1.01340    0.49204  -2.060   0.0394 *  
 #normalized_par                    0.22136    0.14018   1.579   0.1143    
-#soil_moisture                     0.40087    0.15856   2.528   0.0115 *  
+#soil_moisture                     0.40087    0.15856   2.528   0.0115 *   <-- tdr
 #exotic_percentcover               0.06039    0.12550   0.481   0.6304    
 #site2                            -0.51549    0.29315  -1.758   0.0787 .  
 #march_stem_height_cm             -0.38527    0.71407  -0.540   0.5895    
-#speciesHEAR                       1.08268    0.51634   2.097   0.0360 *  
+#speciesHEAR                       1.08268    0.51634   2.097   0.0360 *  <-- spp
 #speciesRHOV                       1.04482    0.70018   1.492   0.1356    
 #speciesSAAP                      -0.09353    0.56593  -0.165   0.8687    
-#normalized_par:soil_moisture      0.55959    0.14347   3.901  9.6e-05 ***
+#normalized_par:soil_moisture      0.55959    0.14347   3.901  9.6e-05 *** <-- tdr x par
 #march_stem_height_cm:speciesHEAR  0.49651    0.73104   0.679   0.4970    
 #march_stem_height_cm:speciesRHOV  1.88603    1.06792   1.766   0.0774 .  
 #march_stem_height_cm:speciesSAAP  1.20488    0.86272   1.397   0.1625  
@@ -748,19 +749,14 @@ summary(glme_rgr_may2018.1)
 # 1.7 is getting dicy
 # >1.7 is not a good fit
 
-glme.may2018.mod <- glmer(as.factor(height_march_surv_may$may_alive) ~ # not normally distributed because bimodal 
-                            # only need to check for normality if expect normally distributed
-                            # don't need to check if other distribution: gamma (biomass, concentrations, things that can't be 0 or less than 0), binomial, ... 
-                            normalized_par * soil_moisture # significant from Q1
-                         # + exotic_percentcover # not significant from Q1
-                          + site 
-                         + march_stem_height_cm 
-                         + species
-                          + (1|plot_number) + (1|treatment), # don't add right/left or individual code (blue, green, )
-                                family = binomial, # not normally distributed
-                         data = height_march_surv_may) # 10 columns in df without species
-# treatment and location cause error messages
-# don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
+# model 2
+glme.may2018.mod <- glmer(may_alive ~ 
+                             normalized_par * soil_moisture # significant from Q1
+                            + exotic_percentcover + site   # nncover not significant from Q1
+                            + march_stem_height_cm + species # plus
+                            + (1|plot_number), # don't add right/left or individual code (blue, green, )
+                         family = binomial, 
+                         data = height_march_surv_may)
 
 MOD <- glme.may2018.mod 
 
@@ -775,6 +771,8 @@ abline(h = 0) # looking for random scatter
 
 # Check for crazy outliers, look for lines MUCH taller than the rest of data
 plot(cooks.distance(MOD))
+
+
 
 # Plot a box plot for each factor, look for equal variance amount levels along the zero line
 # Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
@@ -811,6 +809,22 @@ qqline(ranef(MOD)$plot_number[,1]) # plot number
 
 print(glme.may2018.mod)
 summary(glme.may2018.mod)
+# when normalized_par * soil_moisture and WITHOUT rgr 
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                  -0.67222    0.26791  -2.509   0.0121 *  
+#normalized_par                0.22151    0.13682   1.619   0.1055    
+#soil_moisture                 0.37873    0.15482   2.446   0.0144 * <-- soil moisture
+#exotic_percentcover           0.05884    0.12325   0.477   0.6331    
+#site2                        -0.52592    0.28791  -1.827   0.0677 .  
+#march_stem_height_cm          0.19582    0.14592   1.342   0.1796    
+#speciesHEAR                   0.65675    0.34598   1.898   0.0577 .  
+#speciesRHOV                  -0.09939    0.29329  -0.339   0.7347    
+#speciesSAAP                  -0.71330    0.32438  -2.199   0.0279 *  <-- species
+#normalized_par:soil_moisture  0.55680    0.13963   3.988 6.67e-05 *** <-- interaction PAR x TDR
+
+
+
 # when normalized_par * soil_moisture + nncover + species * march_stem_height_cm
 #Fixed effects:
 #                                 Estimate Std. Error z value Pr(>|z|)    
@@ -932,37 +946,18 @@ summary(glme.may2018.modspp_CEOL)
 anova(glme.may2018.mod) # A significant p-value indicates that one or more significant differences exist between group means.
 # no p-values because no replicates - each individual is an n of 1
 
-anova(glme.may2018.modspp)
-# no p-values because no replicates - each individual is an n of 1
-
 ```
 
 
 
-```{r may 2018 totals, include=TRUE}
-# CODE DOESN'T WORK.
-# ... may_height is a factor response, which (i think) results in error messages
+```{r may 2018 post hoc, include=TRUE}
 
-emmip(height_march_surv_may,  ~ species)
+glmm_interaction <- glmer(factor(may_alive) ~ normalized_par * soil_moisture + species +
+                            (1|plot_number),
+                          family = binomial(link = "logit"),
+                          data = height_march_surv_may)
 
-#height_march_surv_may$species <- factor(height_march_surv_may$species, levels = c("RHOV", "CEOL", "HEAR", "SAAP"))
-levels(height_march_surv_may$species)
-
-#height_march_surv_may$may_alive <- factor(height_march_surv_may$may_alive)
-levels(height_march_surv_may$may_alive)
-# [1] "0" "1"
-
-#factor_variable <- factor(categories)
-
-#height_march_surv_may$species <- factor(height_march_surv_may$species)
-#levels(height_march_surv_may$species)
-
-height_march_surv_may.interaction <- aov(may_alive ~ normalized_par * soil_moisture * species, data = height_march_surv_may)
-summary(height_march_surv_may.interaction) 
-# testing the difference between slopes
-may2018.mod.interaction <- lm(may_alive ~ normalized_par*soil_moisture + species, data = height_march_surv_may)
-anova(may2018.mod.interaction) # p-values for the interaction
-
+summary(glmm_interaction)
 ```
 
 ```{r may 2018 tdr x par interaction on survival, include=TRUE}
@@ -976,10 +971,24 @@ anova(may2018.mod.interaction) # p-values for the interaction
 #print(surv_prediction)
 
 # glm model
-may18_partdr.interaction <- glm(may_alive ~ normalized_par * soil_moisture, data = height_march_surv_may, family = binomial)
+may18_partdr.interaction <- glm(may_alive ~ normalized_par * soil_moisture * species, data = height_march_surv_may, family = binomial)
 print(may18_partdr.interaction)
 summary(may18_partdr.interaction)
+# SAAP, HEAR, SOIL MOISTURE are significant
 
+```
+```{r may 2018 figures, include=TRUE}
+
+# bagraph.1 - survival x species
+may2018.1 <- ggplot(data = height_march_surv_may, aes(x = species, y = may_alive, fill = species)) +
+  geom_bar(stat = "identity")
+  labs(x = "Species",
+       y = "Total Survival",
+       title = "Total Alive in May 2018")
+may2018.1
+
+
+# bargraph.2 - survial x tdr
 
 # TAKE 2
 # Create interaction plot
@@ -2297,43 +2306,76 @@ saap_2018rgr_model <- lmer(rgr ~ normalized_par +  (1|plot_number),
 summary(saap_2018rgr_model)
 ```
 
-# March 2019 Seedling survival 
 
-# May 2019 Seedling survival 
+#January - May 2019 Seedling survival 
   - add height
-```{r may 2019 - join data, include=TRUE}
-# subsetting data for May 2019 survival
+```{r may 2019 subset environmental data, include=TRUE}
+# subsetting data for Jan to May 2019 survival
+#
 # survmortnospp = may 2019
 # par = may 2019
 # tdr = march 2019
 # nncover = 2019
 
-par_may2019 <- dplyr::filter(par, year == "2019" & month =="5")
+# par may 2019 
+par_may2019 <- dplyr::filter(par, year == "2019" & month =="5") %>% 
+  dplyr::select(site, plot_number, treatment, normalized_par) %>% 
+  mutate(treatment = case_when(treatment == "no" ~ "none",
+                               TRUE ~ treatment))
+# tdr March 2019
 tdr_march2019 <- tdr %>% 
-  dplyr::filter(year == "2019" & month == "3")
+  dplyr::filter(year == "2019" & month == "3") %>% 
+  dplyr::select(site, plot_number, treatment, soil_moisture)  %>% 
+  mutate(treatment = case_when(treatment == "nonene" ~ "none",
+                               TRUE ~ treatment))
+
+tdr_march2019$site <- factor(tdr_march2019$site, levels = c("1", "2"))
+
+# nncover may-june 2019
+nncover_may2019 <- dplyr::filter(exotic_cover_all, year == "2019") %>% 
+  dplyr::select(site, plot_number, MAFA_removal, cover_percent) %>% 
+  rename(treatment = MAFA_removal)
+
+# join site conditions 2019
+site_cond_2019 <- full_join(par_may2019, tdr_march2019, by = c("site", "plot_number", "treatment")) %>% 
+  full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
+glimpse(site_cond_2019)
+
+write.csv(site_cond_2019, "data/processed/may2019_site_conditions.csv")
+```
+
+```{r join data environmental and survmort data, include=TRUE}
 
 # Making height and survival dataframe
+height_jan_2019 <- height_raw %>% 
+  filter(date >= "2019-01-25" & date <= "2019-01-30") %>% # filtering to only have rows of data taken in january 2019 
+  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, volume_cm3) %>% 
+  rename(jan_stem_height_cm = stem_height_cm, 
+         jan_volume_cm3 = volume_cm3)
 
-height_march_2019 <- height_raw %>% 
-  filter(date == "2019-03-11") %>% # filtering to only have rows of data taken in March 
-  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm) %>% 
-  rename(march_stem_height_cm = stem_height_cm)
+length(unique(height_march_surv_may$plot_number)) # check number of plots 
+# 36       
+
+print(height_jan_2019 %>%  # check number of individuals per plot 
+  group_by(plot_number) %>% 
+  summarise(N = length(jan_stem_height_cm)))
+# 11 seedlings per plot
 
 survival_may_2019 <- height_raw %>% 
   filter(date>= "2019-04-30" & date <= "2019-05-01") %>% 
-  dplyr::select(plot_number, MAFA_removal, location, species, alive) %>% 
-  rename(may_alive = alive) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, alive, volume_cm3) %>% 
+  rename(may_alive = alive, may_volume_cm3 = volume_cm3) %>% 
   mutate(may_alive = replace_na(may_alive, 0))  # 0= dead 1 = alive
 
-height_march_surv_may_2019 <- full_join(height_march_2019, survival_may_2019, by = c("plot_number", "MAFA_removal", "location", "species")) %>% 
-  mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% 
+height_jan_surv_may_2019 <- full_join(height_jan_2019, survival_may_2019, by = c("plot_number", "MAFA_removal", "location", "species")) %>% 
+  mutate(jan_stem_height_cm = as.numeric(jan_stem_height_cm)) %>% 
   drop_na() %>%  # removing na's for now. But should an NA in alive be assumed as dead? 
   mutate(plot_number = as.character(plot_number)) %>% 
-  left_join(par_april2018, by = "plot_number") %>% 
-  dplyr::select(plot_number, MAFA_removal, location, species, march_stem_height_cm, may_alive, normalized_par) %>% 
-  left_join(tdr_april2018, by = "plot_number") %>% 
+  left_join(par_may2019, by = "plot_number") %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, jan_stem_height_cm, may_alive, normalized_par, jan_volume_cm3, may_volume_cm3) %>% 
+  left_join(par_may2019, by = "plot_number") %>% 
   dplyr::select(!site & !treatment) %>% 
-  left_join(nncover_may2018, by = "plot_number") %>% 
+  left_join(nncover_may2019, by = "plot_number") %>% 
   dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal) %>% 
@@ -2813,11 +2855,20 @@ summary(saap_model)
 ```
 # Survival May - September 2019
 
-```{r MAY 2019 - join data, include=FALSE}
+```{r MAY 2019 subset data, include=FALSE}
 par_may2019 <- dplyr::filter(par, year == "2019" & month =="9")
+
 tdr_july2019 <- tdr %>% 
   dplyr::filter(year == "2019" & month == "7")
 
+nncover_may2019 <- 
+  
+tdr_may2019 <- 
+  
+
+```
+
+```{r may 2019 height survival df, include=TRUE}
 # Making height and survival dataframe
 
 height_may_2019 <- height_raw %>% 
