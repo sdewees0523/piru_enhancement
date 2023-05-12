@@ -380,20 +380,18 @@ height_march_surv_may_notransf <- full_join(height_march, survival_may, by = c("
   left_join(nncover_may2018, by = "plot_number") %>%  # join April 2018 nncover
   dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
-  rename(treatment = MAFA_removal) #%>% 
- #left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover")) # join rgr
-    # mutate(site = as.factor(site))
-view(height_march_surv_may_notransf)
+  rename(treatment = MAFA_removal) %>% 
+ left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover")) %>%  # join rgr
+   mutate(site = as.factor(site))
+glimpse(height_march_surv_may_notransf)
 
 write.csv(height_march_surv_may_notransf, "data/processed/height_march_surv_may_notransf.csv")
 
-view(height_march_surv_may_notransf %>%  # check number of individuals per plot
+glimpse(height_march_surv_may_notransf %>%  # check number of individuals per plot
   group_by(site, plot_number) %>% 
   summarise(N = length(individual))
 )
 ```
-
-
 
 ```{r may 2018 aov height x spp, include=TRUE}
 
@@ -432,7 +430,7 @@ print(TukeyHSD(aov(march_volume_cm3 ~ species, data = height_march_surv_may_notr
 
 # may 2018 alive vs dead by spp
 print(height_march_surv_may %>%  
-  group_by(species) %>% 
+  #group_by(species) %>% 
   summarise(N = length(may_alive), 
             total_survived = sum(may_alive == "1"), 
             total_died = sum(may_alive == "0"),
@@ -494,10 +492,11 @@ height_march_surv_may <- height_march_surv_may_notransf %>%
          soil_moisture = scale(soil_moisture),
          exotic_percentcover = scale(exotic_percentcover),
          march_stem_height_cm = scale(march_stem_height_cm),
-      #   rgr = scale(rgr),
+         rgr = scale(rgr),
+         march_volume_cm3 = scale(march_volume_cm3),
          may_alive = as.factor(may_alive),
-      species = as.factor(species)) 
-print(height_march_surv_may)
+        species = as.factor(species)) 
+glimpse(height_march_surv_may)
 
 write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 
@@ -505,8 +504,7 @@ write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 
 ```
 
-- testing if the residuals are normally distributed
-```{r notes lmer vs glmer, include=FALSE}
+```{r notes on lmer vs glmer, include=FALSE}
 
 # lmer is used to fit linear mixed-effect models, so it assumes that the residual error has a Gaussian distribution. 
 
@@ -515,129 +513,178 @@ write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 # One example of link function that could work in your case is the logistic function, which takes an input with any value from negative to positive infinity and return an output that always takes values between zero and one, which is interpretable as the probability of the binary outcome (e.g. the probability of the subject responding 'yes').
 ```
 
-- model may 2018
-- with glmmTMB
+- model may 2018 with glmer
+- Check for binomial distribution of height_march_surv_may$may_alive
+```{r save chi squared goodness of fit function, include=FALSE}
 
-```{r may 2018 glmTMB test for distribution, include =TRUE}
+### Bard - only need to run once
+
+# Arguments
+# observed <- height_march_surv_may$may_alive
+# p <- rep(1/length(observed), length(observed))
+
+# Write the function
+chi_square_goodness_of_fit <- function(observed, p) {
+  if(length(observed) != length(p)) {stop("The length of the observd frequencies must be equal to the length of the expected proportions.")
+  }
+  chi_square <- sum((observed - p)^2 / p) # calculate chi-square stats
+  degrees_of_freedom <- length(observed) - 1 # calculate degrees of freedom
+  p_value <- pchisq(chi_square, degrees_of_freedom, lower.tail = FALSE) # calculate p-value
+  return(list( # return the results
+    chi_square = chi_square, 
+    degrees_of_freedom = degrees_of_freedom, 
+    p_value = p_value))
+  }
+
+# save as file in R
+save(chi_square_goodness_of_fit, file = "chi_square_goodness_of_fit.R")
+
+# load function
+load("chi_square_goodness_of_fit.R")
+```
+```{r may 2018 goodness of fit chi squared, include=TRUE}
+
+### BARD or ... 
+load("chi_square_goodness_of_fit.R") # load function
+observed <- height_march_surv_may$may_alive
+p <- rep(1/length(observed), length(observed))
+print(chi_square_goodness_of_fit(observed, p)) # NA = perfect fit
 
 
-glmmTMB.may2018.mod <- glmmTMB(may_alive ~ normalized_par * soil_moisture                           + exotic_percentcover + site + march_stem_height_cm + species + (1 | plot_number),
-             family = binomial(link = "logit"),#equivalent to the quasibinomial distribution
-                 data = height_march_surv_may)
+### CHATGPT
+observed <- as.integer(height_march_surv_may$may_alive) # Define the observed frequencies
+expected_probs <- rep(1/length(observed), length(observed)) # Define the expected probabilities
 
-print(glmmTMB.may2018.mod)
-summary(glme.may2018.mod)
+total_observed <- sum(observed) # Calculate the expected frequencies
+expected <- expected_probs * total_observed
+
+chisq_result <- chisq.test(observed, p = expected_probs) # Perform the chi-square test
+
+cat("Observed frequencies:", observed, "\n") # Print the observed and expected frequencies
+cat("Expected frequencies:", expected, "\n")
+
+cat("Chi-square test result:\n") # Print the chi-square test result
+print(chisq_result)
+
+
 ```
 
-- with glmer
-```{r may 2018 glmer SANDBOX, include=FALSE}
+```{r may 2018 glmer SANDBOX, include=TRUE}
 
-# individual seedling survival in May 2018 as dependent variable - Shane's code
-glme.may2018.mod <- glmer(may_alive ~ normalized_par + soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + rgr + (1|plot_number) + (1|treatment) + (1|location) + (1|individual), 
-                          # QUESTION -- why normalized_par * soil_moisture instead of +?
-                          # treatment as independent because treatment wasn't significant in Q1
-                          # QUESTION - add rgr as variable? the issue is not all rows have rgr value
+# FULL MODELS
+
+glme.may2018.mod.1 <- glmer(may_alive ~ 
+                             normalized_par + soil_moisture # plus
+                            + exotic_percentcover + site 
+                            + march_stem_height_cm + species # plus
+                            + (1|plot_number), 
                          family = binomial, 
-                         data = height_march_surv_may) # <-- DO I NEED TO INCLUDE TREATMENT IF IT WASN'T SIG? Now treatment is significant... 
-# error message with scaled data --> Warning: Model failed to converge with max|grad| = 0.0958267 (tol = 0.002, component 1)
-# error message with un-scaled data --> Warning: Some predictor variables are on very different scales: consider rescaling
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.1)
+# AIC: 704.6
+#Fixed effects:
+#                      Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)          -0.800203   0.293996  -2.722  0.00649 **
+#normalized_par       -0.012121   0.151858  -0.080  0.93638   
+#soil_moisture         0.230743   0.178312   1.294  0.19565   
+#exotic_percentcover  -0.009566   0.148175  -0.065  0.94853   
+#site2                -0.474881   0.352830  -1.346  0.17833   
+#march_stem_height_cm  0.167639   0.145981   1.148  0.25082   
+#speciesHEAR           0.717822   0.345186   2.080  0.03757 * <-- species
+#speciesRHOV          -0.085414   0.292463  -0.292  0.77025   
+#speciesSAAP          -0.673506   0.322808  -2.086  0.03694 * <-- species
+
+glme.may2018.mod.2 <- glmer(may_alive ~ 
+                             normalized_par * soil_moisture # times
+                            + exotic_percentcover + site  
+                            + march_stem_height_cm + species # plus
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.2)
+# AIC: 692.3
+# Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                  -0.67222    0.26791  -2.509   0.0121 *  
+#normalized_par                0.22151    0.13682   1.619   0.1055    
+#soil_moisture                 0.37873    0.15482   2.446   0.0144 *  <-- tdr
+#exotic_percentcover           0.05884    0.12325   0.477   0.6331    
+#site2                        -0.52592    0.28791  -1.827   0.0677 .  
+#march_stem_height_cm          0.19582    0.14592   1.342   0.1796    
+#speciesHEAR                   0.65675    0.34598   1.898   0.0577 .  
+#speciesRHOV                  -0.09939    0.29329  -0.339   0.7347    
+#speciesSAAP                  -0.71330    0.32438  -2.199   0.0279 *  <-- species
+#normalized_par:soil_moisture  0.55680    0.13963   3.988 6.67e-05 ***<-- par x tdr
+
+
+glme.may2018.mod.3 <- glmer(may_alive ~ 
+                             normalized_par * soil_moisture + exotic_percentcover + site + # times 
+                             march_stem_height_cm * species + (1|plot_number), # times
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.3)
+# AIC = 693.0
+#Fixed effects:
+#                                 Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                      -1.01340    0.49204  -2.060   0.0394 *  
+#normalized_par                    0.22136    0.14018   1.579   0.1143    
+#soil_moisture                     0.40087    0.15856   2.528   0.0115 *  
+#exotic_percentcover               0.06039    0.12550   0.481   0.6304    
+#site2                            -0.51549    0.29315  -1.758   0.0787 .  
+#march_stem_height_cm             -0.38527    0.71407  -0.540   0.5895    
+#speciesHEAR                       1.08268    0.51634   2.097   0.0360 *  
+#speciesRHOV                       1.04482    0.70018   1.492   0.1356    
+#speciesSAAP                      -0.09353    0.56593  -0.165   0.8687    
+#normalized_par:soil_moisture      0.55959    0.14347   3.901  9.6e-05 ***
+#march_stem_height_cm:speciesHEAR  0.49651    0.73104   0.679   0.4970    
+#march_stem_height_cm:speciesRHOV  1.88603    1.06792   1.766   0.0774 .  
+#march_stem_height_cm:speciesSAAP  1.20488    0.86272   1.397   0.1625  
+
+
+# MINIMAL MODELS
+
+glme.may2018.mod.6 <- glmer(may_alive ~ 
+                             normalized_par + soil_moisture + species + (1|plot_number), # plus
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.6)
+# AIC: 701.6 
+
+glme.may2018.mod.7 <- glmer(may_alive ~ 
+                             normalized_par * soil_moisture + species + (1|plot_number), # times
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.7)
+# AIC: 691.3  
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                   -1.0399     0.2213  -4.700 2.60e-06 ***
+#normalized_par                 0.1509     0.1307   1.154 0.248345    
+#soil_moisture                  0.5266     0.1319   3.991 6.57e-05 *** <-- tdr
+#speciesHEAR                    0.9700     0.2546   3.810 0.000139 *** <-- species
+#speciesRHOV                   -0.1128     0.2929  -0.385 0.700109    
+#speciesSAAP                   -0.6973     0.3245  -2.149 0.031647 *  <-- species
+#normalized_par:soil_moisture   0.5329     0.1466   3.636 0.000277 ***<-- tdr x par
+
+ 
+# RELATIVE GROWTH RATE
 
 # relative growth rate as dependent variable - Shane's code
-glme_rgr_may2018 <- lmer(rgr ~ normalized_par*soil_moisture + exotic_percentcover + site + (1|plot_number),
+glme_rgr_may2018.1 <- lmer(rgr ~ normalized_par*soil_moisture + exotic_percentcover + site + (1|plot_number),
                          data = growth_march_may)
-# plot number not included because only data point per plot (n = 36)
-                         
-# model as lmer - response must be numeric
-# can run lmer if running with TOTAL seedling survival by plot
-#lmer.may2018.mod <- lmer(as.factor(may_alive) ~ normalized_par * soil_moisture + #exotic_percentcover + site + march_stem_height_cm + species + rgr + (1|plot_number) + #(1|treatment) + (1|location) + (1|individual), 
-#                          # QUESTION -- why normalized_par * soil_moisture instead of +?
-#                          # treatment as independent because treatment wasn't significant #in Q1
-#                         data = height_march_surv_may) 
-
-# trial - Stephanie's code - with rgr
-glme.may2018.mod <- glmer(may_alive ~ normalized_par * soil_moisture + exotic_percentcover + site + rgr + march_stem_height_cm + species + (1|plot_number),
-                                family = binomial, 
-                         data = height_march_surv_may) 
-# treatment and location cause error messages
-# don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
-
-# trial - Stephanie's code - without rgr
-glme.may2018.mod <- glmer(may_alive ~ normalized_par * soil_moisture + exotic_percentcover + site + march_stem_height_cm + species + (1|plot_number),
-                                family = binomial, 
-                         data = height_march_surv_may) 
-# treatment and location cause error messages
-# don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
+summary(glme_rgr_may2018.1)
+# no AIC
+# Site 2 is significant
 
 ```
 
-- Testing DISPERSION 
-```{r}
-
-# CHECK FOR BINOMIAL DISTRIBUTION
-# Obtain the observed frequencies
-observed <- table(height_march_surv_may$may_alive)
-
-# Set the probability of success for the binomial distribution
-prob_success <- 0.5
-# Calculate the expected frequencies based on the binomial distribution
-expected <- c((1 - prob_success) * sum(observed), prob_success * sum(observed))
-
-# Normalize the expected frequencies to sum to 1
-expected <- expected / sum(expected)
-
-# Perform the chi-square goodness-of-fit test
-chi_sq_test <- chisq.test(observed, p = expected)
-
-# Print the test result
-print(chi_sq_test)
-# p-value < 2.2e-16
-
-# DOES NOT FOLLOW BINOMIAL DISTRIBUTION
-
-
-# CHECK FOR QUASIBINOMIAL DISTRIBUTION
-install.packages("DHARMa")
-library(DHARMa)
-# Fit a quasibinomial GLM
-model <- glm(may_alive ~ 1, family = quasibinomial, data = height_march_surv_may)
-
-# Test the goodness of fit
-goodness_of_fit <- glm.diag(gamma = model)
-
-# Print the results
-print(goodness_of_fit)
-
-
-
-
-height_march_surv_may$may_alive <- as.integer(height_march_surv_may$may_alive)
-
-# Fit the quasibinomial model
-model <- glm(may_alive ~ 1, family = quasibinomial, data = height_march_surv_may)
-
-# Obtain the predicted probabilities
-predicted_probs <- predict(model, type = "response")
-
-
-# Create observed and expected frequencies
-observed <- table(height_march_surv_may$may_alive)
-expected <- round(predicted_probs * sum(observed))
-
-# Perform the Pearson chi-square test
-chi_squared <- chisq.test(observed, p = expected)
-chi_squared
-
-
-```
-
-
-```{r may 2018 test normality glmer no spp, include =TRUE}
+```{r may 2018 glmer, include =TRUE}
 # glmer - yes/no = binomial distribution
 # 1.0 is perfect
 # 1.7 is getting dicy
 # >1.7 is not a good fit
 
-glme.may2018.mod <- glmer(may_alive ~ # not normally distributed because bimodal 
+glme.may2018.mod <- glmer(as.factor(height_march_surv_may$may_alive) ~ # not normally distributed because bimodal 
                             # only need to check for normality if expect normally distributed
                             # don't need to check if other distribution: gamma (biomass, concentrations, things that can't be 0 or less than 0), binomial, ... 
                             normalized_par * soil_moisture # significant from Q1
@@ -645,28 +692,17 @@ glme.may2018.mod <- glmer(may_alive ~ # not normally distributed because bimodal
                           + site 
                          + march_stem_height_cm 
                          + species
-                          + (1|plot_number), # don't add right/left or individual code (blue, green, )
+                          + (1|plot_number) + (1|treatment), # don't add right/left or individual code (blue, green, )
                                 family = binomial, # not normally distributed
                          data = height_march_surv_may) # 10 columns in df without species
 # treatment and location cause error messages
 # don't include individual because it's similar to species - blue and green are CEOL, RHOV, SAAP. R, S, C are HEAR only. 
-
-
 
 MOD <- glme.may2018.mod 
 
 # Calculate model's residual and fitted values
 F1 <- fitted(MOD)
 E1 <- residuals(MOD, "pearson")
-
-# See residuals as a histogram, look for normal distribution
-hist(E1) 
-# modal modal bimodal... 
-
-# Graph residuals against a normal distribution, look for all points to be on 1:1 line
-#need to call next two lines together
-qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
-qqline(E1) # ends are a bit wonky... 
 
 # Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
 # run together 2 lines
@@ -682,7 +718,7 @@ plot(cooks.distance(MOD))
 # So, only site and treatment get box plots. 
 # exotic_cover is a covariate (continuous variable).
 
-boxplot(E1 ~ site, data = height_march_surv_may) # <---- make sure to change to df, not the lme
+boxplot(E1 ~ site, data = height_march_surv_may) # <---- make sure to change to df, not the glmer
 abline(h = 0)
 # error message - variable lengths differ
 print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
@@ -694,15 +730,6 @@ print(height_march_surv_may %>%  # check number of individuals per plot in March
 
 boxplot(E1 ~ species, data = height_march_surv_may) # <---- make sure to change to df, not the lme
 abline(h = 0)
-# error message - variable lengths differ <-- omitting rgr in model it now runs
-print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
-  group_by(species) %>% 
-  summarise(N = length(species)))
-# species N
-# CEOL	  130			
-# HEAR	  215			
-# RHOV	  136			
-# SAAP	  125	
 
 # Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
@@ -712,6 +739,7 @@ qqline(ranef(MOD)$plot_number[,1]) # plot number
 #qqline(ranef(MOD)$individual[,1]) # individual: blue, green, S, C, R
 
 ```
+
 
 ### Statistics
 
