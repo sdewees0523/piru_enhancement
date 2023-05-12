@@ -640,21 +640,85 @@ summary(glme.may2018.mod.3)
 #march_stem_height_cm:speciesRHOV  1.88603    1.06792   1.766   0.0774 .  
 #march_stem_height_cm:speciesSAAP  1.20488    0.86272   1.397   0.1625  
 
+glme.may2018.mod.4 <- glmer(may_alive ~ 
+                             normalized_par + soil_moisture # plus
+                             + site  # no exotic cover
+                            + march_stem_height_cm + species # plus
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.4)
+# AIC: 702.6
+#Fixed effects:
+#                      Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)          -0.800772   0.293856  -2.725  0.00643 **
+#normalized_par       -0.008121   0.138196  -0.059  0.95314   
+#soil_moisture         0.232701   0.175242   1.328  0.18422   
+#site2                -0.473156   0.351743  -1.345  0.17857   
+#march_stem_height_cm  0.167865   0.145955   1.150  0.25010   
+#speciesHEAR           0.717656   0.345187   2.079  0.03761 * 
+#speciesRHOV          -0.085284   0.292455  -0.292  0.77058   
+#speciesSAAP          -0.673299   0.322758  -2.086  0.03697 * 
 
-# MINIMAL MODELS
+glme.may2018.mod.5 <- glmer(may_alive ~ 
+                             normalized_par * soil_moisture # times
+                             + site  # no exotic cover
+                            + march_stem_height_cm + species # plus
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.5)
+# AIC: 690.5
+# Fixed effects:
+#              Estimate Std. Error z value Pr(>|z|)    
+# (Intercept)                  -0.67157    0.26866  -2.500   0.0124 *  
+#normalized_par                0.19483    0.12569   1.550   0.1211    
+#soil_moisture                 0.36456    0.15283   2.385   0.0171 *  
+#site2                        -0.53426    0.28949  -1.846   0.0650 .  
+#march_stem_height_cm          0.19324    0.14573   1.326   0.1849    
+#speciesHEAR                   0.66010    0.34573   1.909   0.0562 .  
+#speciesRHOV                  -0.09861    0.29338  -0.336   0.7368    
+#speciesSAAP                  -0.71114    0.32455  -2.191   0.0284 *  
+#normalized_par:soil_moisture  0.55034    0.13999   3.931 8.45e-05 ***
 
 glme.may2018.mod.6 <- glmer(may_alive ~ 
-                             normalized_par + soil_moisture + species + (1|plot_number), # plus
+                             normalized_par * soil_moisture # times
+                             + site  # no exotic cover
+                            + march_stem_height_cm * species # times
+                            + (1|plot_number), 
                          family = binomial, 
                          data = height_march_surv_may)
 summary(glme.may2018.mod.6)
-# AIC: 701.6 
+#AIC = 691.2
+#Fixed effects:
+#                                 Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                      -1.02113    0.49196  -2.076 0.037927 *  
+#normalized_par                    0.19382    0.12861   1.507 0.131783    
+#soil_moisture                     0.38623    0.15664   2.466 0.013674 *  <-- tdr
+#site2                            -0.52400    0.29492  -1.777 0.075604 .  
+#march_stem_height_cm             -0.40257    0.71296  -0.565 0.572316    
+#speciesHEAR                       1.09326    0.51557   2.120 0.033965 *  <-- spp
+#speciesRHOV                       1.04934    0.69983   1.499 0.133764    
+#speciesSAAP                      -0.08406    0.56545  -0.149 0.881825    
+#normalized_par:soil_moisture      0.55278    0.14379   3.844 0.000121 *** <-- par x tdr
+#march_stem_height_cm:speciesHEAR  0.51221    0.73019   0.701 0.483009    
+#march_stem_height_cm:speciesRHOV  1.89285    1.06699   1.774 0.076061 .  
+#march_stem_height_cm:speciesSAAP  1.21723    0.86188   1.412 0.157861 
+
+# MINIMAL MODELS
 
 glme.may2018.mod.7 <- glmer(may_alive ~ 
-                             normalized_par * soil_moisture + species + (1|plot_number), # times
+                             normalized_par + soil_moisture + species + (1|plot_number), # plus
                          family = binomial, 
                          data = height_march_surv_may)
 summary(glme.may2018.mod.7)
+# AIC: 701.6 
+
+glme.may2018.mod.8 <- glmer(may_alive ~ 
+                             normalized_par * soil_moisture + species + (1|plot_number), # times
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.8)
 # AIC: 691.3  
 #Fixed effects:
 #                             Estimate Std. Error z value Pr(>|z|)    
