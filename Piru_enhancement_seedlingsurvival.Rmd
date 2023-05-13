@@ -230,13 +230,14 @@ tdr_april2018$site <- factor(tdr_april2018$site, levels = c("1", "2"))
 
 # nncover may 2018
 nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") %>% 
+  rename(treatment = MAFA_removal) %>% 
   dplyr::select(site, plot_number, treatment, cover_percent)
 
-site_cond <- full_join(par_april2018, tdr_april2018, by = c("site", "plot_number", "treatment")) %>% 
+site_cond_2018 <- full_join(par_april2018, tdr_april2018, by = c("site", "plot_number", "treatment")) %>% 
   full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
 glimpse(site_cond)
 
-write.csv(site_cond, "data/processed/may2018_site_conditions.csv")
+write.csv(site_cond_2018, "data/processed/may2018_site_conditions.csv")
 ```
 
 ### How are site 1 and site 2 different? 
@@ -294,7 +295,7 @@ site_cond %>%
 ### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
   - Add height at March 2018 to include in model
   
-```{r may 2018 subset start end height, include=TRUE}
+```{r may 2018 height and survival, include=TRUE}
 # subsetting data for May 2018 survival
 # survmortnospp = may 2018
 # par = april 2018
@@ -304,8 +305,8 @@ site_cond %>%
 #seedling height in March 2018 - STARTING HEIGHT
 height_march <- height_raw %>% 
   filter(date >= "2018-02-23" & date <= "2018-03-31") %>% # filtering to only have rows of data taken in March 
-  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual, volume_cm3) %>% 
-  rename(march_stem_height_cm = stem_height_cm, march_volume_cm3 = volume_cm3) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
+  rename(march_stem_height_cm = stem_height_cm) %>% 
   drop_na()
 
 print(height_march %>%  # check number of individuals per plot in March 2018
@@ -314,26 +315,38 @@ print(height_march %>%  # check number of individuals per plot in March 2018
 # not all plots had 18 seedlings planted in 2018 - Plot 26 and 36
 # not all plots have 18 seedling height measurements
 
-#seedling height in May 2018 - ENDING HEIGHT
-height_may <- height_raw %>% 
-  filter(date >= "2018-05-01" & date <= "2018-05-31") %>% 
-  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual, volume_cm3) %>% 
-  rename(may_stem_height_cm = stem_height_cm, 
-         may_volume_cm3 = volume_cm3) %>% 
-  mutate(individual = case_when(individual == "s" ~ "S",
+# seedling survival or dead in May 2018 - SURVIVAL 0-1
+survival_may <- height_raw %>%  ## Need to change some of the individual labels to fix NAs when rejoin. 
+  filter(date >= "2018-05-01" & date <= "2018-05-31") %>% # select for may 2018 data collection
+  dplyr::select(plot_number, MAFA_removal, location, species, alive, individual) %>% 
+  rename(may_alive = alive) %>% # 1 = alive
+  mutate(may_alive = replace_na(may_alive, 0), # replace NAs with 0 = dead
+         individual = case_when(individual == "s" ~ "S",
                                 individual == "c" ~ "C",
                                 individual == "r" ~ "R",
-                                TRUE ~ individual),
-         may_stem_height_cm = as.numeric(may_stem_height_cm))  %>% 
-  drop_na()
-print(height_may %>%  # check number of individuals per plot in March 2018
-  group_by(plot_number) %>% 
-  summarise(N = length(may_stem_height_cm)))
+                                TRUE ~ individual))  # 0 = dead 1 = alive
 
 ```
 
 - Add rgr at March 2018 to include in model
 ```{r may 2018 relative growth rate, include=TRUE}
+
+#seedling height in May 2018 - ENDING HEIGHT
+height_may <- height_raw %>% 
+  filter(date >= "2018-05-01" & date <= "2018-05-31") %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
+  rename(may_stem_height_cm = stem_height_cm) %>% 
+  mutate(individual = case_when(individual == "s" ~ "S",
+                                individual == "c" ~ "C",
+                                individual == "r" ~ "R",
+                                TRUE ~ individual),
+         may_stem_height_cm = as.numeric(may_stem_height_cm)) %>% 
+  drop_na()
+
+print(height_may %>%  # check number of individuals per plot in May 2018
+  group_by(plot_number) %>% 
+  summarise(N = length(may_stem_height_cm)))
+
 # growth rate from March to May 2018 - GROWTH RATE
 growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
   mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% 
@@ -350,39 +363,27 @@ growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "
   rename(treatment = MAFA_removal)
 ```
 
-  - Add individual survival at March 2018 to include in model
-```{r may 2018 individual survival, include=TRUE}
-# seedling survival or dead in May 2018 - SURVIVAL 0-1
-survival_may <- height_raw %>%  ## Need to change some of the individual labels to fix NAs when rejoin. 
-  filter(date >= "2018-05-01" & date <= "2018-05-31") %>% # select for may 2018 data collection
-  dplyr::select(plot_number, MAFA_removal, location, species, alive, individual, volume_cm3) %>% 
-  rename(may_alive = alive, 
-         may_volume_cm3 = volume_cm3) %>% # 1 = alive
-  mutate(may_alive = replace_na(may_alive, 0), # replace NAs with 0 = dead
-         individual = case_when(individual == "s" ~ "S",
-                                individual == "c" ~ "C",
-                                individual == "r" ~ "R",
-                                TRUE ~ individual))  # 0 = dead 1 = alive
-```
+### Join May 2018 data - 
 
-### Join May 2018 data
+NOTE: May 12, 2023 - need to re-check code to make sure all seedlings are included... including rgr omits seedlings that were alive in March and died in May because many dead seedlings were not re-measured in May 2018.
+
 ```{r may 2018 join march to may data, include=TRUE}
 
-# March to May 2018 join - JOIN 
+# March to May 2018 join - JOIN - 
 # starting height, 0-1 may 2018, april 2018 normPAR, april 2018 tdr, nncover april 2018
 height_march_surv_may_notransf <- full_join(height_march, survival_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
   mutate(march_stem_height_cm = as.numeric(march_stem_height_cm)) %>% # warning: one height "didn't plant"
   drop_na() %>% # drops nas 
   mutate(plot_number = as.character(plot_number)) %>% 
   left_join(par_april2018, by = "plot_number") %>% # join April 2018 PAR
-  dplyr::select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par, march_volume_cm3, may_volume_cm3) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par) %>% 
   left_join(tdr_april2018, by = "plot_number") %>% # join April 2018 TDR
   dplyr::select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>%  # join April 2018 nncover
   dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal) %>% 
- left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover")) %>%  # join rgr
+ left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover")) %>%  
    mutate(site = as.factor(site))
 view(height_march_surv_may_notransf)
 
@@ -2404,17 +2405,349 @@ height_jan_surv_may_2019 <- full_join(height_jan_2019, survival_may_2019, by = c
          jan_volume_cm3 = scale(jan_volume_cm3))
 view(height_jan_surv_may_2019)
 
-write.csv(height_jan_surv_may_2019, "data/processed/height_jan_surv_may_2019.csv")
-
-print(height_jan_surv_may_2019 %>%  # check number of individuals per plot
+# check number of individuals per plot
+print(height_jan_surv_may_2019 %>%  
   group_by(plot_number) %>% 
   summarise(N = length(plot_number))
 )
 
-print(height_jan_surv_may_2019 %>%  # check number of individuals per plot
+# check number of individuals per species
+print(height_jan_surv_may_2019 %>%  
   group_by(species) %>% 
   summarise(N = length(species))
 )
+
+# as factor
+height_jan_surv_may_2019 <- height_jan_surv_may_2019 %>% 
+  mutate(may2019_alive = as.factor(may2019_alive),
+         species = as.factor(species),
+         site = as.factor(site))
+glimpse(height_jan_surv_may_2019)
+
+write.csv(height_jan_surv_may_2019, "data/processed/height_jan_surv_may_2019.csv")
+
+```
+
+
+### How are site 1 and site 2 different? 
+
+```{r jan may 2019 site conditions ttest, include=TRUE}
+
+#soil moisture 
+t.test(soil_moisture~site, data = site_cond_may2019) 
+# YES sig diff
+# data:  soil_moisture by site
+# t = 5.6653, df = 29.535, p-value = 3.76e-06
+site_cond_may2019 %>%  
+  group_by(site) %>% 
+  summarize(avg_tdr = mean(soil_moisture), 
+            SD = sd(soil_moisture),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture))/sqrt(length((soil_moisture)))))
+# site  mean      SD      N     SE
+#1    	22.10556	3.939597	18	0.9285719
+#2	    15.79259	2.613453	18	0.6159968
+
+
+#norm_par
+t.test(normalized_par~site, data = site_cond_may2019) 
+# not significant
+# data:  normalized_par by site
+# t = -1.5124, df = 33.969, p-value = 0.1397
+site_cond_may2019 %>%  
+  group_by(site) %>% 
+  summarize(avg_par = mean(normalized_par), 
+            SD = sd(normalized_par),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par))/sqrt(length((normalized_par)))))
+# site  mean   SD      N    SE
+#1    	0.3621245	0.2155215	18	0.05079891
+#2	    0.4724443	0.2220996	18	0.05234938
+
+#nncover
+t.test(cover_percent~site, data = site_cond_may2019)
+# Not sig
+# data:  cover_percent by site
+# t = 0.2511, df = 33.554, p-value = 0.8033
+site_cond_may2019 %>%  
+  group_by(site) %>% 
+  summarize(avg_tdr = mean(cover_percent), 
+            SD = sd(cover_percent),
+            N = length(cover_percent), 
+            SE = ((sd(cover_percent))/sqrt(length((cover_percent)))))
+# site  mean   SD      N    SE
+#1	36.58889	12.34307	18	2.909289
+#2	35.49056	13.85799	18	3.266359
+
+
+```
+
+
+```{r may 2019 glmer MODELS, include=TRUE}
+
+# FULL MODELS
+
+glme.may2019.mod.5 <- (glmer(as.factor(may2019_alive) ~ 
+                             normalized_par * soil_moisture # times
+                             + site # no exotic cover
+                            + jan_stem_height_cm + species # plus
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019))
+summary(glme.may2019.mod.5)
+# AIC: 471.7
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)                   0.85619    0.38308   2.235  0.02541 * 
+#normalized_par               -0.21410    0.17104  -1.252  0.21067   
+#soil_moisture                 0.21054    0.22996   0.916  0.35989   
+#site2                        -0.87985    0.46786  -1.881  0.06003 . 
+#jan_stem_height_cm           -0.05969    0.17888  -0.334  0.73861   
+#speciesHEAR                   0.95833    0.46390   2.066  0.03885 * <-- species
+#speciesRHOV                  -1.13097    0.35502  -3.186  0.00144 ** <-- species
+#speciesSAAP                   0.32563    0.37127   0.877  0.38045   
+#normalized_par:soil_moisture  0.28700    0.18706   1.534  0.12498  
+
+glme.may2019.mod.4 <- glmer(as.factor(may2019_alive) ~ 
+                             normalized_par + soil_moisture # plus
+                             + site # no exotic cover
+                            + jan_stem_height_cm + species # plus
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019)
+summary(glme.may2019.mod.4)
+# AIC: 471.9
+#Fixed effects:
+#                   Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)          0.8622     0.3902   2.210  0.02711 * 
+#normalized_par      -0.2422     0.1751  -1.383  0.16651   
+#soil_moisture        0.2271     0.2378   0.955  0.33947   
+#site2               -0.9508     0.4824  -1.971  0.04876 *<-- site
+#jan_stem_height_cm  -0.0564     0.1793  -0.315  0.75310   
+#speciesHEAR          0.9521     0.4641   2.052  0.04021 * <-- species
+#speciesRHOV         -1.1327     0.3553  -3.188  0.00143 ** <-- species
+#speciesSAAP          0.3242     0.3714   0.873  0.38268  
+
+glme.may2019.mod.1 <- glmer(as.factor(may2019_alive) ~ 
+                             normalized_par + soil_moisture # plus
+                            + exotic_percentcover + site 
+                            + jan_stem_height_cm + species # plus
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019)
+summary(glme.may2019.mod.1)
+# AIC: 472.2
+#Fixed effects:
+#                    Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)          0.90029    0.38777   2.322  0.02025 *  
+#normalized_par      -0.27240    0.17384  -1.567  0.11713   
+#soil_moisture        0.15323    0.23885   0.642  0.52118   
+#exotic_percentcover  0.22781    0.17272   1.319  0.18717   
+#site2               -1.02435    0.47720  -2.147  0.03183 * <-- site
+#jan_stem_height_cm  -0.05829    0.17871  -0.326  0.74427   
+#speciesHEAR          0.95463    0.46296   2.062  0.03921 * <-- species
+#speciesRHOV         -1.13462    0.35559  -3.191  0.00142 ** <-- species
+#speciesSAAP          0.32528    0.37115   0.876  0.38081 
+
+
+
+glme.may2019.mod.2 <- glmer(as.factor(may2019_alive) ~ 
+                             normalized_par * soil_moisture # times
+                            + exotic_percentcover + site 
+                            + jan_stem_height_cm + species # plus
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019)
+summary(glme.may2019.mod.2)
+# AIC: 472.5
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)                   0.88791    0.38263   2.321  0.02031 * 
+#normalized_par               -0.24133    0.17169  -1.406  0.15982   
+#soil_moisture                 0.15254    0.23302   0.655  0.51270   
+#exotic_percentcover           0.18393    0.17191   1.070  0.28465   
+#site2                        -0.95004    0.46811  -2.030  0.04241 * <-- site
+#jan_stem_height_cm           -0.06077    0.17846  -0.341  0.73345   
+#speciesHEAR                   0.95992    0.46303   2.073  0.03816 * <-- species
+#speciesRHOV                  -1.13268    0.35528  -3.188  0.00143 ** <-- species
+#speciesSAAP                   0.32639    0.37113   0.879  0.37915   
+#normalized_par:soil_moisture  0.24847    0.18851   1.318  0.18748   
+
+glme.may2019.mod.21 <- glmer(as.factor(may2019_alive) ~ 
+                             normalized_par + soil_moisture # plus
+                            + exotic_percentcover + site 
+                            + jan_stem_height_cm * species # times
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019)
+summary(glme.may2019.mod.21)
+# AIC = 477.7
+#Fixed effects:
+#                               Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)                     0.86136    0.49678   1.734   0.0829 .
+#normalized_par                 -0.26414    0.17618  -1.499   0.1338  
+#soil_moisture                   0.14782    0.24146   0.612   0.5404  
+#exotic_percentcover             0.23210    0.17449   1.330   0.1835  
+#site2                          -1.06084    0.48574  -2.184   0.0290 * <-- site
+#jan_stem_height_cm             -0.16167    0.54309  -0.298   0.7659  
+#speciesHEAR                     0.91391    0.58577   1.560   0.1187  
+#speciesRHOV                    -0.81785    0.69048  -1.184   0.2362  
+#speciesSAAP                     0.39747    0.47028   0.845   0.3980  
+#jan_stem_height_cm:speciesHEAR  0.20696    0.63341   0.327   0.7439  
+#jan_stem_height_cm:speciesRHOV  0.44242    0.85271   0.519   0.6039  
+#jan_stem_height_cm:speciesSAAP  0.02396    0.59603   0.040   0.9679  
+
+glme.may2019.mod.3 <- glmer(as.factor(may2019_alive) ~ 
+                             normalized_par * soil_moisture # times
+                            + exotic_percentcover + site 
+                            + jan_stem_height_cm * species # times
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019)
+summary(glme.may2019.mod.3)
+# Warning: Model failed to converge with max|grad| = 0.00819763 (tol = 0.002, component 1)
+# AIC = 478.0
+#Fixed effects:
+#                               Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)                     0.84716    0.49127   1.724   0.0846 .
+#normalized_par                 -0.23316    0.17411  -1.339   0.1805  
+#soil_moisture                   0.14801    0.23571   0.628   0.5300  
+#exotic_percentcover             0.18824    0.17372   1.084   0.2785  
+#site2                          -0.98447    0.47674  -2.065   0.0389 * <-- site
+#jan_stem_height_cm             -0.16675    0.54292  -0.307   0.7587  
+#speciesHEAR                     0.91146    0.58562   1.556   0.1196  
+#speciesRHOV                    -0.83344    0.68760  -1.212   0.2255  
+#speciesSAAP                     0.39950    0.46864   0.852   0.3940  
+#normalized_par:soil_moisture    0.24927    0.19034   1.310   0.1903  
+#jan_stem_height_cm:speciesHEAR  0.21834    0.63371   0.345   0.7304  
+#jan_stem_height_cm:speciesRHOV  0.42159    0.85129   0.495   0.6204  
+#jan_stem_height_cm:speciesSAAP  0.02646    0.59588   0.044   0.9646  
+
+
+
+
+
+glme.may2019.mod.6 <- glmer(as.factor(may2019_alive) ~ 
+                             normalized_par * soil_moisture # times
+                             + site # no exotic cover
+                            + jan_stem_height_cm  *species # times
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019)
+#Warning: Model failed to converge with max|grad| = 0.00318041 (tol = 0.002, component 1)
+summary(glme.may2019.mod.6)
+# AIC = 477.2
+# Fixed effects:
+#                                Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)                     0.826763   0.492816   1.678   0.0934 .
+#normalized_par                 -0.205320   0.173594  -1.183   0.2369  
+#soil_moisture                   0.206357   0.232664   0.887   0.3751  
+#site2                          -0.913006   0.476358  -1.917   0.0553 .
+#jan_stem_height_cm             -0.144412   0.541825  -0.267   0.7898  
+#speciesHEAR                     0.903075   0.586836   1.539   0.1238  
+#speciesRHOV                    -0.847588   0.688692  -1.231   0.2184  
+#speciesSAAP                     0.387224   0.469691   0.824   0.4097  
+#normalized_par:soil_moisture    0.288910   0.188962   1.529   0.1263  
+#jan_stem_height_cm:speciesHEAR  0.191418   0.632532   0.303   0.7622  
+#jan_stem_height_cm:speciesRHOV  0.394426   0.849417   0.464   0.6424  
+#jan_stem_height_cm:speciesSAAP  0.003975   0.594995   0.007   0.9947  
+
+
+
+
+# MINIMAL MODELS
+
+glme.may2018.mod.7 <- glmer(may_alive ~ 
+                             normalized_par + soil_moisture + species + (1|plot_number), # plus
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.7)
+# AIC: 701.6 
+
+glme.may2018.mod.8 <- glmer(may_alive ~ 
+                             normalized_par * soil_moisture + species + (1|plot_number), # times
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.8)
+# AIC: 691.3  
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                   -1.0399     0.2213  -4.700 2.60e-06 ***
+#normalized_par                 0.1509     0.1307   1.154 0.248345    
+#soil_moisture                  0.5266     0.1319   3.991 6.57e-05 *** <-- tdr
+#speciesHEAR                    0.9700     0.2546   3.810 0.000139 *** <-- species
+#speciesRHOV                   -0.1128     0.2929  -0.385 0.700109    
+#speciesSAAP                   -0.6973     0.3245  -2.149 0.031647 *  <-- species
+#normalized_par:soil_moisture   0.5329     0.1466   3.636 0.000277 ***<-- tdr x par
+
+ 
+# RELATIVE GROWTH RATE
+
+# relative growth rate as dependent variable - Shane's code
+glme_rgr_may2018.1 <- lmer(rgr ~ normalized_par*soil_moisture + exotic_percentcover + site + (1|plot_number),
+                         data = growth_march_may)
+summary(glme_rgr_may2018.1)
+# no AIC
+# Site 2 is significant
+
+```
+
+```{r may 2019 glmer, include =TRUE}
+# glmer - yes/no = binomial distribution
+# 1.0 is perfect
+# 1.7 is getting dicy
+# >1.7 is not a good fit
+
+# model 2
+glme.may2018.mod <- glmer(may_alive ~ 
+                             normalized_par * soil_moisture # significant from Q1
+                            + exotic_percentcover + site   # nncover not significant from Q1
+                            + march_stem_height_cm + species # plus
+                            + (1|plot_number), # don't add right/left or individual code (blue, green, )
+                         family = binomial, 
+                         data = height_march_surv_may)
+
+MOD <- glme.may2018.mod 
+
+# Calculate model's residual and fitted values
+F1 <- fitted(MOD)
+E1 <- residuals(MOD, "pearson")
+
+# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
+# run together 2 lines
+plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
+abline(h = 0) # looking for random scatter
+
+# Check for crazy outliers, look for lines MUCH taller than the rest of data
+plot(cooks.distance(MOD))
+
+
+
+# Plot a box plot for each factor, look for equal variance amount levels along the zero line
+# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
+# Random effects need the qqline just like normality. 
+# So, only site and treatment get box plots. 
+# exotic_cover is a covariate (continuous variable).
+
+boxplot(E1 ~ site, data = height_march_surv_may) # <---- make sure to change to df, not the glmer
+abline(h = 0)
+# error message - variable lengths differ
+print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
+  group_by(site) %>% 
+  summarise(N = length(site)))
+# site N
+# 1	  318			
+# 2 	288	
+
+boxplot(E1 ~ species, data = height_march_surv_may) # <---- make sure to change to df, not the lme
+abline(h = 0)
+
+# Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
+qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
+qqline(ranef(MOD)$plot_number[,1]) # plot number
+
+#qqnorm(ranef(MOD)$individual[,1], main = "Plot Residuals")
+#qqline(ranef(MOD)$individual[,1]) # individual: blue, green, S, C, R
 
 ```
 
