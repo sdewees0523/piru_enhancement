@@ -16,9 +16,14 @@ library(dplyr) # includes functions:
 library(tidyverse) # data wrangling, includes packages: ggplot2, tibble, tidyr, rear, purrr, stringr, forcats
 library(lme4)
 library(lmerTest)
+library(DHARMa) #model diagnostics
+library(performance)
 library(emmeans) 
 library(lubridate)
 library(patchwork)
+library(effects)
+library(lattice)
+library(MuMIn)
 ```
 
 ```{r colors for figures, include=TRUE}
@@ -2429,6 +2434,16 @@ write.csv(height_jan_surv_may_2019, "data/processed/height_jan_surv_may_2019.csv
 ```
 
 
+```{r}
+# data exploration - lookin' at the means 
+tapply(as.integer(height_jan_surv_may_2019$may2019_alive), height_jan_surv_may_2019$species, mean)
+tapply(as.integer(height_jan_surv_may_2019$may2019_alive), height_jan_surv_may_2019$site, mean)
+tapply(as.integer(height_jan_surv_may_2019$may2019_alive), height_jan_surv_may_2019$normalized_par, mean)
+
+
+```
+
+
 ### How are site 1 and site 2 different? 
 
 ```{r jan may 2019 site conditions ttest, include=TRUE}
@@ -2485,18 +2500,32 @@ site_cond_may2019 %>%
 
 ```{r may 2019 glmer MODELS, include=TRUE}
 
+MOD.dredge <- dredge(glme.may2019.mod.full)
+MOD.dredge <- dredge(glme.may2019.mod.111)
+MOD.dredge
+#Moreover, the convergence code is zero which indicates that the model has not converged, and the estimated #variance for the random effect is zero. This means that potentially there is no variation within Anim_ID. #It would be a good idea to fit a model with glm() (ie without random intercepts but with Anim_ID as a fixed #effect) and see how the model estimates compare.
+
+glme.may2019.mod.111 <- glmer(as.factor(may2019_alive) ~ site * species
+                            + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019)
+summary(glme.may2019.mod.111)
+# AIC = 468.6 
+plot(allEffects(glme.may2019.mod.111))
+
 # FULL MODELS
+
 
 # WITH EXOTIC COVER
 
-glme.may2019.mod.11 <- glmer(as.factor(may2019_alive) ~ 
+glme.may2019.mod.full <- glmer(as.factor(may2019_alive) ~ 
                              normalized_par + soil_moisture # plus
                             + exotic_percentcover + site # jan_volumne_cm3
                             + jan_volume_cm3 + species # plus
                             + (1|plot_number), 
                          family = binomial, 
                          data = height_jan_surv_may_2019)
-summary(glme.may2019.mod.11)
+summary(glme.may2019.mod.full)
 # AIC = 471.2 
 #Fixed effects:
 #                    Estimate Std. Error z value Pr(>|z|)   
@@ -2628,7 +2657,15 @@ summary(glme.may2019.mod.3)
 #jan_stem_height_cm:speciesHEAR  0.21834    0.63371   0.345   0.7304  
 #jan_stem_height_cm:speciesRHOV  0.42159    0.85129   0.495   0.6204  
 #jan_stem_height_cm:speciesSAAP  0.02646    0.59588   0.044   0.9646  
-
+glme.may2019.mod.3glm <- glm(as.factor(may2019_alive) ~ 
+                             normalized_par * soil_moisture # times
+                            + exotic_percentcover + site 
+                            + jan_stem_height_cm * species # times
+                            + plot_number, 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019)
+summary(glme.may2019.mod.3glm)
+# only Plot 4 was significant
 
 
 # OMIT EXOTIC COVER
@@ -2789,12 +2826,43 @@ summary(glme_rgr_may2018.1)
 glme.may2019.mod <- (glmer(as.factor(may2019_alive) ~ 
                              normalized_par * soil_moisture # times
                              + site # no exotic cover, with volume
-                            + jan_volume_cm3 + species # plus
+                            + jan_volume_cm3 + species # plus 
                             + (1|plot_number), 
                          family = binomial, 
                          data = height_jan_surv_may_2019))
 
 MOD <- glme.may2019.mod 
+
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) 
+# The testDispersion() function gives us a histogram of simulated expected values, and then a red line indicating our observed dispersion in our actual data. Additionally, this function performs a statistical test of our dispersion with the null hypothesis being “We do not have overdispersion”. 
+# dispersion = 1.0114, p-value = 0.808
+plot(residuals(MOD))
+binned_residuals(MOD)
+# Warning: About 80% of the residuals are inside the error bounds (~95% or higher would be good).
+plot(allEffects(MOD))
+
+#visualize alive data by random effect 
+dotplot(ranef(MOD, condVar = T)) #condVar adds 95% confidence intervals around random effects estimates
+
+# visualize data by plotting alive by random effect 
+random.intercepts = ranef(MOD)$plot_number[["(Intercept)"]] # create vector of random intercepts by pulling them from model
+plot.intercepts = fixef(MOD)[1] + random.intercepts # create intercepts estimates by adding effects together
+#for loop creating each individual curve ~ plot number
+for (i in 1:length(random.intercepts)) {
+  
+  if (i ==1) curve(exp(plot.intercepts[i] + fixef(MOD)["Soil Moisture"]*x)/
+                     (1 + exp(plot.intercepts[i] + fixef(MOD)["Soil Moisture"]*x)),
+                   from = min(height_jan_surv_may_2019$soil_moisture), to = max(height_jan_surv_may_2019$soil_moisture), ylim = c(0,1), 
+                   xlab = "Centered Soil Moisture", ylab = "Probability of Alive Jan-May 2019")
+  
+  if (i > 1) curve(exp(plot.intercepts[i] + fixef(MOD)["Soil Moisture"]*x)/
+                     (1 + exp(plot.intercepts[i] + fixef(MOD)["Length"]*x)),
+                   add = T)
+}
+
+
+
 
 # Calculate model's residual and fitted values
 F1 <- fitted(MOD)
@@ -2834,6 +2902,7 @@ qqline(ranef(MOD)$plot_number[,1]) # plot number
 ```{r may 2019 summary stats, include=TRUE}
 print(glme.may2019.mod)
 summary(glme.may2019.mod)
+dispersiontest(glme.may2019.mod, trafo = NULL, alternative = c("greater", "two.sided", "less"))
 anova(glme.may2019.mod) # no p-values
 
 #Formula: as.factor(may2019_alive) ~ normalized_par * soil_moisture + site +  
