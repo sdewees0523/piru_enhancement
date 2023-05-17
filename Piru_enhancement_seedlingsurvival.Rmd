@@ -2509,7 +2509,7 @@ glme.may2019.mod.111 <- glmer(as.factor(may2019_alive) ~ site * species
                             + (1|plot_number), 
                          family = binomial, 
                          data = height_jan_surv_may_2019)
-summary(glme.may2019.mod.111)
+summary(glme.may2019.mod.full)
 # AIC = 468.6 
 plot(allEffects(glme.may2019.mod.111))
 
@@ -2824,8 +2824,8 @@ summary(glme_rgr_may2018.1)
 ```{r may 2019 glmer, include =TRUE}
 
 glme.may2019.mod <- (glmer(as.factor(may2019_alive) ~ 
-                             normalized_par * soil_moisture # times
-                             + site # no exotic cover, with volume
+                             normalized_par + soil_moisture # times
+                             #+ site # no exotic cover, with volume
                             + jan_volume_cm3 + species # plus 
                             + (1|plot_number), 
                          family = binomial, 
@@ -2834,7 +2834,12 @@ glme.may2019.mod <- (glmer(as.factor(may2019_alive) ~
 MOD <- glme.may2019.mod 
 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
-testDispersion(simulationOutput) 
+testDispersion(simulationOutput)
+plot(simulationOutput)
+hist(simulationOutput)
+testResiduals(simulationOutput)
+plotResiduals(simulationOutput, height_jan_surv_may_2019$species) # you're looking for flat red line
+plotResiduals(simulationOutput, height_jan_surv_may_2019$site) # 
 # The testDispersion() function gives us a histogram of simulated expected values, and then a red line indicating our observed dispersion in our actual data. Additionally, this function performs a statistical test of our dispersion with the null hypothesis being “We do not have overdispersion”. 
 # dispersion = 1.0114, p-value = 0.808
 plot(residuals(MOD))
