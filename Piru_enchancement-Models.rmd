@@ -938,6 +938,36 @@ nnscatter.1 <- ggplot(data = nnmod, aes(x = mafacover, y = nncover)) +
 ggplotly(nnscatter.1)
 ```
 
+### Non-native grass height and density
+```{r explore nngrass height and density, include=TRUE}
+
+nngrass2018_cover_height <- nngrass2018_cover_height %>% 
+  rename(treatment = MAFA_removal)
+
+nnheightscatter.1 <- ggplot(data = nngrass2018_cover_height, aes(x = MAFA_coverpercent, y = nn_grassheight_cm)) +
+         geom_point(aes(color = site)) +
+  labs(title = "MAFA cover (%) by Non-native grass height (cm) and Treatment", x = "MAFA cover (%)", y = "Non-native grass height (cm)") +
+  geom_smooth(method="lm", color = "#291611")+
+  theme_bw()
+ggplotly(nnheightscatter.1)
+
+nnheightscatter.2 <- ggplot(data = nngrass2018_cover_height, aes(x = exo_coverpercent, y = nn_grassheight_cm)) +
+         geom_point(aes(color = treatment)) +
+  labs(title = "Exotic cover (%) by Non-native grass height (cm) and Treatment", x = "Exotic cover (%)", y = "Non-native grass height (cm)") +
+  geom_smooth(method="lm", color = "#291611")+
+  theme_bw()
+ggplotly(nnheightscatter.2)
+
+nnheightboxplot.1 <- ggplot(data = nngrass2018_cover_height, aes(x = treatment, y = nn_grassheight_cm)) + 
+  geom_boxplot() 
+ggplotly(nnheightboxplot.1) %>% layout(boxmode = "group")
+
+nnheightboxplot.2 <- ggplot(data = nngrass2018_cover_height, aes(x = site, y = nn_grassheight_cm)) + 
+  geom_boxplot() 
+ggplotly(nnheightboxplot.2) %>% layout(boxmode = "group")
+
+```
+
 ------------------------------------------------------------------------
 
 # Question 1: Take aways
