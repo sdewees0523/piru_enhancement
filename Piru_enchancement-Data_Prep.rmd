@@ -189,6 +189,8 @@ nngrass2018_cover_height <- nngrass2018_height %>%
     mutate(plot_number = as.character(plot_number)) 
 
 view(nngrass2018_cover_height)
+write.csv(nngrass2018_cover_height, "data/processed/nngrass2018_cover_height.csv")
+
 ```
 
 
