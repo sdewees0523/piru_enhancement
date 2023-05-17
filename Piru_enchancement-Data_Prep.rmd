@@ -24,8 +24,12 @@ library(lme4)
 * year: number
 * month: number
 * plot number: character
-* treatment: ordinal ("none", "half", "full") or character
+* treatment: ordinal ("none", "half", "full") or character or factor (full, half, none)
+* site: factor (1,2)
+* survival: factor (0,1)
 * percent cover: double
+* nn_grassheight_cm: double
+* 2018_density: integer
 * PAR: double
 * TDR: double
 
@@ -130,6 +134,56 @@ print(exotic_cover_all)
 write.csv(exotic_cover_all, "data/processed/exotic_cover_all.csv")
 # 36 x 2 = 72 rows
 ```
+
+## Non-native grass density and height
+```{r nn grass density and height, include=TRUE}
+
+# load density
+nngrass2018_density <- read_csv("data/________", 
+    col_types = cols(
+      month = col_character(),
+      year = col_character(),
+      plot_number = col_integer(),
+      quad_rep = col_character(), 
+      species_code = col_character(),
+      status = col_character(), 
+      lifeform = col_character(), 
+      status_lifeform = col_character(), 
+      stemdensity = col_integer(),
+      individualdensity = col_integer(),
+      notes = col_character()
+      )
+    )
+
+# load height csv
+nngrass2018_height_raw <- read_csv("data/2018_nngrass_height.csv", 
+    col_types = cols(
+      date = col_character(),
+      year = col_character(),
+      plot_number = col_integer(),
+      treatment = col_character(),
+      quad_rep = col_character(), 
+      nn_grassheight_cm = col_number()
+      )
+    )
+
+nngrass2018_height <- nngrass2018_height_raw %>% 
+  dplyr::select("year", "plot_number", "quad_rep", "nn_grassheight_cm") %>% 
+  na.omit(nngrass2018_height_raw)
+view(nngrass2018_height)
+
+exotic_cover_2018_prepforheight <- exotic_cover_2018 %>% 
+  dplyr::select(plot_number, MAFA_removal, cover_percent, year, site) %>% 
+  mutate(year = as.character(year)) 
+
+nngrass2018_cover_height <- nngrass2018_height %>% 
+  left_join(exotic_cover_2018_prepforheight, by = c("year", "plot_number")) %>% 
+    mutate(plot_number = as.character(plot_number)) 
+
+view(nngrass2018_cover_height)
+```
+
+
 
 ## Seedling survival
 ```{r seedling survivial prep, include=TRUE} 
