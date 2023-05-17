@@ -174,10 +174,18 @@ view(nngrass2018_height)
 
 exotic_cover_2018_prepforheight <- exotic_cover_2018 %>% 
   dplyr::select(plot_number, MAFA_removal, cover_percent, year, site) %>% 
-  mutate(year = as.character(year)) 
+  mutate(year = as.character(year)) %>% 
+  rename(exo_coverpercent = cover_percent)
+
+mafa_cover_2018_prepforheight <- mafa_cover_2018 %>% 
+  dplyr::select(plot_number, cover_percent, year, site) %>% 
+  mutate(year = as.character(year)) %>% 
+  rename(MAFA_coverpercent = cover_percent)
+  
 
 nngrass2018_cover_height <- nngrass2018_height %>% 
   left_join(exotic_cover_2018_prepforheight, by = c("year", "plot_number")) %>% 
+  left_join(mafa_cover_2018_prepforheight, by = c("year", "plot_number", "site")) %>% 
     mutate(plot_number = as.character(plot_number)) 
 
 view(nngrass2018_cover_height)
