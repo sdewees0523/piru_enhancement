@@ -141,6 +141,22 @@ survmort <- survmort_load %>%
 print(survmort)
 summary(survmort)
 
+nngrass2018_cover_height_laod <- read_csv("data/processed/nngrass2018_cover_height.csv",
+                                          col_types = cols(
+                             year = col_character(),
+                             plot_number = col_character(),
+                             quad_rep = col_character(),
+                             nn_grassheight_cm = col_number(),
+                             MAFA_removal = col_character(), 
+                             exo_coverpercent = col_number(),
+                             site = col_character(),
+                             MAFA_coverpercent = col_number()
+                          )
+                          )
+nngrass2018_cover_height <- nngrass2018_cover_height_laod %>% 
+  dplyr::select(year, plot_number, quad_rep, nn_grassheight_cm, MAFA_removal, exo_coverpercent, site, MAFA_coverpercent) %>% 
+  rename(treatment = MAFA_removal)
+
 ```
 
 Create dfs for PAR, TDR, and NNcover models: parmod, tdrmod, nnmod
