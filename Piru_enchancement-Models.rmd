@@ -156,7 +156,6 @@ nngrass2018_cover_height_laod <- read_csv("data/processed/nngrass2018_cover_heig
 nngrass2018_cover_height <- nngrass2018_cover_height_laod %>% 
   dplyr::select(year, plot_number, quad_rep, nn_grassheight_cm, MAFA_removal, exo_coverpercent, site, MAFA_coverpercent) %>% 
   rename(treatment = MAFA_removal)
-
 ```
 
 Create dfs for PAR, TDR, and NNcover models: parmod, tdrmod, nnmod
@@ -957,15 +956,51 @@ ggplotly(nnscatter.1)
 ### Non-native grass height and density
 ```{r explore nngrass height and density, include=TRUE}
 
-nngrass2018_cover_height <- nngrass2018_cover_height %>% 
-  rename(treatment = MAFA_removal)
+nngrass2018_cover_height %>%  
+  group_by(treatment) %>% 
+  summarize(avg_grassheight_cm = mean(nn_grassheight_cm), 
+            SD = sd(nn_grassheight_cm),
+            N = length(nn_grassheight_cm), 
+            SE = ((sd(nn_grassheight_cm))/sqrt(length((nn_grassheight_cm)))))
+# A tibble: 3 × 5=
+#  treatment avg_grassheight_cm    SD     N    SE
+#  <chr>                  <dbl> <dbl> <int> <dbl>
+#1 full                    20.5  8.18    60 1.06 
+#2 half                    16.6  7.46    60 0.963
+#3 none                    19.3  8.77    60 1.13 
 
+# grass height by TREATMENT
+nnheightboxplot.1 <- ggplot(data = nngrass2018_cover_height, aes(x = treatment, y = nn_grassheight_cm)) + 
+  geom_boxplot() 
+ggplotly(nnheightboxplot.1) %>% layout(boxmode = "group")
+
+height_treatment_aov <- aov(nn_grassheight_cm ~ treatment, data = nngrass2018_cover_height)
+summary(height_treatment_aov)
+#             Df Sum Sq Mean Sq F value Pr(>F)  
+#treatment     2    481   240.6   3.618 0.0288 * <-- 
+#Residuals   177  11770    66.5  
+
+TukeyHSD(height_treatment_aov) 
+#             diff        lwr        upr     p adj
+#half-full -3.9050 -7.4239875 -0.3860125 0.0255544
+#none-full -1.1825 -4.7014875  2.3364875 0.7070506
+#none-half  2.7225 -0.7964875  6.2414875 0.1632428
+plot(TukeyHSD(height_treatment_aov))
+
+
+# grass height x MAFA PERCENT COVER
 nnheightscatter.1 <- ggplot(data = nngrass2018_cover_height, aes(x = MAFA_coverpercent, y = nn_grassheight_cm)) +
          geom_point(aes(color = site)) +
   labs(title = "MAFA cover (%) by Non-native grass height (cm) and Treatment", x = "MAFA cover (%)", y = "Non-native grass height (cm)") +
   geom_smooth(method="lm", color = "#291611")+
   theme_bw()
 ggplotly(nnheightscatter.1)
+
+height_mafacover_aov <- aov(nn_grassheight_cm ~ MAFA_coverpercent, data = nngrass2018_cover_height)
+summary(height_mafacover_aov)
+#                   Df Sum Sq Mean Sq F value   Pr(>F)    
+#MAFA_coverpercent   1   2386  2386.2   43.05 5.61e-10 ***
+#Residuals         178   9865    55.4    
 
 nnheightscatter.2 <- ggplot(data = nngrass2018_cover_height, aes(x = exo_coverpercent, y = nn_grassheight_cm)) +
          geom_point(aes(color = treatment)) +
@@ -974,9 +1009,7 @@ nnheightscatter.2 <- ggplot(data = nngrass2018_cover_height, aes(x = exo_coverpe
   theme_bw()
 ggplotly(nnheightscatter.2)
 
-nnheightboxplot.1 <- ggplot(data = nngrass2018_cover_height, aes(x = treatment, y = nn_grassheight_cm)) + 
-  geom_boxplot() 
-ggplotly(nnheightboxplot.1) %>% layout(boxmode = "group")
+
 
 nnheightboxplot.2 <- ggplot(data = nngrass2018_cover_height, aes(x = site, y = nn_grassheight_cm)) + 
   geom_boxplot() 
