@@ -138,10 +138,9 @@ write.csv(exotic_cover_all, "data/processed/exotic_cover_all.csv")
 ## Non-native grass density and height
 ```{r nn grass density and height, include=TRUE}
 
-# load density
-nngrass2018_density <- read_csv("data/________", 
+# load density csv
+nngrass2018_density_raw <- read_csv("data/2018_nngrass_density.csv", 
     col_types = cols(
-      month = col_character(),
       year = col_character(),
       plot_number = col_integer(),
       quad_rep = col_character(), 
@@ -149,13 +148,37 @@ nngrass2018_density <- read_csv("data/________",
       status = col_character(), 
       lifeform = col_character(), 
       status_lifeform = col_character(), 
-      stemdensity = col_integer(),
-      individualdensity = col_integer(),
-      notes = col_character()
+      density_individual_200cm2 = col_integer()
       )
     )
 
-# load height csv
+nngrass2018_density <- nngrass2018_density_raw %>% 
+    na.omit(nngrass2018_density_raw) %>% 
+  group_by(year, plot_number, quad_rep, status_lifeform) %>% 
+  summarize(total_density_200cm2 = sum(density_individual_200cm2))
+view(nngrass2018_density)
+
+exotic_cover_2018_prepfordensity <- exotic_cover_2018 %>% 
+  dplyr::select(plot_number, MAFA_removal, cover_percent, year, site) %>% 
+  mutate(year = as.character(year)) %>% 
+  rename(exo_coverpercent = cover_percent)
+
+mafa_cover_2018_prepfordensity <- mafa_cover_2018 %>% 
+  dplyr::select(plot_number, cover_percent, year, site) %>% 
+  mutate(year = as.character(year)) %>% 
+  rename(MAFA_coverpercent = cover_percent)
+  
+
+nngrass2018_cover_density <- nngrass2018_density %>% 
+  left_join(exotic_cover_2018_prepfordensity, by = c("year", "plot_number")) %>% 
+  left_join(mafa_cover_2018_prepfordensity, by = c("year", "plot_number", "site")) %>% 
+    mutate(plot_number = as.character(plot_number)) 
+
+view(nngrass2018_cover_density)
+write.csv(nngrass2018_cover_density, "data/processed/nngrass2018_cover_density.csv")
+
+
+# load nn grass height csv
 nngrass2018_height_raw <- read_csv("data/2018_nngrass_height.csv", 
     col_types = cols(
       date = col_character(),
@@ -170,7 +193,7 @@ nngrass2018_height_raw <- read_csv("data/2018_nngrass_height.csv",
 nngrass2018_height <- nngrass2018_height_raw %>% 
   dplyr::select("year", "plot_number", "quad_rep", "nn_grassheight_cm") %>% 
   na.omit(nngrass2018_height_raw)
-view(nngrass2018_height)
+glimpse(nngrass2018_height)
 
 exotic_cover_2018_prepforheight <- exotic_cover_2018 %>% 
   dplyr::select(plot_number, MAFA_removal, cover_percent, year, site) %>% 
@@ -182,13 +205,12 @@ mafa_cover_2018_prepforheight <- mafa_cover_2018 %>%
   mutate(year = as.character(year)) %>% 
   rename(MAFA_coverpercent = cover_percent)
   
-
 nngrass2018_cover_height <- nngrass2018_height %>% 
   left_join(exotic_cover_2018_prepforheight, by = c("year", "plot_number")) %>% 
   left_join(mafa_cover_2018_prepforheight, by = c("year", "plot_number", "site")) %>% 
     mutate(plot_number = as.character(plot_number)) 
 
-view(nngrass2018_cover_height)
+head(nngrass2018_cover_height)
 write.csv(nngrass2018_cover_height, "data/processed/nngrass2018_cover_height.csv")
 
 ```
