@@ -228,16 +228,17 @@ nnmod_nodate <- nnmod %>%
 
 tdrmod_nodate <- tdrmod %>% 
    dplyr::select(!date)
+parmod_nodate <- parmod %>% 
+    dplyr::select(!date)
 
-parmod_exotdr <- parmod %>%
-  dplyr::select(!date) %>% 
-  group_by(year, site, plot_number, treatment) %>% 
-  full_join(nnmod_nodate, by = c("year", "site", "plot_number", "treatment")) %>% 
-    ungroup()
-#   full_join(tdrmod, by = c("year", "month", "site", "plot_number", "treatment", "mafacover"))
-   
-view(parmod_exotdr)
-write.csv(parmod_exotdr, "data/processed/parmod_exotdr.csv")
+
+parmod_withnncover <- full_join(parmod, nnmod_nodate, by = c("year", "site", "plot_number", "treatment", "mafacover"))
+view(parmod_withnncover)
+parmod_withnncover %>%  # check number of data points
+  group_by(year, treatment) %>% 
+  summarise(N_mafacover = length(mafacover), 
+            N_exocover = length(nncover))
+write.csv(parmod_withnncover, "data/processed/parmod_exotdr.csv")
 ```
 
 ------------------------------------------------------------------------
@@ -254,8 +255,10 @@ parmod$month <- factor(parmod$month, levels = c(1,3,4,5,7,9,11))
 parmod$site <- as.factor(parmod$site)
 
 # lmer model
-lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|date) + (1|plot_number) + (1|year),
-                   data = parmod)
+#lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|date) + (1|plot_number) + (1|year),
+#                   data = parmod)
+lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + nncover+ year+ (1|plot_number),
+                   data = parmod_withnncover)
 
 MOD <- lme.parmod
 
@@ -293,16 +296,13 @@ abline(h = 0)
 boxplot(E1 ~ site, data = parmod)
 abline(h = 0)
 
-# Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
-qqnorm(ranef(MOD)$date[,1], main = "Plot Residuals")
-qqline(ranef(MOD)$date[,1]) # unique dates
+boxplot(E1 ~ year, data = parmod)
+abline(h = 0)
 
+# Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1]) # unique plots
 
-# year doesn't run becuase only 2 numbers
-qqnorm(ranef(MOD)$year[,1], main = "Plot Residuals") 
-qqline(ranef(MOD)$year[,1]) # unique plots
 ```
 
 3.  statistics
