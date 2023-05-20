@@ -235,12 +235,12 @@ tdr_april2018$site <- factor(tdr_april2018$site, levels = c("1", "2"))
 
 # nncover may 2018
 nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") %>% 
-  rename(treatment = MAFA_removal) %>% 
+  #rename(treatment = MAFA_removal) %>% 
   dplyr::select(site, plot_number, treatment, cover_percent)
 
 site_cond_2018 <- full_join(par_april2018, tdr_april2018, by = c("site", "plot_number", "treatment")) %>% 
   full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
-glimpse(site_cond)
+glimpse(site_cond_2018)
 
 write.csv(site_cond_2018, "data/processed/may2018_site_conditions.csv")
 ```
@@ -250,11 +250,11 @@ write.csv(site_cond_2018, "data/processed/may2018_site_conditions.csv")
 ```{r may2018 site conditions ttest, include=TRUE}
 
 #soil moisture 
-t.test(soil_moisture~site, data = site_cond) 
+t.test(soil_moisture~site, data = site_cond_2018) 
 # YES sig diff
 # data:  soil_moisture by site
 # t = 5.0592, df = 33.993, p-value = 1.44e-05  <-- - soil moiture is sig diff by Site 
-site_cond %>%  
+site_cond_2018 %>%  
   group_by(site) %>% 
   summarize(avg_tdr = mean(soil_moisture), 
             SD = sd(soil_moisture),
@@ -265,11 +265,11 @@ site_cond %>%
 #2	7.665741	1.141167	18	0.2689756
 
 #norm_par
-t.test(normalized_par~site, data = site_cond) 
+t.test(normalized_par~site, data = site_cond_2018) 
 # not sig diff
 # data:  normalized_par by site
 # t = -1.2109, df = 29.972, p-value = 0.2354
-site_cond %>%  
+site_cond_2018 %>%  
   group_by(site) %>% 
   summarize(avg_par = mean(normalized_par), 
             SD = sd(normalized_par),
@@ -280,11 +280,11 @@ site_cond %>%
 #2	0.3770072	0.1612470	18	0.03800628
 
 #nncover
-t.test(cover_percent~site, data = site_cond)
+t.test(cover_percent~site, data = site_cond_2018)
 # not sig diff
 # data:  cover_percent by site
 # t = 0.2511, df = 33.554, p-value = 0.8033
-site_cond %>%  
+site_cond_2018 %>%  
   group_by(site) %>% 
   summarize(avg_tdr = mean(cover_percent), 
             SD = sd(cover_percent),
@@ -2339,8 +2339,7 @@ tdr_march2019$site <- factor(tdr_march2019$site, levels = c("1", "2"))
 
 # nncover may-june 2019
 nncover_may2019 <- dplyr::filter(exotic_cover_all, year == "2019") %>% 
-  dplyr::select(site, plot_number, MAFA_removal, cover_percent) %>% 
-  rename(treatment = MAFA_removal)
+  dplyr::select(site, plot_number, treatment, cover_percent)
 unique(nncover_may2019$plot_number)
 glimpse(nncover_may2019)
 
@@ -2846,6 +2845,9 @@ plot(residuals(MOD))
 binned_residuals(MOD)
 # Warning: About 80% of the residuals are inside the error bounds (~95% or higher would be good).
 plot(allEffects(MOD))
+r2(MOD)
+# Conditional: R2 like a line
+# Marginal R2: takes into account only fixed effects without random effects
 
 #visualize alive data by random effect 
 dotplot(ranef(MOD, condVar = T)) #condVar adds 95% confidence intervals around random effects estimates
