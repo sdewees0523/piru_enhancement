@@ -174,6 +174,7 @@ nngrass2018_cover_density_laod <- read_csv("data/processed/nngrass2018_cover_den
 nngrass2018_cover_density <- nngrass2018_cover_density_laod %>% 
   dplyr::select(year, plot_number, quad_rep, status_lifeform, total_density_200cm2, MAFA_removal, exo_coverpercent, site, MAFA_coverpercent) %>% 
   rename(treatment = MAFA_removal)
+
 ```
 
 Create dfs for PAR, TDR, and NNcover models: parmod, tdrmod, nnmod
@@ -208,13 +209,28 @@ nnmod <- exotic_cover_all %>%
          mafacover = cover_percent.y, 
          treatment = MAFA_removal) #%>% 
   # dplyr::select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
-print(nnmod)
+view(nnmod)
+
 nnmod %>%  # check number of data points
   group_by(year, treatment) %>% 
-  summarise(N = length(mafacover))
+  summarise(N_mafacover = length(mafacover), 
+            N_exocover = length(nncover))
 # write.csv(nnmod, "data/processed/nn_model.csv")
 # nnmod1 <- filter(nnmod, site == "1")
 # nnmod2 <- filter(nnmod, site == "2")
+
+
+
+
+parmod_exotdr <- parmod %>%
+  dplyr::select(!date) %>% 
+  left_join(nnmod, by = c("year", "site", "plot_number", "treatment", "mafacover")) #%>% 
+#   dplyr::select(!date) 
+#%>%
+#  dplyr::select(!date) 
+#   full_join(tdrmod, by = c("year", "month", "site", "plot_number", "treatment", "mafacover")) %>% 
+   
+view(parmod_exotdr)
 ```
 
 ------------------------------------------------------------------------
