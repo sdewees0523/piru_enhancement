@@ -188,6 +188,7 @@ parmod %>%
   group_by(year, treatment) %>% 
   summarise(N = length(normalized_par))
 
+
 # TDR
 tdrmod <- tdr %>% 
   left_join(mafa_cover_all, by = c("year", "site", "plot_number")) %>% 
@@ -210,6 +211,7 @@ nnmod <- exotic_cover_all %>%
          treatment = MAFA_removal) #%>% 
   # dplyr::select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
 view(nnmod)
+write.csv(nnmod, "data/processed/nnmod.csv")
 
 nnmod %>%  # check number of data points
   group_by(year, treatment) %>% 
@@ -219,18 +221,23 @@ nnmod %>%  # check number of data points
 # nnmod1 <- filter(nnmod, site == "1")
 # nnmod2 <- filter(nnmod, site == "2")
 
+nnmod_nodate <- nnmod %>% 
+  dplyr::select(!date) %>% 
+  mutate(treatment = case_when(treatment == "nonene" ~ "none", 
+                               TRUE ~ treatment))
 
-
+tdrmod_nodate <- tdrmod %>% 
+   dplyr::select(!date)
 
 parmod_exotdr <- parmod %>%
   dplyr::select(!date) %>% 
-  left_join(nnmod, by = c("year", "site", "plot_number", "treatment", "mafacover")) #%>% 
-#   dplyr::select(!date) 
-#%>%
-#  dplyr::select(!date) 
-#   full_join(tdrmod, by = c("year", "month", "site", "plot_number", "treatment", "mafacover")) %>% 
+  group_by(year, site, plot_number, treatment) %>% 
+  full_join(nnmod_nodate, by = c("year", "site", "plot_number", "treatment")) %>% 
+    ungroup()
+#   full_join(tdrmod, by = c("year", "month", "site", "plot_number", "treatment", "mafacover"))
    
 view(parmod_exotdr)
+write.csv(parmod_exotdr, "data/processed/parmod_exotdr.csv")
 ```
 
 ------------------------------------------------------------------------
