@@ -2410,8 +2410,20 @@ growth_jan_may2019 <- right_join(height_jan_2019, height_may_2019, by = c("plot_
 ```
 
 
-```{r may 2019 full join, include=TRUE}
-# full join
+```{r may 2019 full join and scale, include=TRUE}
+
+# full join - no data transformation
+height_jan_surv_may_2019_notransf <- full_join(height_jan_2019, survival_may_2019, by = c("plot_number", "MAFA_removal", "location", "species")) %>% 
+  mutate(jan_stem_height_cm = as.numeric(jan_stem_height_cm)) %>% 
+  drop_na() %>%  # removing na's for now. But should an NA in alive be assumed as dead? 
+  mutate(plot_number = as.character(plot_number)) %>% 
+  left_join(site_cond_may2019, by = "plot_number") %>% 
+  rename(exotic_percentcover = cover_percent) %>% 
+  dplyr::select(!MAFA_removal)
+view(height_jan_surv_may_2019_notransf)
+write.csv(height_jan_surv_may_2019_notransf, "data/processed/height_jan_surv_may_2019_notransf.csv")
+
+# full join - with data transformation
 height_jan_surv_may_2019 <- full_join(height_jan_2019, survival_may_2019, by = c("plot_number", "MAFA_removal", "location", "species")) %>% 
   mutate(jan_stem_height_cm = as.numeric(jan_stem_height_cm)) %>% 
   drop_na() %>%  # removing na's for now. But should an NA in alive be assumed as dead? 
@@ -2422,6 +2434,7 @@ height_jan_surv_may_2019 <- full_join(height_jan_2019, survival_may_2019, by = c
   mutate(normalized_par = scale(normalized_par),
          soil_moisture = scale(soil_moisture),
          exotic_percentcover = scale(exotic_percentcover),
+         mafacover = scale(mafacover),
          jan_stem_height_cm = scale(jan_stem_height_cm),
          jan_volume_cm3 = scale(jan_volume_cm3))
 view(height_jan_surv_may_2019)
@@ -2430,13 +2443,17 @@ view(height_jan_surv_may_2019)
 print(height_jan_surv_may_2019 %>%  
   group_by(plot_number) %>% 
   summarise(N = length(plot_number))
-)
+) # plots 22 and 35 have 10 seedlings. All other plots have 11 seedlings/plot
 
 # check number of individuals per species
 print(height_jan_surv_may_2019 %>%  
   group_by(species) %>% 
   summarise(N = length(species))
-)
+) #species N
+#CEOL	70			
+#HEAR	108			
+#RHOV	108			
+#SAAP	108	
 
 # as factor
 height_jan_surv_may_2019 <- height_jan_surv_may_2019 %>% 
@@ -2449,27 +2466,129 @@ write.csv(height_jan_surv_may_2019, "data/processed/height_jan_surv_may_2019.csv
 
 ```
 
-
+### D1. Basic stats on seedling survival - anovas and ttests
 ```{r}
-# data exploration - lookin' at the means 
+# data exploration by species
 
-# mean survival by species
-tapply(as.integer(height_jan_surv_may_2019$may2019_alive), 
-       height_jan_surv_may_2019$species, mean)
+# HEIGHT 
+tapply(height_jan_surv_may_2019_notransf$jan_stem_height_cm, height_jan_surv_may_2019_notransf$species,mean)
+#    CEOL     HEAR     RHOV     SAAP 
+#  2.620714 6.213889 2.218889 4.298519 
+height_jan_surv_may_2019_notransf %>%  
+  group_by(species) %>% 
+  summarize(avg_height_may2019 = mean(jan_stem_height_cm), 
+            SD = sd(jan_stem_height_cm),
+            N = length(jan_stem_height_cm), 
+            SE = ((sd(jan_stem_height_cm))/sqrt(length((jan_stem_height_cm)))))
+summary(aov(jan_stem_height_cm ~ species, data = height_jan_surv_may_2019_notransf))
+TukeyHSD(aov(jan_stem_height_cm ~ species, data = height_jan_surv_may_2019_notransf))
+#             Df Sum Sq Mean Sq F value Pr(>F)    
+#species       3 1014.0   338.0   140.7 <2e-16 ***
+#Residuals   390  937.1     2.4    
+#$species
+#                diff       lwr        upr     p adj
+#HEAR-CEOL  3.5931746  2.979466  4.2068831 0.0000000
+#RHOV-CEOL -0.4018254 -1.015534  0.2118831 0.3306664
+#SAAP-CEOL  1.6778042  1.064096  2.2915127 0.0000000
+#RHOV-HEAR -3.9950000 -4.539272 -3.4507278 0.0000000
+#SAAP-HEAR -1.9153704 -2.459643 -1.3710982 0.0000000
+#SAAP-RHOV  2.0796296  1.535357  2.6239018 0.0000000
 
-# mean survival by site
-tapply(as.integer(height_jan_surv_may_2019$may2019_alive), 
-       height_jan_surv_may_2019$site, mean)
 
-# mean survival by treatment
-tapply(as.integer(height_jan_surv_may_2019$may2019_alive), 
-       height_jan_surv_may_2019$treatment, mean)
+# VOLUME 
+tapply(height_jan_surv_may_2019_notransf$jan_volume_cm3, height_jan_surv_may_2019_notransf$species,mean)
+#      CEOL       HEAR       RHOV       SAAP 
+# 14.369030 142.141754   8.013437  68.794423 
+height_jan_surv_may_2019_notransf %>%  
+  group_by(species) %>% 
+  summarize(avg_vol_may2019 = mean(jan_volume_cm3), 
+            SD = sd(jan_volume_cm3),
+            N = length(jan_volume_cm3), 
+            SE = ((sd(jan_volume_cm3))/sqrt(length((jan_volume_cm3)))))
+summary(aov(jan_volume_cm3 ~ species, data = height_jan_surv_may_2019_notransf))
+TukeyHSD(aov(jan_volume_cm3 ~ species, data = height_jan_surv_may_2019_notransf))
+#$species
+#                 diff        lwr        upr     p adj
+#HEAR-CEOL  127.772724  103.23368  152.31176 0.0000000
+#RHOV-CEOL   -6.355594  -30.89463   18.18345 0.9089998
+#SAAP-CEOL   54.425392   29.88635   78.96443 0.0000001
+#RHOV-HEAR -134.128317 -155.89096 -112.36568 0.0000000
+#SAAP-HEAR  -73.347331  -95.10997  -51.58469 0.0000000
+#SAAP-RHOV   60.780986   39.01835   82.54363 0.0000000
 
-# doesn't tell you much since survival is so low :/
+
+# SURVIVAL by species - the results are the same as table below :)
+#tapply(as.integer(height_jan_surv_may_2019_notransf$may2019_alive), 
+#       height_jan_surv_may_2019_notransf$species, mean) 
+#   CEOL      HEAR      RHOV      SAAP 
+#0.5857143 0.7407407 0.3611111 0.6388889 
+
+
+# SURVIVAL
+print(height_jan_surv_may_2019_notransf %>%  
+  group_by(species) %>% 
+  summarise(N = length(may2019_alive), 
+            total_survived = sum(may2019_alive == "1"), 
+            total_died = sum(may2019_alive == "0"),
+            percent_survived = 100*(sum(may2019_alive == "1")/length(may2019_alive))))
+# species N   total_surv  total_died  percent_survived
+#CEOL	70	    41	          29	    58.57143
+#HEAR	108	    80	          28	    74.07407
+#RHOV	108	    39	          69    	36.11111
+#SAAP	108	    69    	      39    	63.88889
+summary(aov(may2019_alive ~ species, data = height_jan_surv_may_2019_notransf))
+TukeyHSD(aov(may2019_alive ~ species, data = height_jan_surv_may_2019_notransf))
+#             Df Sum Sq Mean Sq F value  Pr(>F)    
+#species       3   8.34  2.7804   12.38 9.4e-08 ***
+#Residuals   390  87.56  0.2245                
+#$species
+#                diff         lwr         upr     p adj
+#HEAR-CEOL  0.1550265 -0.03256484  0.34261775 0.1447346
+#RHOV-CEOL -0.2246032 -0.41219447 -0.03701188 0.0115076 <-- rhov and ceol
+#SAAP-CEOL  0.0531746 -0.13441669  0.24076590 0.8844639
+#RHOV-HEAR -0.3796296 -0.54599644 -0.21326282 0.0000001 <-- rhov and hear
+#SAAP-HEAR -0.1018519 -0.26821866  0.06451496 0.3914784
+#SAAP-RHOV  0.2777778  0.11141097  0.44414459 0.0001224 <-- rhov and saap
+
+
+#  SITE
+tapply(as.integer(height_jan_surv_may_2019_notransf$may2019_alive), 
+       height_jan_surv_may_2019_notransf$site, mean) 
+#        1         2 
+# 0.7121212 0.4489796 
+# 1: 71% and 2: 45%
+print(height_jan_surv_may_2019_notransf %>%  
+  group_by(site) %>% 
+  summarise(N = length(may2019_alive), 
+            total_survived = sum(may2019_alive == "1"), 
+            total_died = sum(may2019_alive == "0"),
+            percent_survived = 100*(sum(may2019_alive == "1")/length(may2019_alive))))
+t.test(may2019_alive~site, data = height_jan_surv_may_2019_notransf) 
+# site  N total_surv total_died percent_survived
+#1	198	141	57	71.21212
+#2	196	88	108	44.89796
+t.test(may2019_alive~site, data = height_jan_surv_may_2019_notransf) 
+# p-value = 7.843e-08
+
+
+#  TREATMENT
+tapply(as.integer(height_jan_surv_may_2019_notransf$may2019_alive), 
+       height_jan_surv_may_2019_notransf$treatment, mean)
+#     full      half      none 
+#0.6307692 0.5227273 0.5909091 
+print(height_jan_surv_may_2019_notransf %>%  
+  group_by(treatment) %>% 
+  summarise(N = length(may2019_alive), 
+            total_survived = sum(may2019_alive == "1"), 
+            total_died = sum(may2019_alive == "0"),
+            percent_survived = 100*(sum(may2019_alive == "1")/length(may2019_alive))))
+summary(aov(may2019_alive ~ treatment, data = height_jan_surv_may_2019_notransf))
+# TukeyHSD(aov(may2019_alive ~ treatment, data = height_jan_surv_may_2019_notransf))
+
 ```
 
 
-### How are site 1 and site 2 different? 
+### D2. Basic stats on site - How are site 1 and site 2 different? 
 
 ```{r jan may 2019 site conditions ttest, include=TRUE}
 
