@@ -563,7 +563,7 @@ write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 # mafacover
 glme.may2018.mod.mafacover <- glmer(may_alive ~ mafacover + species + volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
-                         data = height_march_surv_may)
+                         data = height_march_surv_may, na.action = "na.fail")
 summary(glme.may2018.mod.mafacover) # AIC = 694.6
 MOD <- glme.may2018.mod.mafacover 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
@@ -571,12 +571,17 @@ testDispersion(simulationOutput)
 #data:  simulationOutput
 #dispersion = 1.0126, p-value = 0.856
 #alternative hypothesis: two.sided
+dredge(glme.may2018.mod.mafacover)
+#Model selection table 
+#     (Int)       mfc sit spc vlm_cm3 df   logLik  AICc delta weight
+#15 -0.5558             +   +  0.3551  7 -339.319 692.8  0.00  0.648 <-- best model is without mafacover although pretty similar to with mafa cover.
+#16 -0.5014 -0.002468   +   +  0.3545  8 -339.301 694.8  2.02  0.236
 
 
 # treatment
 glme.may2018.mod.mafatreat <- glmer(may_alive ~ treatment + species + volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
-                         data = height_march_surv_may)
+                         data = height_march_surv_may, na.action = "na.fail")
 summary(glme.may2018.mod.mafatreat) # AIC = 692.3
 MOD <- glme.may2018.mod.mafatreat 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
@@ -584,6 +589,11 @@ testDispersion(simulationOutput)
 #data:  simulationOutput
 #dispersion = 1.0087, p-value = 0.816
 #alternative hypothesis: two.sided
+dredge(glme.may2018.mod.mafatreat)
+#Model selection table 
+#     (Int) sit spc trt vlm_cm3 df   logLik  AICc delta weight
+#16 -0.3606   +   +   +  0.3435  9 -337.137 692.6  0.00  0.480
+
 
 # environmental conditions FULL
 glme.may2018.mod.1 <- glmer(may_alive ~ 
@@ -592,7 +602,7 @@ glme.may2018.mod.1 <- glmer(may_alive ~
                             + volume_cm3 + species # plus
                             + (1|plot_number), 
                          family = binomial, 
-                         data = height_march_surv_may)
+                         data = height_march_surv_may, na.action = "na.fail")
 summary(glme.may2018.mod.1)
 # AIC: 696.5
 #Fixed effects:
@@ -612,6 +622,7 @@ testDispersion(simulationOutput)
 #data:  simulationOutput
 #dispersion = 1.01, p-value = 0.84
 #alternative hypothesis: two.sided
+dredge(glme.may2018.mod.1)
 
 glme.may2018.mod.2 <- glmer(may_alive ~ 
                              normalized_par * soil_moisture # times
@@ -619,7 +630,7 @@ glme.may2018.mod.2 <- glmer(may_alive ~
                             + volume_cm3 + species # plus
                             + (1|plot_number), 
                          family = binomial, 
-                         data = height_march_surv_may)
+                         data = height_march_surv_may, na.action = "na.fail")
 summary(glme.may2018.mod.2)
 # AIC: 684.9
 #Fixed effects:
@@ -640,6 +651,7 @@ testDispersion(simulationOutput) # it follows a binomial distribution!
 #data:  simulationOutput
 #dispersion = 1.0009, p-value = 0.992
 #alternative hypothesis: two.sided
+dredge(glme.may2018.mod.2)
 ```
 
 ```{r may 2018 sandbox glmers, include=FALSE}
@@ -2644,6 +2656,10 @@ site_cond_may2019 %>%
 
 ```{r may 2019 glmer MODELS, include=TRUE}
 
+MOD.dredge <- dredge(glme.may2019.mod.full, beta = FALSE, evaluate = TRUE,
+    rank = "AICc", fixed = NULL, m.max = NA, m.min = 0, subset,
+    marg.ex = NULL, trace = FALSE, varying, extra, ...)
+
 MOD.dredge <- dredge(glme.may2019.mod.full)
 MOD.dredge <- dredge(glme.may2019.mod.111)
 MOD.dredge
@@ -2652,7 +2668,7 @@ MOD.dredge
 glme.may2019.mod.111 <- glmer(as.factor(may2019_alive) ~ site * species
                             + (1|plot_number), 
                          family = binomial, 
-                         data = height_jan_surv_may_2019)
+                         data = height_jan_surv_may_2019, na.action = "na.fail")
 summary(glme.may2019.mod.full)
 # AIC = 468.6 
 plot(allEffects(glme.may2019.mod.111))
