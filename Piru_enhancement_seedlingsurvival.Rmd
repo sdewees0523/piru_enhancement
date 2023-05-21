@@ -170,17 +170,20 @@ exotic_cover_all <- exotic_cover_all_load %>%
 print(exotic_cover_all)
 
 
-#mafa_cover_all_load <- read_csv("data/processed/mafa_cover_all.csv",
-#  col_types = cols(
-#    plot_number = col_character(),
-#    year = col_integer(),
-#    cover_percent = col_double(),
-#    site = col_integer()
-#    )
-#  )
-#mafa_cover_all <- mafa_cover_all_load %>% 
-#  select(plot_number, year, cover_percent, site) 
-#print(mafa_cover_all)
+mafa_cover_all_load <- read_csv("data/processed/mafa_cover_all.csv",
+  col_types = cols(
+    plot_number = col_character(),
+    year = col_integer(),
+    cover_percent = col_double(),
+    site = col_integer()
+    )
+  )
+
+mafa_cover_all <- mafa_cover_all_load %>% 
+#  select(plot_number, year, cover_percent, site) %>% 
+  rename(mafacover = cover_percent) %>% 
+  mutate(site = as.character(site))
+print(mafa_cover_all)
 
 ```
   
@@ -238,9 +241,15 @@ nncover_may2018 <- dplyr::filter(exotic_cover_all, year == "2018") %>%
   #rename(treatment = MAFA_removal) %>% 
   dplyr::select(site, plot_number, treatment, cover_percent)
 
+# mafacover may 2018
+mafacover_may2018 <- dplyr::filter(mafa_cover_all, year == "2018") %>% 
+  dplyr::select(site, year, plot_number, mafacover)
+
 site_cond_2018 <- full_join(par_april2018, tdr_april2018, by = c("site", "plot_number", "treatment")) %>% 
-  full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
-glimpse(site_cond_2018)
+  full_join(nncover_may2018, by = c("site", "plot_number", "treatment")) %>% 
+  full_join(mafacover_may2018, by = c("site", "plot_number")) 
+
+view(site_cond_2018)
 
 write.csv(site_cond_2018, "data/processed/may2018_site_conditions.csv")
 ```
@@ -310,7 +319,7 @@ site_cond_2018 %>%
 #seedling height in March 2018 - STARTING HEIGHT
 height_march <- height_raw %>% 
   filter(date >= "2018-02-23" & date <= "2018-03-31") %>% # filtering to only have rows of data taken in March 
-  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, individual, volume_cm3) %>% 
   rename(march_stem_height_cm = stem_height_cm) %>% 
   drop_na()
 
@@ -330,6 +339,15 @@ survival_may <- height_raw %>%  ## Need to change some of the individual labels 
                                 individual == "c" ~ "C",
                                 individual == "r" ~ "R",
                                 TRUE ~ individual))  # 0 = dead 1 = alive
+
+print(survival_may %>%  # check number of individuals per plot in May 2018
+  summarise(total_seedlings_march2018 = length(individual)))
+# 648 seedlings that were alive in March 2018
+# 18 * 36 = 648
+
+print(survival_may %>%  # check number of individuals per plot in May 2018
+        group_by(MAFA_removal) %>% 
+  summarise(seedlingspertreat_march2018 = length(individual)))
 
 ```
 
@@ -351,6 +369,9 @@ height_may <- height_raw %>%
 print(height_may %>%  # check number of individuals per plot in May 2018
   group_by(plot_number) %>% 
   summarise(N = length(may_stem_height_cm)))
+print(height_may %>%  # check number of individuals per plot in May 2018
+  summarise(total_seedlings_may2018 = length(may_stem_height_cm)))
+# 310 seedlings that survived to May 2018
 
 # growth rate from March to May 2018 - GROWTH RATE
 growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "MAFA_removal", "location", "species", "individual")) %>% 
@@ -381,23 +402,28 @@ height_march_surv_may_notransf <- full_join(height_march, survival_may, by = c("
   drop_na() %>% # drops nas 
   mutate(plot_number = as.character(plot_number)) %>% 
   left_join(par_april2018, by = "plot_number") %>% # join April 2018 PAR
-  dplyr::select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par) %>% 
+  dplyr::select(plot_number, MAFA_removal, location, species, individual, march_stem_height_cm, may_alive, normalized_par, volume_cm3) %>% # include volume_cm3
   left_join(tdr_april2018, by = "plot_number") %>% # join April 2018 TDR
   dplyr::select(!site & !treatment) %>% 
   left_join(nncover_may2018, by = "plot_number") %>%  # join April 2018 nncover
   dplyr::select(!treatment) %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   rename(treatment = MAFA_removal) %>% 
- left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "soil_moisture", "site", "exotic_percentcover")) %>%  
+  left_join(mafacover_may2018, by = "plot_number") %>% 
+    dplyr::select(!site.y) %>% 
+  rename(site = site.x) %>% 
+left_join(growth_march_may, by = c("plot_number", "treatment", "location", "species", "individual", "normalized_par", "site", "soil_moisture", "exotic_percentcover")) %>%  
    mutate(site = as.factor(site))
+
 view(height_march_surv_may_notransf)
 
 write.csv(height_march_surv_may_notransf, "data/processed/height_march_surv_may_notransf.csv")
 
 print(height_march_surv_may_notransf %>%  # check number of individuals per plot
-  group_by(site, plot_number) %>% 
+  group_by(site, species) %>% 
   summarise(N = length(individual))
 )
+# 606 seedlings
 ```
 
 ```{r may 2018 aov height x spp, include=TRUE}
@@ -421,11 +447,11 @@ print(TukeyHSD(aov(march_stem_height_cm ~ species, data = height_march_surv_may_
 #SAAP-RHOV  0.3794761 -0.1901589  0.9491110 0.3160699
 
 #volume
-summary(aov(march_volume_cm3 ~ species, data = height_march_surv_may_notransf))
+summary(aov(volume_cm3 ~ species, data = height_march_surv_may_notransf))
 #            Df  Sum Sq Mean Sq F value Pr(>F)    
 #species       3 2608825  869608   147.3 <2e-16 ***
 #Residuals   602 3554014    5904       
-print(TukeyHSD(aov(march_volume_cm3 ~ species, data = height_march_surv_may_notransf)))
+print(TukeyHSD(aov(volume_cm3 ~ species, data = height_march_surv_may_notransf)))
 #$species
 #                 diff        lwr        upr     p adj
 #HEAR-CEOL  140.309690  118.31777  162.30161 0.0000000 <-- HEAR - CEOL
@@ -436,8 +462,8 @@ print(TukeyHSD(aov(march_volume_cm3 ~ species, data = height_march_surv_may_notr
 #SAAP-RHOV    6.754787  -17.77198   31.28155 0.8933340
 
 # may 2018 alive vs dead by spp
-print(height_march_surv_may %>%  
-  #group_by(species) %>% 
+print(height_march_surv_may_notransf %>%  
+  group_by(species) %>% 
   summarise(N = length(may_alive), 
             total_survived = sum(may_alive == "1"), 
             total_died = sum(may_alive == "0"),
@@ -500,7 +526,7 @@ height_march_surv_may <- height_march_surv_may_notransf %>%
          exotic_percentcover = scale(exotic_percentcover),
          march_stem_height_cm = scale(march_stem_height_cm),
          rgr = scale(rgr),
-         march_volume_cm3 = scale(march_volume_cm3),
+         volume_cm3 = scale(volume_cm3),
          may_alive = as.factor(may_alive),
         species = as.factor(species)) 
 glimpse(height_march_surv_may)
@@ -522,61 +548,20 @@ write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 
 - model may 2018 with glmer
 - Check for binomial distribution of height_march_surv_may$may_alive
-```{r save chi squared goodness of fit function, include=FALSE}
-
-### Bard - only need to run once
-
-# Arguments
-# observed <- height_march_surv_may$may_alive
-# p <- rep(1/length(observed), length(observed))
-
-# Write the function
-chi_square_goodness_of_fit <- function(observed, p) {
-  if(length(observed) != length(p)) {stop("The length of the observd frequencies must be equal to the length of the expected proportions.")
-  }
-  chi_square <- sum((observed - p)^2 / p) # calculate chi-square stats
-  degrees_of_freedom <- length(observed) - 1 # calculate degrees of freedom
-  p_value <- pchisq(chi_square, degrees_of_freedom, lower.tail = FALSE) # calculate p-value
-  return(list( # return the results
-    chi_square = chi_square, 
-    degrees_of_freedom = degrees_of_freedom, 
-    p_value = p_value))
-  }
-
-# save as file in R
-save(chi_square_goodness_of_fit, file = "chi_square_goodness_of_fit.R")
-
-# load function
-load("chi_square_goodness_of_fit.R")
-```
-```{r may 2018 goodness of fit chi squared, include=TRUE}
-
-### BARD or ... 
-load("chi_square_goodness_of_fit.R") # load function
-observed <- height_march_surv_may$may_alive
-p <- rep(1/length(observed), length(observed))
-print(chi_square_goodness_of_fit(observed, p)) # NA = perfect fit
-
-
-### CHATGPT
-observed <- as.integer(height_march_surv_may$may_alive) # Define the observed frequencies
-expected_probs <- rep(1/length(observed), length(observed)) # Define the expected probabilities
-
-total_observed <- sum(observed) # Calculate the expected frequencies
-expected <- expected_probs * total_observed
-
-chisq_result <- chisq.test(observed, p = expected_probs) # Perform the chi-square test
-
-cat("Observed frequencies:", observed, "\n") # Print the observed and expected frequencies
-cat("Expected frequencies:", expected, "\n")
-
-cat("Chi-square test result:\n") # Print the chi-square test result
-print(chisq_result)
-
-
-```
 
 ```{r may 2018 glmer MODELS, include=TRUE}
+
+MOD.dredge <- dredge(glme.may2018.mod.mafacover)
+
+glme.may2018.mod.mafacover <- glmer(may_alive ~ mafacover + species + volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.mafacover)
+
+glme.may2018.mod.mafatreat <- glmer(may_alive ~ treatment + species + volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may)
+summary(glme.may2018.mod.mafatreat)
 
 # FULL MODELS
 
@@ -765,6 +750,11 @@ glme.may2018.mod <- glmer(may_alive ~
                          data = height_march_surv_may)
 
 MOD <- glme.may2018.mod 
+
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) 
+
+```
 
 # Calculate model's residual and fitted values
 F1 <- fitted(MOD)
@@ -2831,9 +2821,7 @@ summary(glme_rgr_may2018.1)
 
 ```{r may 2019 glmer, include =TRUE}
 
-glme.may2019.mod <- (glmer(as.factor(may2019_alive) ~ 
-                             normalized_par + soil_moisture # times
-                             #+ site # no exotic cover, with volume
+glme.may2019.fullmod <- (glmer(as.factor(may2019_alive) ~ normalized_par + soil_moisture + site + 
                             + jan_volume_cm3 + species # plus 
                             + (1|plot_number), 
                          family = binomial, 
