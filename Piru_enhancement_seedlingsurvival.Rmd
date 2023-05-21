@@ -2313,7 +2313,7 @@ summary(saap_2018rgr_model)
 ```
 
 
-#January - May 2019 Seedling survival 
+# January - May 2019 Seedling survival 
   - add height
 ```{r may 2019 subset environmental data, include=TRUE}
 # subsetting data for Jan to May 2019 survival
@@ -2344,7 +2344,7 @@ unique(nncover_may2019$plot_number)
 glimpse(nncover_may2019)
 
 # join par tdr nncover for may2019
-site_cond_may2019 <- full_join(par_may2019, tdr_march2019, by = c("site", "plot_number", "treatment")) %>% 
+site_cond_may2019 <- full_join(par_may2019, tdr_march2019, by = c("site", "plot_number", "treatment", "mafacover")) %>% 
   full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
 glimpse(site_cond_may2019)
 
@@ -2361,12 +2361,12 @@ height_jan_2019 <- height_raw %>%
   rename(jan_stem_height_cm = stem_height_cm, 
          jan_volume_cm3 = volume_cm3)
 
-length(unique(height_march_surv_may$plot_number)) # check number of plots 
+length(unique(height_jan_2019$plot_number)) # check number of plots 
 # 36       
 
-print(height_jan_2019 %>%  # check number of individuals per plot 
+height_jan_2019 %>%  # check number of individuals per plot 
   group_by(plot_number) %>% 
-  summarise(N = length(jan_stem_height_cm)))
+  summarise(N = length(jan_stem_height_cm))
 # 11 seedlings per plot
 
 # height may 2019
@@ -2435,11 +2435,20 @@ write.csv(height_jan_surv_may_2019, "data/processed/height_jan_surv_may_2019.csv
 
 ```{r}
 # data exploration - lookin' at the means 
-tapply(as.integer(height_jan_surv_may_2019$may2019_alive), height_jan_surv_may_2019$species, mean)
-tapply(as.integer(height_jan_surv_may_2019$may2019_alive), height_jan_surv_may_2019$site, mean)
-tapply(as.integer(height_jan_surv_may_2019$may2019_alive), height_jan_surv_may_2019$normalized_par, mean)
 
+# mean survival by species
+tapply(as.integer(height_jan_surv_may_2019$may2019_alive), 
+       height_jan_surv_may_2019$species, mean)
 
+# mean survival by site
+tapply(as.integer(height_jan_surv_may_2019$may2019_alive), 
+       height_jan_surv_may_2019$site, mean)
+
+# mean survival by treatment
+tapply(as.integer(height_jan_surv_may_2019$may2019_alive), 
+       height_jan_surv_may_2019$treatment, mean)
+
+# doesn't tell you much since survival is so low :/
 ```
 
 
