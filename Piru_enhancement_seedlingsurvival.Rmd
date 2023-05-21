@@ -26,7 +26,7 @@ library(lattice)
 library(MuMIn)
 ```
 
-```{r colors for figures, include=TRUE}
+```{r colors for figures, include=FALSE}
 devtools::install_github("an-bui/calecopal")
 
 library(calecopal)
@@ -51,7 +51,7 @@ treatmentcolors <- c(treatment1color, treatment2color, treatment3color)
 
 ```
 
-# Question 2: How does seedling survival change with PAR, TDR, % nn cover, and species?
+# A. Question 2: How does seedling survival change with PAR, TDR, % nn cover, and species?
 
 Notes:
 * __response variable__: The variable you want to test. (e.g.,. PAR, TDR, nncover)
@@ -63,10 +63,10 @@ Notes:
   
   
 
-### Load PAR, TDR, and non-native percent cover data.
+### A1. Load PAR, TDR, and non-native percent cover data.
 
 - Loaded csvs from the "Processed" data folder.
-```{r load survival csv, include=TRUE}
+```{r load survival csv, include=FALSE}
 
 # survival and mortality data
 survmort_load <- read_csv("data/processed/survmort.csv",
@@ -189,9 +189,9 @@ print(mafa_cover_all)
   
 ***
 
-# May 2018 
+# B. May 2018 models
 
-### Code to save for later on calculating survival rate or change between two time points. 
+### B1. Code to save for later on calculating survival rate or change between two time points. 
 
 - RUN AFTER "SURVIVAL AT TIME POINTS" AND ONLY MAKE CODE IF IT'S NEEDED
   
@@ -254,7 +254,7 @@ view(site_cond_2018)
 write.csv(site_cond_2018, "data/processed/may2018_site_conditions.csv")
 ```
 
-### How are site 1 and site 2 different? 
+### B2. How are site 1 and site 2 different? 
 
 ```{r may2018 site conditions ttest, include=TRUE}
 
@@ -306,7 +306,7 @@ site_cond_2018 %>%
 ```
 
 
-### Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
+### B3. Subsetting dataframes survival, par, tdr, and nncover to May 2018 data
   - Add height at March 2018 to include in model
   
 ```{r may 2018 height and survival, include=TRUE}
@@ -389,7 +389,7 @@ growth_march_may <- right_join(height_march, height_may, by = c("plot_number", "
   rename(treatment = MAFA_removal)
 ```
 
-### Join May 2018 data - 
+### B4. Join May 2018 data
 
 NOTE: May 12, 2023 - need to re-check code to make sure all seedlings are included... including rgr omits seedlings that were alive in March and died in May because many dead seedlings were not re-measured in May 2018.
 
@@ -483,10 +483,10 @@ print(height_march_surv_may_notransf %>%
 # may 2018 vol x spp
 print(height_march_surv_may_notransf %>%  
   group_by(species) %>% 
-  summarise(avg_vol_cm3 = mean(march_volume_cm3), 
-            SD = sd(march_volume_cm3),
-            N = length(march_volume_cm3), 
-            SE = ((sd(march_volume_cm3))/sqrt(length((march_volume_cm3))))))
+  summarise(avg_vol_cm3 = mean(volume_cm3), 
+            SD = sd(volume_cm3),
+            N = length(volume_cm3), 
+            SE = ((sd(volume_cm3))/sqrt(length((volume_cm3))))))
 #species    avg_vol_cm3   SD          N         SE
 #CEOL	      4.167051	    4.797507	  130	      0.4207692
 #HEAR	      144.476741	  126.600155	215	      8.6340589
@@ -546,22 +546,44 @@ write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 # One example of link function that could work in your case is the logistic function, which takes an input with any value from negative to positive infinity and return an output that always takes values between zero and one, which is interpretable as the probability of the binary outcome (e.g. the probability of the subject responding 'yes').
 ```
 
-- model may 2018 with glmer
-- Check for binomial distribution of height_march_surv_may$may_alive
-
+### B4. Model may 2018 with glmers
+- run glmer with:
+--- mafacover
+--- treatment
+--- PAR + TDR
+--- PAR  TDR
+--- dredge all four models if possible
 ```{r may 2018 glmer MODELS, include=TRUE}
+# check for binomial distribution:
+# glmer - yes/no = binomial distribution
+# 1.0 is perfect
+# 1.7 is getting dicy
+# >1.7 is not a good fit
 
 # mafacover
 glme.may2018.mod.mafacover <- glmer(may_alive ~ mafacover + species + volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
                          data = height_march_surv_may)
 summary(glme.may2018.mod.mafacover) # AIC = 694.6
+MOD <- glme.may2018.mod.mafacover 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) 
+#data:  simulationOutput
+#dispersion = 1.0126, p-value = 0.856
+#alternative hypothesis: two.sided
+
 
 # treatment
 glme.may2018.mod.mafatreat <- glmer(may_alive ~ treatment + species + volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
                          data = height_march_surv_may)
 summary(glme.may2018.mod.mafatreat) # AIC = 692.3
+MOD <- glme.may2018.mod.mafatreat 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) 
+#data:  simulationOutput
+#dispersion = 1.0087, p-value = 0.816
+#alternative hypothesis: two.sided
 
 # environmental conditions FULL
 glme.may2018.mod.1 <- glmer(may_alive ~ 
@@ -584,9 +606,15 @@ summary(glme.may2018.mod.1)
 #speciesHEAR          0.48153    0.30614   1.573  0.11573   
 #speciesRHOV         -0.10973    0.29242  -0.375  0.70748   
 #speciesSAAP         -0.70437    0.32340  -2.178  0.02941 * <-- species SAAP
+MOD <- glme.may2018.mod.1 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) 
+#data:  simulationOutput
+#dispersion = 1.01, p-value = 0.84
+#alternative hypothesis: two.sided
 
 glme.may2018.mod.2 <- glmer(may_alive ~ 
-                             normalized_par * soil_moisture # plus
+                             normalized_par * soil_moisture # times
                             + exotic_percentcover + site 
                             + volume_cm3 + species # plus
                             + (1|plot_number), 
@@ -606,7 +634,12 @@ summary(glme.may2018.mod.2)
 #speciesRHOV                  -0.12386    0.29338  -0.422 0.672899    
 #speciesSAAP                  -0.74044    0.32505  -2.278 0.022728 *  <-- species 
 #normalized_par:soil_moisture  0.54188    0.13957   3.882 0.000103 *** <-- soil moisture x par
-
+MOD <- glme.may2018.mod.2 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # it follows a binomial distribution!
+#data:  simulationOutput
+#dispersion = 1.0009, p-value = 0.992
+#alternative hypothesis: two.sided
 ```
 
 ```{r may 2018 sandbox glmers, include=FALSE}
@@ -737,27 +770,12 @@ summary(glme_rgr_may2018.1)
 
 ```
 
-```{r may 2018 glmer, include =TRUE}
-# glmer - yes/no = binomial distribution
-# 1.0 is perfect
-# 1.7 is getting dicy
-# >1.7 is not a good fit
+```{r }
 
-# model 2
-glme.may2018.mod <- glmer(may_alive ~ 
-                             normalized_par * soil_moisture # significant from Q1
-                            + exotic_percentcover + site   # nncover not significant from Q1
-                            + march_stem_height_cm + species # plus
-                            + (1|plot_number), # don't add right/left or individual code (blue, green, )
-                         family = binomial, 
-                         data = height_march_surv_may)
-
-MOD <- glme.may2018.mod 
-
-simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
-testDispersion(simulationOutput) 
-
-```
+MODmc <- glme.may2018.mod.mafacover 
+MODtreat <- glme.may2018.mod.mafatreat
+MOD1 <- glme.may2018.mod.1
+MOD2 <- glme.may2018.mod.2
 
 # Calculate model's residual and fitted values
 F1 <- fitted(MOD)
@@ -770,8 +788,6 @@ abline(h = 0) # looking for random scatter
 
 # Check for crazy outliers, look for lines MUCH taller than the rest of data
 plot(cooks.distance(MOD))
-
-
 
 # Plot a box plot for each factor, look for equal variance amount levels along the zero line
 # Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
@@ -1076,7 +1092,7 @@ mayscatter.1
 ```
 
 
-- prediction of survival in May 2018
+# D. Prediction of survival in May 2018
 
 ```{r May 2018 figures stem height survival site, include=TRUE}
 
@@ -1134,7 +1150,7 @@ site_1_sh_plot + site_2_sh_plot
 ```
 
 - figure - prediction of survival x soil moisture x low, mean, and high PAR 
-- BY SITE
+### D1. BY SITE
 ```{r May 2018 figure predict site by levels of par, include=TRUE}
 
 # soil moisture x MIN par x Site 1
@@ -1326,7 +1342,7 @@ par_site_2_graph <- ggplot()+
 par_site_1_graph + par_site_2_graph
 ```
 
-- BY SPECIES
+### D3. Prediction of survival May 2018 by species
 ```{r may 2018 glmer by species, include=TRUE}
 #CEOL
 glme.may2018.modspp_CEOL <- glmer(may_alive ~ 
@@ -1691,7 +1707,7 @@ moisture_CEOL_graph + moisture_HEAR_graph + moisture_RHOV_graph +moisture_SAAP_g
 ```
 
 
-- by SPECIES
+### D4. Prediction May 2018 by SPECIES
 ```{r May 2018 figure predict species by levels of tdr, include=TRUE}
 
 # glmer(may_alive ~ 
@@ -1882,7 +1898,7 @@ par_SAAP_graph <- ggplot()+
 
 par_CEOL_graph + par_HEAR_graph + par_RHOV_graph + par_SAAP_graph
 ```
-# END
+# END (Stephanie looked through the code from beginning to this point)
 
 ## Repeat each model for each species
 
@@ -2308,7 +2324,7 @@ summary(saap_2018rgr_model)
 ```
 
 
-# January - May 2019 Seedling survival 
+# E. January - May 2019 Seedling survival 
   - add height
 ```{r may 2019 subset environmental data, include=TRUE}
 # subsetting data for Jan to May 2019 survival
@@ -2317,6 +2333,7 @@ summary(saap_2018rgr_model)
 # par = may 2019
 # tdr = march 2019
 # nncover = 2019
+# mafacover = 2019
 
 # par may 2019 
 par_may2019 <- dplyr::filter(par, year == "2019" & month =="5") %>% 
@@ -2338,9 +2355,14 @@ nncover_may2019 <- dplyr::filter(exotic_cover_all, year == "2019") %>%
 unique(nncover_may2019$plot_number)
 glimpse(nncover_may2019)
 
+# mafacover may 2019
+mafacover_may2019 <- dplyr::filter(mafa_cover_all, year == "2019") %>% 
+  dplyr::select(site, year, plot_number, mafacover)
+
 # join par tdr nncover for may2019
-site_cond_may2019 <- full_join(par_may2019, tdr_march2019, by = c("site", "plot_number", "treatment", "mafacover")) %>% 
-  full_join(nncover_may2018, by = c("site", "plot_number", "treatment"))
+site_cond_may2019 <- full_join(par_may2019, tdr_march2019, by = c("site", "plot_number", "treatment")) %>% 
+  full_join(nncover_may2019, by = c("site", "plot_number", "treatment")) %>% 
+    full_join(mafacover_may2019, by = c("site", "plot_number")) 
 glimpse(site_cond_may2019)
 
 write.csv(site_cond_may2019, "data/processed/may2019_site_conditions.csv")
