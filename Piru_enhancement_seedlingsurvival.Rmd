@@ -551,63 +551,66 @@ write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 
 ```{r may 2018 glmer MODELS, include=TRUE}
 
-MOD.dredge <- dredge(glme.may2018.mod.mafacover)
-
+# mafacover
 glme.may2018.mod.mafacover <- glmer(may_alive ~ mafacover + species + volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
                          data = height_march_surv_may)
-summary(glme.may2018.mod.mafacover)
+summary(glme.may2018.mod.mafacover) # AIC = 694.6
 
+# treatment
 glme.may2018.mod.mafatreat <- glmer(may_alive ~ treatment + species + volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
                          data = height_march_surv_may)
-summary(glme.may2018.mod.mafatreat)
+summary(glme.may2018.mod.mafatreat) # AIC = 692.3
 
-# FULL MODELS
-
+# environmental conditions FULL
 glme.may2018.mod.1 <- glmer(may_alive ~ 
                              normalized_par + soil_moisture # plus
                             + exotic_percentcover + site 
-                            + march_stem_height_cm + species # plus
+                            + volume_cm3 + species # plus
                             + (1|plot_number), 
                          family = binomial, 
                          data = height_march_surv_may)
 summary(glme.may2018.mod.1)
-# AIC: 704.6
+# AIC: 696.5
 #Fixed effects:
-#                      Estimate Std. Error z value Pr(>|z|)   
-#(Intercept)          -0.800203   0.293996  -2.722  0.00649 **
-#normalized_par       -0.012121   0.151858  -0.080  0.93638   
-#soil_moisture         0.230743   0.178312   1.294  0.19565   
-#exotic_percentcover  -0.009566   0.148175  -0.065  0.94853   
-#site2                -0.474881   0.352830  -1.346  0.17833   
-#march_stem_height_cm  0.167639   0.145981   1.148  0.25082   
-#speciesHEAR           0.717822   0.345186   2.080  0.03757 * <-- species
-#speciesRHOV          -0.085414   0.292463  -0.292  0.77025   
-#speciesSAAP          -0.673506   0.322808  -2.086  0.03694 * <-- species
+#                    Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)         -0.69977    0.28854  -2.425  0.01530 * 
+#normalized_par       0.00966    0.15166   0.064  0.94921   
+#soil_moisture        0.25036    0.17752   1.410  0.15844   
+#exotic_percentcover -0.01068    0.14764  -0.072  0.94232   
+#site2               -0.48841    0.35111  -1.391  0.16421   
+#volume_cm3           0.36269    0.12329   2.942  0.00326 ** <-- seedling volume
+#speciesHEAR          0.48153    0.30614   1.573  0.11573   
+#speciesRHOV         -0.10973    0.29242  -0.375  0.70748   
+#speciesSAAP         -0.70437    0.32340  -2.178  0.02941 * <-- species SAAP
 
 glme.may2018.mod.2 <- glmer(may_alive ~ 
-                             normalized_par * soil_moisture # times
-                            + exotic_percentcover + site  
-                            + march_stem_height_cm + species # plus
+                             normalized_par * soil_moisture # plus
+                            + exotic_percentcover + site 
+                            + volume_cm3 + species # plus
                             + (1|plot_number), 
                          family = binomial, 
                          data = height_march_surv_may)
 summary(glme.may2018.mod.2)
-# AIC: 692.3
-# Fixed effects:
+# AIC: 684.9
+#Fixed effects:
 #                             Estimate Std. Error z value Pr(>|z|)    
-#(Intercept)                  -0.67222    0.26791  -2.509   0.0121 *  
-#normalized_par                0.22151    0.13682   1.619   0.1055    
-#soil_moisture                 0.37873    0.15482   2.446   0.0144 *  <-- tdr
-#exotic_percentcover           0.05884    0.12325   0.477   0.6331    
-#site2                        -0.52592    0.28791  -1.827   0.0677 .  
-#march_stem_height_cm          0.19582    0.14592   1.342   0.1796    
-#speciesHEAR                   0.65675    0.34598   1.898   0.0577 .  
-#speciesRHOV                  -0.09939    0.29329  -0.339   0.7347    
-#speciesSAAP                  -0.71330    0.32438  -2.199   0.0279 *  <-- species
-#normalized_par:soil_moisture  0.55680    0.13963   3.988 6.67e-05 ***<-- par x tdr
+#(Intercept)                  -0.59678    0.26206  -2.277 0.022769 *  
+#normalized_par                0.23082    0.13687   1.686 0.091724 .  
+#soil_moisture                 0.39538    0.15547   2.543 0.010986 *  <-- soil moisture
+#exotic_percentcover           0.05639    0.12384   0.455 0.648866    
+#site2                        -0.53365    0.28874  -1.848 0.064569 .  
+#volume_cm3                    0.35577    0.12244   2.906 0.003664 ** <-- seedling volume 
+#speciesHEAR                   0.47571    0.30567   1.556 0.119635    
+#speciesRHOV                  -0.12386    0.29338  -0.422 0.672899    
+#speciesSAAP                  -0.74044    0.32505  -2.278 0.022728 *  <-- species 
+#normalized_par:soil_moisture  0.54188    0.13957   3.882 0.000103 *** <-- soil moisture x par
 
+```
+
+```{r may 2018 sandbox glmers, include=FALSE}
+# additional models run but not used
 
 glme.may2018.mod.3 <- glmer(may_alive ~ 
                              normalized_par * soil_moisture + exotic_percentcover + site + # times 
@@ -970,9 +973,11 @@ summary(glmm_interaction)
 may18_partdr.interaction <- glm(may_alive ~ normalized_par * soil_moisture * species, data = height_march_surv_may, family = binomial)
 print(may18_partdr.interaction)
 summary(may18_partdr.interaction)
+
 # SAAP, HEAR, SOIL MOISTURE are significant
 
 ```
+
 ```{r may 2018 figures, include=TRUE}
 
 # bagraph.1 - survival x species
