@@ -3652,10 +3652,11 @@ glimpse(mafacover_may2019)
 # join par tdr nncover for nov2019
 site_cond_nov2019 <- full_join(par_nov2019, tdr_march2019, by = c("site", "plot_number", "treatment")) %>% 
   full_join(nncover_may2019, by = c("site", "plot_number", "treatment")) %>% 
+  dplyr::select(!year) %>% 
     full_join(mafacover_may2019, by = c("site", "plot_number")) 
 view(site_cond_nov2019)
 
-write.csv(site_cond_nov2019, "data/processed/may2019_site_conditions.csv")
+write.csv(site_cond_nov2019, "data/processed/nov2019_site_conditions.csv")
 ```
 
 ```{r may 2019 height survival df, include=TRUE}
