@@ -3870,14 +3870,14 @@ glme.nov2019.modcover <- glmer(as.factor(nov_alive) ~ mafacover + species + may_
                          family = binomial, 
                          data = height_may_surv_nov_2019, na.action = "na.fail")
 summary(glme.nov2019.modcover)
-# 259.6
+# 259.6 
 #Fixed effects:
 #               Estimate Std. Error z value Pr(>|z|)   
 #(Intercept)     -1.5610     0.4965  -3.144  0.00167 **
 #mafacover        0.5311     0.1941   2.736  0.00623 ** <-- mafacover
 #speciesHEAR      1.2967     0.5573   2.326  0.01999 * <-- species
 #speciesRHOV     -0.1623     0.6446  -0.252  0.80123   
-#speciesSAAP      1.7256     0.5715   3.019  0.00253 ** <-- speceis
+#speciesSAAP      1.7256     0.5715   3.019  0.00253 ** <-- species
 #may_volume_cm3   0.3512     0.1891   1.857  0.06334 . 
 #site2           -0.8247     0.3939  -2.094  0.03628 * <-- site
 MOD <- glme.nov2019.modcover 
@@ -3886,7 +3886,7 @@ testDispersion(simulationOutput)
 dredge(glme.nov2019.modcover)
 #Model selection table 
 #     (Int)    mfc may_vlm_cm3 sit spc df   logLik  AICc delta weight
-#16 -1.5610 0.5311      0.3512   +   +  8 -121.807 260.2  0.00  0.519
+#16 -1.5610 0.5311      0.3512   +   +  8 -121.807 260.2  0.00  0.519 <-- best model
 plot(allEffects(MOD))
 
 # treatment
@@ -3912,7 +3912,7 @@ testDispersion(simulationOutput)
 dredge(glme.nov2019.modtreat)
 #Model selection table 
 #     (Int) may_vlm_cm3 sit spc trt df   logLik  AICc delta weight
-#16 -1.7200      0.3892   +   +   +  9 -121.899 262.6  0.00  0.630
+#16 -1.7200      0.3892   +   +   +  9 -121.899 262.6  0.00  0.630 <-- best model
 plot(allEffects(MOD))
 
 # par + tdr
@@ -3951,7 +3951,7 @@ dredge(glme.nov2019.mod1)
 #39 -1.7780              0.4685 -0.5242                +  7 -126.905 268.3  2.94  0.038
 #41 -1.5380                               +            +  6 -127.992 268.4  3.00  0.037
 #63 -1.4370              0.4111 -0.2260   + -0.04078   +  9 -125.080 269.0  3.60  0.028
-#64 -1.4780 -0.2980      0.4494 -0.2415   + -0.04485   + 10 -123.994 269.0  3.61  0.027
+#64 -1.4780 -0.2980      0.4494 -0.2415   + -0.04485   + 10 -123.994 269.0  3.61  0.027 <-- full model
 plot(allEffects(MOD))
 
 # par * tdr
@@ -4004,7 +4004,7 @@ dredge(glme.nov2019.mod2)
 #57  -1.5750                               +  0.06399   +                  7 -127.959 270.4  5.05  0.013
 #51  -1.8170              0.4624              0.44330   +                  7 -128.000 270.5  5.14  0.012
 #46  -1.6890 -0.2387             -0.2118   +            +                  8 -126.977 270.6  5.23  0.012
-#128 -1.5830 -0.3393      0.4594 -0.3648   + -0.14790   +        -0.18340 11 -123.771 270.7  5.36  0.011
+#128 -1.5830 -0.3393      0.4594 -0.3648   + -0.14790   +        -0.18340 11 -123.771 270.7  5.36  0.011 <-- full model
 plot(allEffects(MOD))
 
 
@@ -4035,7 +4035,123 @@ random.intercepts = ranef(MOD)$plot_number[["(Intercept)"]] # create vector of r
 plot.intercepts = fixef(MOD)[1] + random.intercepts # create intercepts estimates by adding effects together
 
 ```
+### F4. Nov 2019 post hoc
 
+```{r nov 2019 post hoc, include=TRUE}
+
+# mafacover is the best model
+glme.nov2019.best <- glmer(as.factor(nov_alive) ~ mafacover + species + may_volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_may_surv_nov_2019, na.action = "na.fail")
+summary(glme.nov2019.best)
+# AIC: 259.6  
+#Fixed effects:
+#               Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)     -1.5610     0.4965  -3.144  0.00167 **
+#mafacover        0.5311     0.1941   2.736  0.00623 ** <-- mafacover
+#speciesHEAR      1.2967     0.5573   2.326  0.01999 *  <-- spp
+#speciesRHOV     -0.1623     0.6446  -0.252  0.80123   
+#speciesSAAP      1.7256     0.5715   3.019  0.00253 ** <-- spp
+#may_volume_cm3   0.3512     0.1891   1.857  0.06334 . 
+#site2           -0.8247     0.3939  -2.094  0.03628 * <-- site
+#Correlation of Fixed Effects:
+#            (Intr) mafcvr spHEAR spRHOV spSAAP my_v_3
+#mafacover   -0.249                                   
+#speciesHEAR -0.840  0.102                            
+#speciesRHOV -0.660  0.002  0.571                     
+#speciesSAAP -0.821  0.148  _0.782_  0.560            <-- collinearity between SAAP and HEAR... driven by similar conditions?           
+#may_vlm_cm3  0.167 -0.054 -0.309  0.047 -0.239       
+#site2       -0.167  0.299 -0.112  0.036 -0.156  0.122
+
+glme.nov2019.notbest <- glmer(as.factor(nov_alive) ~ mafacover + species + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_may_surv_nov_2019, na.action = "na.fail")
+summary(glme.nov2019.notbest)
+# AIC:  261.6
+#Fixed effects:
+#            Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)  -1.7301     0.4904  -3.528 0.000419 ***
+#mafacover     0.5608     0.1910   2.936 0.003328 ** <-- mafacover
+#speciesHEAR   1.6341     0.5308   3.079 0.002079 ** <-- species
+#speciesRHOV  -0.2156     0.6450  -0.334 0.738191    
+#speciesSAAP   2.0424     0.5528   3.694 0.000220 *** <-- species
+#site2        -0.9443     0.3861  -2.446 0.014448 *  <-- site
+#Correlation of Fixed Effects:
+#            (Intr) mafcvr spHEAR spRHOV spSAAP
+#mafacover   -0.248                            
+#speciesHEAR -0.844  0.097                     
+#speciesRHOV -0.678  0.007  0.617              
+#speciesSAAP -0.824  0.148  _0.773_  0.593            <-- collinearity between SAAP and HEAR... driven by similar conditions?         
+#site2       -0.182  0.300 -0.079  0.031 -0.136
+
+MOD <- glme.nov2019.best 
+
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput)
+plot(simulationOutput)
+hist(simulationOutput)
+testResiduals(simulationOutput)
+plotResiduals(simulationOutput, height_may_surv_nov_2019$species) # you're looking for flat red line
+plotResiduals(simulationOutput, height_may_surv_nov_2019$site) # 
+
+# The testDispersion() function gives us a histogram of simulated expected values, and then a red line indicating our observed dispersion in our actual data. Additionally, this function performs a statistical test of our dispersion with the null hypothesis being “We do not have overdispersion”. 
+# dispersion = 1.0114, p-value = 0.808
+
+plot(residuals(MOD))
+binned_residuals(MOD)
+# Warning: About 80% of the residuals are inside the error bounds (~95% or higher would be good).
+plot(allEffects(MOD))
+r2(MOD)
+#Conditional R2: 0.322
+#     Marginal R2: 0.304
+dredge(glme.nov2019.best)
+#Model selection table 
+#     (Int)    mfc may_vlm_cm3 sit spc df   logLik  AICc delta weight
+#16 -1.5610 0.5311      0.3512   +   +  8 -121.807 260.2  0.00  0.519 <-- already the best model
+anova(glme.nov2019.best) # no p-values
+
+# by mafacover
+glmm_interactionNOV2019_mfcv <- glmer(factor(nov_alive) ~  mafacover + (1|plot_number),
+                          family = binomial(link = "logit"),
+                          data = height_may_surv_nov_2019)
+summary(glmm_interactionNOV2019_mfcv)
+#Fixed effects:
+#            Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)  -0.7978     0.1638  -4.870 1.12e-06 ***
+#mafacover     0.5743     0.1649   3.482 0.000498 ***
+  
+# by species
+glmm_interactionNOV2019_spp <- glmer(factor(nov_alive) ~  species + (1|plot_number),
+                          family = binomial(link = "logit"),
+                          data = height_may_surv_nov_2019)
+summary(glmm_interactionNOV2019_spp)
+#Fixed effects:
+#            Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)  -2.1274     0.5206  -4.086 4.38e-05 ***
+#speciesHEAR   1.5930     0.5348   2.978 0.002897 ** 
+#speciesRHOV  -0.1232     0.6485  -0.190 0.849366    
+#speciesSAAP   1.9205     0.5578   3.443 0.000575 ***
+
+# by site
+glmm_interactionNOV2019_site <- glmer(factor(nov_alive) ~  site + (1|plot_number),
+                          family = binomial(link = "logit"),
+                          data = height_may_surv_nov_2019)
+summary(glmm_interactionNOV2019_site)
+#Fixed effects:
+#            Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)  -0.4230     0.1962  -2.156  0.03108 * 
+#site2        -0.9862     0.3490  -2.826  0.00471 **
+
+# by volume
+glmm_interactionNOV2019_vol <- glmer(factor(nov_alive) ~  may_volume_cm3 + (1|plot_number),
+                          family = binomial(link = "logit"),
+                          data = height_may_surv_nov_2019)
+summary(glmm_interactionNOV2019_vol)
+#Fixed effects:
+#               Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)     -0.8253     0.1933  -4.270 1.95e-05 ***
+#may_volume_cm3   0.7734     0.1865   4.146 3.38e-05 ***
+```
 
 ```{r}
 glme.sep2019.mod <- glmer(as.factor(sep_alive) ~ normalized_par +  soil_moisture  + exotic_percentcover + site + may_stem_height_cm  + species + (1|plot_number), 
