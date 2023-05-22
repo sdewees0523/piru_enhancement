@@ -2404,7 +2404,7 @@ height_jan_2019 %>%  # check number of individuals per plot
 
 # height may 2019
 height_may_2019 <- height_raw %>% 
-  filter(date >= "2019-04-30" & date <= "2019-05-30") %>% # filtering to only have rows of data taken in january 2019 
+  filter(date >= "2019-04-30" & date <= "2019-05-30") %>% # filtering to only have rows of data taken in may 2019 
    dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, volume_cm3) %>% 
   rename(may_stem_height_cm = stem_height_cm, 
          may_volume_cm3 = volume_cm3)
@@ -3662,33 +3662,54 @@ write.csv(site_cond_nov2019, "data/processed/nov2019_site_conditions.csv")
 ```{r may 2019 height survival df, include=TRUE}
 # Making height and survival dataframe
 
+# height may 2019 - calculated in Jan-May 2019
 height_may_2019 <- height_raw %>% 
-  filter(date>= "2019-04-30" & date <= "2019-05-01") %>% # filtering to only have rows of data taken in March 
-  dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm) %>% 
-  rename(may_stem_height_cm = stem_height_cm)
+  filter(date >= "2019-04-30" & date <= "2019-05-30") %>% # filtering to only have rows of data taken in may 2019 
+   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, volume_cm3) %>% 
+  rename(may_stem_height_cm = stem_height_cm, 
+         may_volume_cm3 = volume_cm3)
+list(unique(height_may_2019$plot_number)) # check captured all 36 plots with dates
 
-survival_sep_2019 <- height_raw %>% 
-  filter(date == "2019-09-19") %>% 
+# height Nov 2019
+survival_nov_2019 <- height_raw %>% 
+  filter(date == "2019-11-23") %>% 
   dplyr::select(plot_number, MAFA_removal, location, species, alive) %>% 
-  rename(sep_alive = alive) %>% 
-  mutate(sep_alive = replace_na(sep_alive, 0))  # 0= dead 1 = alive
+  rename(nov_alive = alive) %>% 
+  mutate(nov_alive = replace_na(nov_alive, 0))  # 0= dead 1 = alive
+glimpse(survival_nov_2019)
+list(unique(survival_nov_2019$plot_number)) # check captured all 36 plots with dates
+```
 
-height_may_surv_sep_2019 <- full_join(height_may_2019, survival_sep_2019, by = c("plot_number", "MAFA_removal", "location", "species")) %>% 
+### F1. Join environmental and survival df and scale
+```{r nov 2019 transform data, include=TRUE}
+
+# full join - no data transformation
+height_may_surv_nov_2019_notransf <- full_join(height_may_2019, survival_nov_2019, by = c("plot_number", "MAFA_removal", "location", "species")) %>% 
   mutate(may_stem_height_cm = as.numeric(may_stem_height_cm)) %>% 
   drop_na() %>%  # removing na's for now. But should an NA in alive be assumed as dead? 
   mutate(plot_number = as.character(plot_number)) %>% 
-  left_join(par_april2018, by = "plot_number") %>% 
-  dplyr::select(plot_number, MAFA_removal, location, species, may_stem_height_cm, sep_alive, normalized_par) %>% 
-  left_join(tdr_april2018, by = "plot_number") %>% 
-  dplyr::select(!site & !treatment) %>% 
-  left_join(nncover_may2018, by = "plot_number") %>% 
-  dplyr::select(!treatment) %>% 
+  left_join(site_cond_nov2019, by = "plot_number") %>% 
   rename(exotic_percentcover = cover_percent) %>% 
-  rename(treatment = MAFA_removal) %>% 
+  dplyr::select(!MAFA_removal)
+view(height_may_surv_nov_2019_notransf)
+write.csv(height_may_surv_nov_2019_notransf, "data/processed/height_may_surv_nov_2019_notransf.csv")
+
+# full join - with data transformation
+height_may_surv_nov_2019 <- full_join(height_may_2019, survival_nov_2019, by = c("plot_number", "MAFA_removal", "location", "species")) %>% 
+  mutate(may_stem_height_cm = as.numeric(may_stem_height_cm)) %>% 
+  drop_na() %>%  # removing na's for now. But should an NA in alive be assumed as dead? 
+  mutate(plot_number = as.character(plot_number)) %>% 
+  left_join(site_cond_nov2019, by = "plot_number") %>% 
+  rename(exotic_percentcover = cover_percent) %>% 
+  dplyr::select(!MAFA_removal) %>% 
   mutate(normalized_par = scale(normalized_par),
          soil_moisture = scale(soil_moisture),
          exotic_percentcover = scale(exotic_percentcover), 
-         may_stem_height_cm = scale(may_stem_height_cm))
+         may_stem_height_cm = scale(may_stem_height_cm), 
+         mafacover = scale(mafacover),
+         may_stem_height_cm = scale(may_stem_height_cm),
+         may_volume_cm3 = scale(may_volume_cm3))
+view(height_may_surv_nov_2019)
 ```
 
 ```{r}
