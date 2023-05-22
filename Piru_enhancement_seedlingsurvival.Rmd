@@ -2482,7 +2482,7 @@ write.csv(height_jan_surv_may_2019, "data/processed/height_jan_surv_may_2019.csv
 
 ```
 
-### D1. Basic stats on seedling survival - anovas and ttests
+### E1. Basic stats on seedling survival - anovas and ttests
 ```{r}
 # data exploration by species
 
@@ -2604,7 +2604,7 @@ summary(aov(may2019_alive ~ treatment, data = height_jan_surv_may_2019_notransf)
 ```
 
 
-### D2. Basic stats on site - How are site 1 and site 2 different? 
+### E2. Basic stats on site - How are site 1 and site 2 different? 
 
 ```{r jan may 2019 site conditions ttest, include=TRUE}
 
@@ -2657,7 +2657,7 @@ site_cond_may2019 %>%
 
 ```
 
-### D3. May 2019 glmer models
+### E3. May 2019 glmer models
 ```{r may 2019 glmer model sandbox, include=FALSE}
 
 MOD.dredge <- dredge(glme.may2019.mod.full)
@@ -2946,27 +2946,6 @@ summary(glme_rgr_may2018.1)
 #Moreover, the convergence code is zero which indicates that the model has not converged, and the estimated #variance for the random effect is zero. This means that potentially there is no variation within Anim_ID. #It would be a good idea to fit a model with glm() (ie without random intercepts but with Anim_ID as a fixed #effect) and see how the model estimates compare.
 
 # mafacover
-glme.may2018.mod.mafacover <- glmer(may2019_alive ~ mafacover + species + volume_cm3 + site + (1|plot_number), 
-                         family = binomial, 
-                         data = height_jan_surv_may_2019, na.action = "na.fail")
-summary(glme.may2018.mod.mafacover) # AIC = 694.6
-MOD <- glme.may2018.mod.mafacover 
-simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
-testDispersion(simulationOutput) 
-#data:  simulationOutput
-#dispersion = 1.0126, p-value = 0.856
-#alternative hypothesis: two.sided
-dredge(glme.may2018.mod.mafacover)
-#Model selection table 
-#     (Int)       mfc sit spc vlm_cm3 df   logLik  AICc delta weight
-#15 -0.5558             +   +  0.3551  7 -339.319 692.8  0.00  0.648 <-- best model is without mafacover although pretty similar to with mafa cover.
-#16 -0.5014 -0.002468   +   +  0.3545  8 -339.301 694.8  2.02  0.236
-
-
-
-###
-
-# mafacover
 glme.may2019.modcover <- glmer(as.factor(may2019_alive) ~ mafacover + species + jan_volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
                          data = height_jan_surv_may_2019, na.action = "na.fail")
@@ -2993,6 +2972,7 @@ dredge(glme.may2019.modcover)
 #14 1.2270      0.2056            +   +  7 -227.711 469.7  0.85  0.289
 #15 1.1160             0.006237   +   +  7 -228.322 470.9  2.07  0.157
 #16 1.2150      0.2068 0.021610   +   +  8 -227.706 471.8  2.92  0.103
+plot(allEffects(MOD))
 
 # treatment
 glme.may2019.modtreat <- glmer(as.factor(may2019_alive) ~ treatment + species + jan_volume_cm3 + site + (1|plot_number), 
@@ -3022,7 +3002,7 @@ dredge(glme.may2019.modtreat)
 #8  1.2270      0.2056   +   +      7 -227.711 469.7  0.85  0.297
 #15 1.4030               +   +   +  8 -227.370 471.1  2.25  0.147
 #16 1.5170      0.2083   +   +   +  9 -226.738 471.9  3.08  0.097
-
+plot(allEffects(MOD))
 
 # par + tdr
 glme.may2019.mod.full <- glmer(as.factor(may2019_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + jan_volume_cm3 + species 
@@ -3063,7 +3043,7 @@ dredge(glme.may2019.mod.full)
 #43 1.0870                0.2035           +           +  6 -234.194 480.6  2.67  0.044
 #57 0.8606                                 +  0.1793   +  6 -234.280 480.8  2.84  0.040
 #64 0.9114  0.068030      0.1832 -0.2246   +  0.2046   +  9 -231.273 481.0  3.07  0.036
-
+plot(allEffects(MOD))
 
 # par * tdr
 glme.may2019.mod.12 <- glmer(as.factor(may2019_alive) ~ 
@@ -3098,7 +3078,7 @@ dredge(glme.may2019.mod.12)
 #Model selection table 
 #     (Int)   ext_prc jan_vlm_cm3 nrm_par sit sol_mst spc nrm_par:sol_mst df   logLik  AICc delta weight
 #41  1.1190                                 +           +                  6 -228.322 468.9  0.00  0.109
-
+plot(allEffects(MOD))
 
 
 
@@ -3131,15 +3111,13 @@ plot.intercepts = fixef(MOD)[1] + random.intercepts # create intercepts estimate
 
 
 
-```{r may 2019 glmer, include =TRUE}
+```{r may 2019 extra glmer code, include =FALSE}
 
-glme.may2019.fullmod <- (glmer(as.factor(may2019_alive) ~ normalized_par + soil_moisture + site + 
-                            + jan_volume_cm3 + species # plus 
-                            + (1|plot_number), 
+glme.may2019 <- (glmer(as.factor(may2019_alive) ~ species + site + (1|plot_number), 
                          family = binomial, 
                          data = height_jan_surv_may_2019))
 
-MOD <- glme.may2019.mod 
+MOD <- glme.may2019.best 
 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput)
@@ -3215,29 +3193,66 @@ qqline(ranef(MOD)$plot_number[,1]) # plot number
 
 
 ```
-### D4. May 2019 post
-
-```{r may 2019 summary stats, include=TRUE}
-   
-
-
-```
-
+### E4. May 2019 post hoc
 
 ```{r may 2019 post hoc, include=TRUE}
+
 # best model from dredge(glme.may2019.mod.12) is --> site and species 
-glmm_interaction <- glmer(factor(may_alive) ~ site + species 
-                            (1|plot_number),
-                          family = binomial(link = "logit"),
-                          data = height_march_surv_may)
+glme.may2019.best <- (glmer(as.factor(may2019_alive) ~ species + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019, na.action = "na.fail")) #AIC = 468.6
+summary(glme.may2019.best) # no colinearity in summary
+#Fixed effects:
+#            Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)   1.1192     0.3547   3.156 0.001602 ** 
+#speciesHEAR   0.8627     0.3614   2.387 0.016998 *  
+#speciesRHOV  -1.1224     0.3535  -3.175 0.001497 ** 
+#speciesSAAP   0.2867     0.3479   0.824 0.409890    
+#site2        -1.3896     0.3579  -3.883 0.000103 ***
+  
+glme.may2019.secondbest <- (glm(as.factor(may2019_alive) ~ species * site + (1|plot_number) # When run as a glm, AIC: 473.63.
+                                , 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019)) #AIC = 461.3. 
+summary(glme.may2019.secondbest) # lots of colinearity in the summary :/
 
-summary(glmm_interaction)
+MOD <- glme.may2019.best 
 
-glmm_interactionmay2019_species <- glmer(factor(may2019_alive) ~  species +
-                            (1|plot_number),
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput)
+plot(simulationOutput)
+hist(simulationOutput)
+testResiduals(simulationOutput)
+plotResiduals(simulationOutput, height_jan_surv_may_2019$species) # you're looking for flat red line
+plotResiduals(simulationOutput, height_jan_surv_may_2019$site) # 
+
+# The testDispersion() function gives us a histogram of simulated expected values, and then a red line indicating our observed dispersion in our actual data. Additionally, this function performs a statistical test of our dispersion with the null hypothesis being “We do not have overdispersion”. 
+# dispersion = 1.0114, p-value = 0.808
+
+plot(residuals(MOD))
+binned_residuals(MOD)
+# Warning: About 80% of the residuals are inside the error bounds (~95% or higher would be good).
+plot(allEffects(MOD))
+r2(MOD)
+#Conditional R2: 0.335
+#     Marginal R2: 0.214
+dredge(glme.may2019.best)
+#Model selection table 
+#  (Intrc) site specs df   logLik  AICc delta weight
+#4  1.1190    +     +  6 -228.322 468.9  0.00  0.997 <-- best model
+#3  0.4300          +  5 -235.096 480.3 11.49  0.003
+#2  0.9988    +        3 -249.099 504.3 35.40  0.000
+#1  0.3882             2 -255.870 515.8 46.91  0.000
+#Models ranked by AICc(x) 
+#Random terms (all models): 
+#  1 | plot_number
+anova(glme.may2019.best)
+
+glmm_interactionmay2019_species <- glmer(factor(may2019_alive) ~  species + (1|plot_number),
                           family = binomial(link = "logit"),
                           data = height_jan_surv_may_2019)
 summary(glmm_interactionmay2019_species)
+# AIC: 480.2
 #Fixed effects:
 #            Estimate Std. Error z value Pr(>|z|)   
 #(Intercept)   0.4300     0.3210   1.340  0.18035   
@@ -3245,21 +3260,23 @@ summary(glmm_interactionmay2019_species)
 #speciesRHOV  -1.1293     0.3525  -3.204  0.00136 **
 #speciesSAAP   0.2774     0.3472   0.799  0.42431   
 
-glmm_interactionmay2019_site <- glmer(factor(may2019_alive) ~  site +
-                            (1|plot_number),
+glmm_interactionmay2019_site <- glmer(factor(may2019_alive) ~  site + (1|plot_number), # When run as a glm, AIC: 511.36.
                           family = binomial(link = "logit"),
                           data = height_jan_surv_may_2019)
+print(glmm_interactionmay2019_site)
 summary(glmm_interactionmay2019_site)
+# AIC: 504.2
 # Fixed effects:
 #            Estimate Std. Error z value Pr(>|z|)    
 #(Intercept)   0.9988     0.2277   4.387 1.15e-05 ***
 #site2        -1.2197     0.3127  -3.900 9.62e-05 ***
 
-# STEPHANIE - START HERE (May 12, 2023)
 
 ```
 
-```{r}
+
+### E5. May 2018 Predictions
+```{r , include = FALSE}
 ## Soil moisture
 
 moisture_site_1_low_par_2019 <- seq(from = -1.6 , to = 1.8 , by = 0.1) %>% 
@@ -3270,7 +3287,7 @@ moisture_site_1_low_par_2019 <- seq(from = -1.6 , to = 1.8 , by = 0.1) %>%
          site = "1",
          march_stem_height_cm = mean(height_march_surv_may_2019$march_stem_height_cm, na.rm = TRUE),
          plot_number = "1") %>% 
-  mutate(alive = predict(glme.may2019.mod, newdata = . , type = "response"))
+  mutate(alive = predict(glme.may2019., newdata = . , type = "response"))
 
 moisture_site_2_low_par_2019 <- seq(from = -1.6 , to = 1.8 , by = 0.1) %>% 
   as.data.frame() %>% 
@@ -3383,9 +3400,9 @@ site_1_sh_plot + site_2_sh_plot
 ```
 
 
-## Repeat each model for each species
+### E6. Predictions for each species
 
-### CEOL 
+#### CEOL 
 ```{r}
 ceol_2019 <- height_march_surv_may_2019 %>% 
   filter(species == "CEOL")
@@ -3434,7 +3451,7 @@ summary(glmer(as.factor(may_alive) ~ site + (1|plot_number),
 ## Add Figure
 ``` 
 
-### RHOV
+#### RHOV
 
 ```{r} 
 rhov_2019 <- height_march_surv_may_2019 %>% 
@@ -3482,7 +3499,7 @@ rhov_model <- glmer(as.factor(may_alive) ~ site + (1|plot_number),
 summary(rhov_model)
 ```
 
-### HEAR
+#### HEAR
 
 ```{r}
 hear_2019 <- height_march_surv_may_2019 %>% 
@@ -3544,8 +3561,7 @@ ggplot()+
 
 ```
 
-
-
+#### SAAP
 ```{r}
 saap_2019 <- height_march_surv_may %>% 
   filter(species == "SAAP")
@@ -3593,19 +3609,53 @@ saap_model <- glmer(as.factor(may_alive) ~ site + (1|plot_number),
 
 summary(saap_model)
 ```
-# Survival May - September 2019
 
-```{r MAY 2019 subset data, include=FALSE}
-par_may2019 <- dplyr::filter(par, year == "2019" & month =="9")
+# F. Survival May - November 2019
 
+```{r May - Nov 2019 subset data, include=TRUE}
+
+# subsetting data for May - Nov 2019 survival
+#
+# survmortnospp = nov 2019
+# par = nov 2019
+# tdr = march 2019 #wettest time of year
+# nncover = 2019
+# mafacover = 2019
+
+# par Nov 2019
+par_nov2019 <- dplyr::filter(par, year == "2019" & month =="11")
+  dplyr::select(site, plot_number, treatment, normalized_par) 
+glimpse(par_nov2019)
 tdr_july2019 <- tdr %>% 
-  dplyr::filter(year == "2019" & month == "7")
-
-nncover_may2019 <- 
+  dplyr::filter(year == "2019" & month == "3") %>% 
   
-tdr_may2019 <- 
-  
+# tdr March 2019 - df created from May 2019 
+glimpse(tdr_march2019)
+#tdr_march2019 <- tdr %>% 
+#  dplyr::filter(year == "2019" & month == "3") %>% 
+#  dplyr::select(site, plot_number, treatment, soil_moisture)  %>% 
+#  mutate(treatment = case_when(treatment == "nonene" ~ "none",
+#                               TRUE ~ treatment))
+#tdr_march2019$site <- factor(tdr_march2019$site, levels = c("1", "2"))  
 
+# nncover may-june 2019 - df created from May 2019 
+glimpse(nncover_may2019)
+#nncover_may2019 <- dplyr::filter(exotic_cover_all, year == "2019") %>% 
+#  dplyr::select(site, plot_number, treatment, cover_percent)
+#unique(nncover_may2019$plot_number)
+
+# mafacover may 2019 - df created from May 2019 
+glimpse(mafacover_may2019)
+#mafacover_may2019 <- dplyr::filter(mafa_cover_all, year == "2019") %>% 
+#  dplyr::select(site, year, plot_number, mafacover)
+
+# join par tdr nncover for nov2019
+site_cond_nov2019 <- full_join(par_nov2019, tdr_march2019, by = c("site", "plot_number", "treatment")) %>% 
+  full_join(nncover_may2019, by = c("site", "plot_number", "treatment")) %>% 
+    full_join(mafacover_may2019, by = c("site", "plot_number")) 
+view(site_cond_nov2019)
+
+write.csv(site_cond_nov2019, "data/processed/may2019_site_conditions.csv")
 ```
 
 ```{r may 2019 height survival df, include=TRUE}
