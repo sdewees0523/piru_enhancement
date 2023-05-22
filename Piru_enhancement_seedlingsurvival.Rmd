@@ -3680,7 +3680,7 @@ glimpse(survival_nov_2019)
 list(unique(survival_nov_2019$plot_number)) # check captured all 36 plots with dates
 ```
 
-### F1. Join environmental and survival df and scale
+#### Join environmental and survival df and scale
 ```{r nov 2019 transform data, include=TRUE}
 
 # full join - no data transformation
@@ -3711,6 +3711,331 @@ height_may_surv_nov_2019 <- full_join(height_may_2019, survival_nov_2019, by = c
          may_volume_cm3 = scale(may_volume_cm3))
 view(height_may_surv_nov_2019)
 ```
+
+### F1. Basic stats on seedling survival - anovas and ttests
+
+```{r}
+# data exploration of survival by species
+
+# HEIGHT 
+height_may_surv_nov_2019_notransf %>%  
+  group_by(species) %>% 
+  summarize(avg_height_may2019 = mean(may_stem_height_cm), 
+            SD = sd(may_stem_height_cm),
+            N = length(may_stem_height_cm), 
+            SE = ((sd(may_stem_height_cm))/sqrt(length((may_stem_height_cm)))))
+summary(aov(may_stem_height_cm ~ species, data = height_may_surv_nov_2019_notransf))
+TukeyHSD(aov(may_stem_height_cm ~ species, data = height_may_surv_nov_2019_notransf))
+#$species
+#                diff        lwr       upr     p adj
+#HEAR-CEOL  2.6467380  1.4620183  3.831458 0.0000001 <-- hear and ceol
+#RHOV-CEOL -1.5337806 -2.8659781 -0.201583 0.0167503
+#SAAP-CEOL  3.1906321  1.9755301  4.405734 0.0000000 <-- saap and ceol
+#RHOV-HEAR -4.1805185 -5.3203271 -3.040710 0.0000000 <-- hear and rhov
+#SAAP-HEAR  0.5438942 -0.4565488  1.544337 0.4963399
+#SAAP-RHOV  4.7244127  3.5530563  5.895769 0.0000000 <-- saap and rhov
+
+# VOLUME 
+height_may_surv_nov_2019_notransf %>%  
+  group_by(species) %>% 
+  summarize(avg_vol_may2019 = mean(may_volume_cm3), 
+            SD = sd(may_volume_cm3),
+            N = length(may_volume_cm3), 
+            SE = ((sd(may_volume_cm3))/sqrt(length((may_volume_cm3)))))
+summary(aov(may_volume_cm3 ~ species, data = height_may_surv_nov_2019_notransf))
+TukeyHSD(aov(may_volume_cm3 ~ species, data = height_may_surv_nov_2019_notransf))
+#$species
+#                 diff        lwr       upr     p adj
+#HEAR-CEOL   97.554673   46.24790 148.86145 0.0000097
+#RHOV-CEOL  -13.839957  -71.53357  43.85366 0.9253608
+#SAAP-CEOL   90.949297   38.32675 143.57184 0.0000712
+#RHOV-HEAR -111.394630 -160.75644 -62.03282 0.0000001
+#SAAP-HEAR   -6.605376  -49.93166  36.72091 0.9791357
+#SAAP-RHOV  104.789254   54.06120 155.51731 0.0000013
+
+
+# SURVIVAL
+print(height_may_surv_nov_2019_notransf %>%  
+  group_by(species) %>% 
+  summarise(N = length(nov_alive), 
+            total_survived = sum(nov_alive == "1"), 
+            total_died = sum(nov_alive == "0"),
+            percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
+summary(aov(nov_alive ~ species, data = height_may_surv_nov_2019_notransf))
+TukeyHSD(aov(nov_alive ~ species, data = height_may_surv_nov_2019_notransf))
+#$species
+#                 diff         lwr         upr     p adj
+#HEAR-CEOL  0.25740741  0.03177926  0.48303556 0.0181557 <-- hear and ceol
+#RHOV-CEOL -0.01666667 -0.27038177  0.23704843 0.9982493
+#SAAP-CEOL  0.30714286  0.07572843  0.53855729 0.0038972 <-- saap and ceol
+#RHOV-HEAR -0.27407407 -0.49114898 -0.05699917 0.0068121 <-- hear and rhov
+#SAAP-HEAR  0.04973545 -0.14079748  0.24026838 0.9062973
+#SAAP-RHOV  0.32380952  0.10072638  0.54689266 0.0012420 <-- saap and rhov
+
+
+# data exploration of survival by site and treatment
+
+#  SITE
+print(height_may_surv_nov_2019_notransf %>%  
+  group_by(site) %>% 
+  summarise(N = length(nov_alive), 
+            mean_survival = mean(nov_alive),
+            total_survived = sum(nov_alive == "1"), 
+            total_died = sum(nov_alive == "0"),
+            percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
+t.test(nov_alive~site, data = height_may_surv_nov_2019_notransf) 
+# data:  nov_alive by site
+# t = 3.2805, df = 210.26, p-value = 0.001213
+
+
+#  TREATMENT
+
+print(height_may_surv_nov_2019_notransf %>%  
+  group_by(treatment) %>% 
+  summarise(N = length(nov_alive), 
+            mean_survival = mean(nov_alive),
+            total_survived = sum(nov_alive == "1"), 
+            total_died = sum(nov_alive == "0"),
+            percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
+summary(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
+TukeyHSD(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
+#treatment
+#                 diff         lwr          upr     p adj
+#half-full  0.19642857  0.02082773  0.372029414 0.0240464 <--
+#none-full  0.01309524 -0.15771247  0.183902950 0.9821339
+#none-half -0.18333333 -0.36094878 -0.005717884 0.0412930 <-- 
+
+```
+
+### F2. Basic stats on site - How are site 1 and site 2 different? 
+
+```{r jan nov 2019 site conditions ttest, include=TRUE}
+
+#soil moisture 
+t.test(soil_moisture~site, data = site_cond_nov2019) # same as May 2019
+# YES sig diff
+# data:  soil_moisture by site
+# t = 5.6653, df = 29.535, p-value = 3.76e-06
+site_cond_nov2019 %>%  
+  group_by(site) %>% 
+  summarize(avg_tdr = mean(soil_moisture), 
+            SD = sd(soil_moisture),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture))/sqrt(length((soil_moisture)))))
+# site  mean      SD      N     SE
+#1    	22.10556	3.939597	18	0.9285719
+#2	    15.79259	2.613453	18	0.6159968
+
+
+#norm_par
+t.test(normalized_par~site, data = site_cond_nov2019) 
+# PAR by site is significantly different
+# data:  normalized_par by site
+#t = -5.1832, df = 25.07, p-value = 2.303e-05
+site_cond_nov2019 %>%  
+  group_by(site) %>% 
+  summarize(avg_par = mean(normalized_par), 
+            SD = sd(normalized_par),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par))/sqrt(length((normalized_par)))))
+# site  mean   SD      N    SE
+# 1     0.1805103	0.08270182	18	0.01949301 <-- site 1 is darker, more shady compared to Site 2
+# 2	    0.4055448	0.16458910	18	0.03879402
+
+#nncover
+t.test(cover_percent~site, data = site_cond_nov2019)
+# Not sig
+#data:  cover_percent by site
+#t = -1.2375, df = 29.093, p-value = 0.2258
+site_cond_nov2019 %>%  
+  group_by(site) %>% 
+  summarize(avg_nncover = mean(cover_percent), 
+            SD = sd(cover_percent),
+            N = length(cover_percent), 
+            SE = ((sd(cover_percent))/sqrt(length((cover_percent)))))
+# site  mean   SD      N    SE
+#1	35.83333	12.61302	18	2.972917
+#2	42.61111	19.51512	18	4.599758
+
+
+```
+
+### F3. November 2019 glmer models
+```{r nov 2019 glmer MODELS, include=TRUE}
+
+#Moreover, the convergence code is zero which indicates that the model has not converged, and the estimated #variance for the random effect is zero. This means that potentially there is no variation within Anim_ID. #It would be a good idea to fit a model with glm() (ie without random intercepts but with Anim_ID as a fixed #effect) and see how the model estimates compare.
+
+# mafacover
+glme.nov2019.modcover <- glmer(as.factor(nov_alive) ~ mafacover + species + may_volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_may_surv_nov_2019, na.action = "na.fail")
+summary(glme.nov2019.modcover)
+# 259.6
+#Fixed effects:
+#               Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)     -1.5610     0.4965  -3.144  0.00167 **
+#mafacover        0.5311     0.1941   2.736  0.00623 ** <-- mafacover
+#speciesHEAR      1.2967     0.5573   2.326  0.01999 * <-- species
+#speciesRHOV     -0.1623     0.6446  -0.252  0.80123   
+#speciesSAAP      1.7256     0.5715   3.019  0.00253 ** <-- speceis
+#may_volume_cm3   0.3512     0.1891   1.857  0.06334 . 
+#site2           -0.8247     0.3939  -2.094  0.03628 * <-- site
+MOD <- glme.nov2019.modcover 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) 
+dredge(glme.nov2019.modcover)
+#Model selection table 
+#     (Int)    mfc may_vlm_cm3 sit spc df   logLik  AICc delta weight
+#16 -1.5610 0.5311      0.3512   +   +  8 -121.807 260.2  0.00  0.519
+plot(allEffects(MOD))
+
+# treatment
+glme.nov2019.modtreat <- glmer(as.factor(nov_alive) ~ treatment + species + may_volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_may_surv_nov_2019, na.action = "na.fail")
+summary(glme.nov2019.modtreat)
+#Fixed effects:
+#               Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)     -1.7204     0.5366  -3.206 0.001346 ** 
+#treatmenthalf    1.0658     0.4027   2.647 0.008123 ** <-- treatment 
+#treatmentnone    0.2015     0.4072   0.495 0.620729    
+#speciesHEAR      1.2190     0.5564   2.191 0.028465 *  <-- species
+#speciesRHOV     -0.2029     0.6456  -0.314 0.753360    
+#speciesSAAP      1.6393     0.5704   2.874 0.004051 ** <-- species
+#may_volume_cm3   0.3892     0.1894   2.055 0.039896 *  <-- volume
+#site2           -1.2429     0.3720  -3.341 0.000834 *** <-- site
+MOD <- glme.nov2019.modtreat 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) 
+#dispersion = 1.0113, p-value = 0.856
+#alternative hypothesis: two.sided
+dredge(glme.nov2019.modtreat)
+#Model selection table 
+#     (Int) may_vlm_cm3 sit spc trt df   logLik  AICc delta weight
+#16 -1.7200      0.3892   +   +   +  9 -121.899 262.6  0.00  0.630
+plot(allEffects(MOD))
+
+# par + tdr
+glme.nov2019.mod1 <- glmer(as.factor(nov_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + may_volume_cm3 + species 
+                             + (1|plot_number) # random effect needed for glmer
+                                , 
+                         family = binomial(link = "logit"), 
+                         data = height_may_surv_nov_2019, na.action = "na.fail")
+summary(glme.nov2019.mod1)
+#                   Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)         -1.47809    0.52383  -2.822  0.00478 **
+#normalized_par      -0.24149    0.27152  -0.889  0.37378   
+#soil_moisture       -0.04485    0.26266  -0.171  0.86442   
+#exotic_percentcover -0.29803    0.20798  -1.433  0.15186   
+#site2               -0.88006    0.56134  -1.568  0.11693   
+#may_volume_cm3       0.44942    0.20136   2.232  0.02562 * <-- volume
+#speciesHEAR          1.18156    0.56462   2.093  0.03638 * <-- species
+#speciesRHOV         -0.13719    0.64679  -0.212  0.83202   
+#speciesSAAP          1.60602    0.57607   2.788  0.00530 ** <-- species
+MOD <- glme.nov2019.mod1 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) 
+#data:  simulationOutput
+#dispersion = 1.0086, p-value = 0.84
+#alternative hypothesis: two.sided
+dredge(glme.nov2019.mod1)
+#Model selection table 
+#     (Int) ext_prc may_vlm_cm3 nrm_par sit  sol_mst spc df   logLik  AICc delta weight
+#43 -1.3490              0.4086           +            +  7 -125.432 265.4  0.00  0.167
+#44 -1.3860 -0.2909      0.4446           +            +  8 -124.408 265.4  0.09  0.159
+#48 -1.4950 -0.2984      0.4490 -0.2230   +            +  9 -124.009 266.8  1.46  0.081
+#47 -1.4520              0.4107 -0.2090   +            +  8 -125.092 266.8  1.46  0.080
+#40 -1.7640 -0.3592      0.5053 -0.4850                +  8 -125.337 267.3  1.95  0.063
+#59 -1.3770              0.4084           +  0.04898   +  8 -125.413 267.5  2.10  0.058
+#60 -1.4140 -0.2915      0.4445           +  0.04968   +  9 -124.387 267.6  2.21  0.055
+#39 -1.7780              0.4685 -0.5242                +  7 -126.905 268.3  2.94  0.038
+#41 -1.5380                               +            +  6 -127.992 268.4  3.00  0.037
+#63 -1.4370              0.4111 -0.2260   + -0.04078   +  9 -125.080 269.0  3.60  0.028
+#64 -1.4780 -0.2980      0.4494 -0.2415   + -0.04485   + 10 -123.994 269.0  3.61  0.027
+plot(allEffects(MOD))
+
+# par * tdr
+glme.nov2019.mod2 <- glmer(as.factor(nov_alive) ~ 
+                             normalized_par * soil_moisture # times
+                            + exotic_percentcover + site # jan_volumne_cm3
+                            + may_volume_cm3 + species # plus
+                            + (1|plot_number) # random effect needed for glmer
+                          , 
+                         family = binomial, 
+                         data = height_may_surv_nov_2019, na.action = "na.fail")
+summary(glme.nov2019.mod2)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)                   -1.5826     0.5520  -2.867  0.00414 **
+#normalized_par                -0.3648     0.3295  -1.107  0.26830   
+#soil_moisture                 -0.1479     0.3049  -0.485  0.62763   
+#exotic_percentcover           -0.3393     0.2175  -1.560  0.11877   
+#site2                         -0.9294     0.5693  -1.632  0.10258   
+#may_volume_cm3                 0.4593     0.2009   2.286  0.02226 * <-- volume
+#speciesHEAR                    1.1716     0.5655   2.072  0.03829 * <-- species
+#speciesRHOV                   -0.1301     0.6483  -0.201  0.84097   
+#speciesSAAP                    1.6041     0.5764   2.783  0.00539 ** <-- species
+#normalized_par:soil_moisture  -0.1834     0.2747  -0.667  0.50446   
+MOD <- glme.nov2019.mod2 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) 
+#data:  simulationOutput
+#dispersion = 1.009, p-value = 0.912
+#alternative hypothesis: two.sided
+dredge(glme.nov2019.mod2)
+#Model selection table 
+#      (Int) ext_prc may_vlm_cm3 nrm_par sit  sol_mst spc nrm_par:sol_mst df   logLik  AICc delta weight
+#43  -1.3490              0.4086           +            +                  7 -125.432 265.4  0.00  0.160
+#44  -1.3860 -0.2909      0.4446           +            +                  8 -124.408 265.4  0.09  0.153
+#48  -1.4950 -0.2984      0.4490 -0.2230   +            +                  9 -124.009 266.8  1.46  0.077
+#47  -1.4520              0.4107 -0.2090   +            +                  8 -125.092 266.8  1.46  0.077
+#40  -1.7640 -0.3592      0.5053 -0.4850                +                  8 -125.337 267.3  1.95  0.060
+#59  -1.3770              0.4084           +  0.04898   +                  8 -125.413 267.5  2.10  0.056
+#60  -1.4140 -0.2915      0.4445           +  0.04968   +                  9 -124.387 267.6  2.21  0.053
+#39  -1.7780              0.4685 -0.5242                +                  7 -126.905 268.3  2.94  0.037
+#41  -1.5380                               +            +                  6 -127.992 268.4  3.00  0.036
+#63  -1.4370              0.4111 -0.2260   + -0.04078   +                  9 -125.080 269.0  3.60  0.027
+#64  -1.4780 -0.2980      0.4494 -0.2415   + -0.04485   +                 10 -123.994 269.0  3.61  0.026
+#42  -1.5860 -0.2322                       +            +                  7 -127.331 269.2  3.80  0.024
+#56  -1.7800 -0.3527      0.4971 -0.4105      0.11540   +                  9 -125.232 269.3  3.90  0.023
+#52  -1.7960 -0.3598      0.5000              0.38950   +                  8 -126.521 269.7  4.32  0.019
+#45  -1.6360                     -0.2002   +            +                  7 -127.679 269.8  4.49  0.017
+#55  -1.7970              0.4586 -0.4213      0.15590   +                  8 -126.720 270.1  4.72  0.015
+#57  -1.5750                               +  0.06399   +                  7 -127.959 270.4  5.05  0.013
+#51  -1.8170              0.4624              0.44330   +                  7 -128.000 270.5  5.14  0.012
+#46  -1.6890 -0.2387             -0.2118   +            +                  8 -126.977 270.6  5.23  0.012
+#128 -1.5830 -0.3393      0.4594 -0.3648   + -0.14790   +        -0.18340 11 -123.771 270.7  5.36  0.011
+plot(allEffects(MOD))
+
+
+
+# additional code to visualize MOD data
+plot(simulationOutput)
+hist(simulationOutput)
+testResiduals(simulationOutput)
+plotResiduals(simulationOutput, height_jan_surv_may_2019$species) # you're looking for flat red line
+plotResiduals(simulationOutput, height_jan_surv_may_2019$site) # 
+
+# The testDispersion() function gives us a histogram of simulated expected values, and then a red line indicating our observed dispersion in our actual data. Additionally, this function performs a statistical test of our dispersion with the null hypothesis being “We do not have overdispersion”. 
+# dispersion = 1.0114, p-value = 0.808
+
+plot(residuals(MOD))
+binned_residuals(MOD)
+# Warning: About 80% of the residuals are inside the error bounds (~95% or higher would be good).
+plot(allEffects(MOD))
+r2(MOD)
+# Conditional: R2 like a line
+# Marginal R2: takes into account only fixed effects without random effects
+
+#visualize alive data by random effect 
+dotplot(ranef(MOD, condVar = T)) #condVar adds 95% confidence intervals around random effects estimates
+
+# visualize data by plotting alive by random effect 
+random.intercepts = ranef(MOD)$plot_number[["(Intercept)"]] # create vector of random intercepts by pulling them from model
+plot.intercepts = fixef(MOD)[1] + random.intercepts # create intercepts estimates by adding effects together
+
+```
+
 
 ```{r}
 glme.sep2019.mod <- glmer(as.factor(sep_alive) ~ normalized_par +  soil_moisture  + exotic_percentcover + site + may_stem_height_cm  + species + (1|plot_number), 
