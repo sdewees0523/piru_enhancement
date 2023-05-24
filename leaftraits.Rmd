@@ -37,4 +37,46 @@ leaftraits <- leaftraits_load %>%
 
 glimpse(leaftraits)
 ```
+# LEAF TRAITS
+### 1) SLA
+```{r sla, include=TRUE}
 
+# highlight all and run as one command
+SLA <- aov(SLA_m2kg ~ species, data = leaftraits)
+print(summary(SLA))
+print(TukeyHSD(SLA))
+leaftraits %>%  
+  group_by(species) %>% 
+  summarize(avg_SLA_m2kg = mean(SLA_m2kg), 
+            SD = sd(SLA_m2kg),
+            N = length(SLA_m2kg), 
+            SE = ((sd(SLA_m2kg))/sqrt(length((SLA_m2kg)))))
+```
+### 2) LDMC 
+```{r ldmc, include=TRUE}
+
+# highlight all and run as one command
+LDMC <- aov(leaf_LDMC_proportion ~ species, data = leaftraits)
+print(summary(LDMC))
+print(TukeyHSD(LDMC))
+leaftraits %>%  
+  group_by(species) %>% 
+  summarize(avg_LDMC_proportion = mean(leaf_LDMC_proportion), 
+            SD = sd(leaf_LDMC_proportion),
+            N = length(leaf_LDMC_proportion), 
+            SE = ((sd(leaf_LDMC_proportion))/sqrt(length((leaf_LDMC_proportion)))))
+```
+### 3) leaf thickness  
+```{r leaf thickness, include=TRUE}
+
+# highlight all and run as one command
+Lt <- aov(leaf_thickness_cm ~ species, data = leaftraits)
+print(summary(Lt))
+print(TukeyHSD(Lt))
+leaftraits %>%  
+  group_by(species) %>% 
+  summarize(avg_Leafthickness_cm = mean(leaf_thickness_cm), 
+            SD = sd(leaf_thickness_cm),
+            N = length(leaf_thickness_cm), 
+            SE = ((sd(leaf_thickness_cm))/sqrt(length((leaf_thickness_cm)))))
+```
