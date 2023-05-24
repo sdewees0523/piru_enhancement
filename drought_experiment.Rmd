@@ -13,6 +13,7 @@ library(lubridate)
 library(DescTools)
 library(gmodels)
 library(janitor)
+library(sicegar)
 ```
 
 use t.test then broom::tidy to get mean, pvalue and confidence intervals. 
