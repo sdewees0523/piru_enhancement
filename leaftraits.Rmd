@@ -80,3 +80,45 @@ leaftraits %>%
             N = length(leaf_thickness_cm), 
             SE = ((sd(leaf_thickness_cm))/sqrt(length((leaf_thickness_cm)))))
 ```
+
+# LIGHT CURVES
+```{r load light curve data, include=FALSE}
+
+par <- read_csv("data/par_data.csv")
+
+par %>%  
+  group_by(weeding) %>% 
+  summarize(below_min = min(below_PAR_1), 
+            below_mean = mean(below_PAR_1), 
+            below_median = median(below_PAR_1),
+             below_max = max(below_PAR_1))#,
+            amb_min = min(ambient_PAR_1), 
+             amb_mean = mean(ambient_PAR_1),
+              amb_max = max(ambient_PAR_1)
+       )
+# below_min    below_mean    below_max
+# 25	          495.5538	    1384	
+
+# amb_min      amb_mean      amb_max
+# 361	          1267.144	    1764
+
+# Light curve levels: 0, 25, 50, 100, 250, 500,  1000, 2000
+par.scatter <- ggplot(data = par, 
+                       aes(x = below_PAR_1, y = ambient_PAR_1)) +
+  geom_point(aes(color = (weeding))) 
+ggplotly(par.scatter)
+
+# calculate mean photo based on 1000 PAR, which is closest to max PAR experienced by seedlings.
+
+# calculate mean photo based on 500 PAR, which is the mean PAR experienced by seedlings.
+
+# calculate mean photo based on 250 PAR, which is close to the min PAR experienced by seedlings.
+
+```
+
+
+# DROUGHT
+```{r}
+
+```
+
