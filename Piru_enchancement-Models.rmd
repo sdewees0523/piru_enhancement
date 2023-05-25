@@ -193,7 +193,7 @@ parmod %>%
 tdrmod <- tdr %>% 
   left_join(mafa_cover_all, by = c("year", "site", "plot_number")) %>% 
   rename(mafacover = cover_percent) %>% 
-  filter(year <= 2019) %>% 
+  filter(year <= 2019)
   
 #print(tdrmod)
 tdrmod %>% #highlight and run
@@ -209,11 +209,12 @@ nnmod <- exotic_cover_all %>%
    left_join(mafa_cover_all, by = c("year", "site", "plot_number")) %>% 
   rename(nncover = cover_percent.x,
          mafacover = cover_percent.y, 
-         treatment = MAFA_removal) #%>% 
+         treatment = MAFA_removal)#%>% 
   # dplyr::select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
 view(nnmod)
-write.csv(nnmod, "data/processed/nnmod.csv")
+#write.csv(nnmod, "data/processed/nnmod.csv")
 ```
+
 ```{r combine model dfs}
 
 nnmod %>%  # check number of data points
@@ -241,7 +242,7 @@ parmod_nodate <- parmod %>%
 
 # join parmod + nncover + tdrmod
 environ_mod <- full_join(parmod, nnmod_nodate, by = c("year", "site", "plot_number", "treatment", "mafacover")) %>% 
-  full_join(tdrmod_nodate, by = c("year", "month", "site", "plot_number", "treatment", "mafacover", "normalized_par", "nncover"))
+  full_join(tdrmod_nodate, by = c("year", "month", "site", "plot_number", "treatment", "mafacover"))
 
 view(environ_mod)
 environ_mod %>%  # check number of data points
@@ -266,7 +267,7 @@ write.csv(environ_mod, "data/processed/full_environ_mod.csv")
 #lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|date) + (1|plot_number) + (1|year),
 #                   data = parmod)
 lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + nncover+ year+ (1|plot_number) ,
-                   data = parmod)
+                   data = environ_mod)
 
 MOD <- lme.parmod
 
