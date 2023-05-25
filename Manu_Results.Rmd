@@ -1,0 +1,144 @@
+---
+title: |
+  **Patterns of agricultural intensification drive bumble bee occurrence in the North American Midwest**
+author:
+- Jeremy Hemberger
+- Michael Crossley
+- Claudio Gratton
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  pdf_document:
+    fig_caption: yes
+    keep_tex: yes
+  word_document: default
+  html_document:
+    df_print: paged
+fontfamily: mathpazo
+fontsize: 11pt
+geometry: margin = 1in
+#header-includes:
+#- \usepackage{setspace}\doublespacing
+#- \usepackage[left]{lineno}
+#- \linenumbers
+##- \usepackage{dcolumn}
+#- \usepackage{caption}
+#- \usepackage{float}
+#- \usepackage{afterpage}
+#- \usepackage{siunitx}
+#- \usepackage{amsmath}
+keywords: Agricultural intensification, Bumble bees, bee decline, agroecosystems
+# bibliography: ./library.bib
+csl: ./restoration-ecology.csl
+abstract: |
+  Recently documented insect declines suggest that agricultural expansion and productivity-focused intensification are a putative driver for the observed declines. However, this hypothesis has yet to be formally tested due to a lack of historical data on agricultural land-use change and insect taxa. Using large, spatiotemporal sets of bumble bee and agricultural records, we show that agricultural intensification, specifically an increase cropland extent and insecticides, as well as a decrease in crop richness and perennial habitat, are associated with a decrease in the occurrence of bumble bee species in the agriculturally intensive Midwest. Yet, we found positive associations between bumble bees and crop richness and pasture, even in areas where agriculture is spatially extensive. Our findings suggest that insect conservation and agricultural production may be compatible, with increasing in on-farm and landscape-level crop diversity, pasture, and reduction in insecticides predicted to have positive effects on bumble bees.
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(stevemisc)
+library(knitr)
+```
+
+```{r resources, include=FALSE}
+
+# https://stirlingcodingclub.github.io/Manuscripts_in_Rmarkdown/Rmarkdown_notes.html
+
+# This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. 
+
+# For more details on using R Markdown see <http://rmarkdown.rstudio.com>. 
+
+# Here is an obligatory citation to @xie2013ddrk.
+```
+
+```{r par, include=FALSE}
+parmod_exotdr <- read_csv("data/processed/parmod_exotdr.csv")
+glimpse(parmod_exotdr)
+parmod_exotdr$treatment <- as.factor(parmod_exotdr$treatment)
+parmod_exotdr$month <- factor(parmod_exotdr$month, levels = c(1,3,4,5,7,9,11))
+parmod_exotdr$site <- as.factor(parmod_exotdr$site)
+
+lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + nncover+ year+ (1|plot_number),
+                   data = parmod_exotdr)
+
+anova(lme.parmod) 
+```
+
+
+# Resutls
+
+## _How do environmental conditions change with mature shrub canopy cover?_
+PAR is significantly correlated with MAFA cover (p='anova(lme.parmod) %>%  select )
+TDR
+non-native cover
+
+Here is another paragraph.
+
+# Literature Review
+
+Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+
+# Research Design
+
+Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+
+## Another Subsection From Kant, Who Writes as If He Does Not Want to Be Read
+
+Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+
+## Another Subsection
+
+Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+
+```{r, echo=F, fig.cap = "A Simple ggplot with the mtcars Data in R", message=F, fig.width=8}
+
+#mtcars %>%
+#  ggplot(.,aes(wt, mpg)) + geom_point() +
+#  theme_steve_web() +
+#  geom_smooth(method="lm") +
+#  labs(caption = "Data: 1974 Motor Trend US magazine",
+#       x = "Weight (1,000 Pounds)",
+#       y = "(U.S.) Miles per Gallon")
+```
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r, echo=F, fig.cap = "A Simple ggplot with the mtcars Data in R", message=F, fig.width=8}
+
+# making some data
+dat <- c(3, 5, 6, 9)
+
+# making some fake data to put into the plot
+yaxis <- sqrt(dat) + 3
+
+plot(x = dat, y = yaxis)
+
+```
+
+# Results
+
+Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+
+plot(x = dat, y = yaxis)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+More text here.
+
+```{r}
+plot(x = dat, y = yaxis)
+```
+
+# Conclusion
+
+Conclusion sentences here. 
+
+\newpage
