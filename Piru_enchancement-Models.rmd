@@ -196,7 +196,7 @@ tdrmod <- tdr %>%
   filter(year <= 2019) %>% 
   
 #print(tdrmod)
-tdrmod %>% 
+tdrmod %>% #highlight and run
   group_by(year, treatment) %>% 
   summarise(N = length(soil_moisture))
 
@@ -240,15 +240,15 @@ parmod_nodate <- parmod %>%
                                TRUE ~ treatment))
 
 # join parmod + nncover + tdrmod
-parmod_withnncover <- full_join(parmod, nnmod_nodate, by = c("year", "site", "plot_number", "treatment", "mafacover")) %>% 
-  full_join(tdrmod_nodate, by = c("year", "month", "site", "plot_number", "treatment", "mafacover"))
+environ_mod <- full_join(parmod, nnmod_nodate, by = c("year", "site", "plot_number", "treatment", "mafacover")) %>% 
+  full_join(tdrmod_nodate, by = c("year", "month", "site", "plot_number", "treatment", "mafacover", "normalized_par", "nncover"))
 
-view(parmod_withnncover)
-parmod_withnncover %>%  # check number of data points
+view(environ_mod)
+environ_mod %>%  # check number of data points
   group_by(year, treatment) %>% 
   summarise(N_mafacover = length(mafacover), 
             N_exocover = length(nncover))
-write.csv(parmod_withnncover, "data/processed/parmod_exotdr.csv")
+write.csv(environ_mod, "data/processed/full_environ_mod.csv")
 ```
 
 ------------------------------------------------------------------------
