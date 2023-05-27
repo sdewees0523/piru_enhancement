@@ -3700,9 +3700,8 @@ glimpse(mafacover_may2019)
 
 # join par tdr nncover for nov2019
 site_cond_nov2019 <- full_join(par_nov2019, nncover_may2019, by = c("site", "plot_number", "treatment")) %>% # omit tdr because soil moisture in may doesn't make sense to model survival in dry months
-  dplyr::select(!year) %>% 
     full_join(mafacover_may2019, by = c("site", "plot_number")) 
-view(site_cond_nov2019)
+print(site_cond_nov2019)
 
 write.csv(site_cond_nov2019, "data/processed/nov2019_site_conditions.csv")
 ```
@@ -3739,7 +3738,7 @@ height_may_surv_nov_2019_notransf <- full_join(height_may_2019, survival_nov_201
   left_join(site_cond_nov2019, by = "plot_number") %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   dplyr::select(!MAFA_removal)
-view(height_may_surv_nov_2019_notransf)
+print(height_may_surv_nov_2019_notransf)
 write.csv(height_may_surv_nov_2019_notransf, "data/processed/height_may_surv_nov_2019_notransf.csv")
 
 # full join - with data transformation
@@ -3751,13 +3750,12 @@ height_may_surv_nov_2019 <- full_join(height_may_2019, survival_nov_2019, by = c
   rename(exotic_percentcover = cover_percent) %>% 
   dplyr::select(!MAFA_removal) %>% 
   mutate(normalized_par = scale(normalized_par),
-         soil_moisture = scale(soil_moisture),
          exotic_percentcover = scale(exotic_percentcover), 
          may_stem_height_cm = scale(may_stem_height_cm), 
          mafacover = scale(mafacover),
          may_stem_height_cm = scale(may_stem_height_cm),
          may_volume_cm3 = scale(may_volume_cm3))
-view(height_may_surv_nov_2019)
+print(height_may_surv_nov_2019)
 ```
 
 ### F1. Basic stats on seedling survival - anovas and ttests
@@ -3917,6 +3915,7 @@ site_cond_nov2019 %>%
 glme.nov2019.modcover <- glmer(as.factor(nov_alive) ~ mafacover + species + may_volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
                          data = height_may_surv_nov_2019, na.action = "na.fail")
+anova(glme.nov2019.modcover)
 summary(glme.nov2019.modcover)
 # 259.6 
 #Fixed effects:
@@ -3928,6 +3927,24 @@ summary(glme.nov2019.modcover)
 #speciesSAAP      1.7256     0.5715   3.019  0.00253 ** <-- species
 #may_volume_cm3   0.3512     0.1891   1.857  0.06334 . 
 #site2           -0.8247     0.3939  -2.094  0.03628 * <-- site
+
+emmeans(glme.nov2019.modcover, list(pairwise ~ species), adjust = "tukey")
+#$`pairwise differences of species`
+# 1           estimate    SE  df z.ratio p.value
+# CEOL - HEAR   -1.297 0.557 Inf  -2.326  0.0921
+# CEOL - RHOV    0.162 0.645 Inf   0.252  0.9944
+# CEOL - SAAP   -1.726 0.571 Inf  -3.019  0.0135
+# HEAR - RHOV    1.459 0.562 Inf   2.595  0.0466
+# HEAR - SAAP   -0.429 0.373 Inf  -1.149  0.6590
+# RHOV - SAAP   -1.888 0.574 Inf  -3.288  0.0056
+plot(emmeans(glme.nov2019.modcover, list(pairwise ~ species), adjust = "tukey"))
+
+emmeans(glme.nov2019.modcover, list(pairwise ~ site), adjust = "tukey")
+#$`pairwise differences of site`
+# 1             estimate    SE  df z.ratio p.value
+# site1 - site2    0.825 0.394 Inf   2.094  0.0363
+
+
 MOD <- glme.nov2019.modcover 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) 
@@ -3941,6 +3958,7 @@ plot(allEffects(MOD))
 glme.nov2019.modtreat <- glmer(as.factor(nov_alive) ~ treatment + species + may_volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
                          data = height_may_surv_nov_2019, na.action = "na.fail")
+anova(glme.nov2019.modtreat)
 summary(glme.nov2019.modtreat)
 #Fixed effects:
 #               Estimate Std. Error z value Pr(>|z|)    
@@ -3952,6 +3970,23 @@ summary(glme.nov2019.modtreat)
 #speciesSAAP      1.6393     0.5704   2.874 0.004051 ** <-- species
 #may_volume_cm3   0.3892     0.1894   2.055 0.039896 *  <-- volume
 #site2           -1.2429     0.3720  -3.341 0.000834 *** <-- site
+
+emmeans(glme.nov2019.modtreat, list(pairwise ~ species), adjust = "tukey")
+#$`pairwise differences of species`
+# 1           estimate    SE  df z.ratio p.value
+# CEOL - HEAR   -1.219 0.556 Inf  -2.191  0.1257
+# CEOL - RHOV    0.203 0.646 Inf   0.314  0.9893
+# CEOL - SAAP   -1.639 0.570 Inf  -2.874  0.0211 <-- 
+# HEAR - RHOV    1.422 0.561 Inf   2.534  0.0548
+# HEAR - SAAP   -0.420 0.371 Inf  -1.133  0.6689
+# RHOV - SAAP   -1.842 0.573 Inf  -3.217  0.0071 <--
+plot(emmeans(glme.nov2019.modtreat, list(pairwise ~ species), adjust = "tukey"))
+
+emmeans(glme.nov2019.modcover, list(pairwise ~ site), adjust = "tukey")
+#$`pairwise differences of site`
+# 1             estimate    SE  df z.ratio p.value
+# site1 - site2    0.825 0.394 Inf   2.094  0.0363
+
 MOD <- glme.nov2019.modtreat 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) 
@@ -3980,6 +4015,10 @@ summary(glme.nov2019.mod1)
 #speciesHEAR          1.18156    0.56462   2.093  0.03638 * <-- species
 #speciesRHOV         -0.13719    0.64679  -0.212  0.83202   
 #speciesSAAP          1.60602    0.57607   2.788  0.00530 ** <-- species
+
+
+
+
 MOD <- glme.nov2019.mod1 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) 
