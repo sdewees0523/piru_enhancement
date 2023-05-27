@@ -266,7 +266,7 @@ write.csv(environ_mod, "data/processed/full_environ_mod.csv")
 # lmer model
 #lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|date) + (1|plot_number) + (1|year),
 #                   data = parmod)
-lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + nncover+ year+ (1|plot_number) ,
+lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + nncover+ year + (1|plot_number) ,
                    data = environ_mod)
 
 MOD <- lme.parmod
@@ -358,15 +358,16 @@ emmip(lme.parmod, mafacover ~ month)
 # mafacover is 26.32... that values must be from the model
 
 # testing the difference between slopes
-parmod.interaction <- lm(normalized_par ~ mafacover*month, data = parmod)
+parmod.interaction <- lm(normalized_par ~ mafacover * month * nncover, data = environ_mod)
 anova(parmod.interaction) # p-values for the interaction
-# Analysis of Variance Table
-#Response: normalized_par
-#                 Df Sum Sq Mean Sq F value    Pr(>F)    
-#mafacover         1 1.3002 1.30023 53.2054 3.242e-12 ***
-#month             6 1.7738 0.29563 12.0973 4.632e-12 ***
-#mafacover:month   6 0.4450 0.07416  3.0346  0.006871 ** 
-#Residuals       274 6.6960 0.02444     
+#                         Df Sum Sq Mean Sq F value    Pr(>F)    
+#mafacover                 1 1.3002 1.30023 61.1155 1.343e-13 ***
+#month                     6 1.7738 0.29563 13.8958 1.058e-13 ***
+#nncover                   1 0.9288 0.92885 43.6592 2.198e-10 ***
+#mafacover:month           6 0.4314 0.07190  3.3795  0.003165 ** 
+#mafacover:nncover         1 0.0664 0.06644  3.1228  0.078376 .  
+#month:nncover             6 0.1149 0.01916  0.9005  0.495044    
+#mafacover:month:nncover   6 0.0679 0.01131  0.5315  0.784116  
 ```
 
 ```{r parmod posthoc slope per month, include=TRUE}
@@ -491,12 +492,19 @@ parbox.1 <- ggplot(data = parmod,
 ggplotly(parbox.1)
 
 # scatterplot: normpar x mafacover
-parscatter.6 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
+parscatter.6 <- ggplot(data = environ_mod, aes(x = mafacover, y = normalized_par)) + 
   geom_point() +
 labs(title = "Normalized PAR by Mature Shrub cover (%)", x = "MAFA cover (%)", y = "Nomalized PAR") +
   geom_smooth(method="lm")+
   theme_bw()
 ggplotly(parscatter.6)
+# scatterplot: normpar x nncover
+parscatter.7 <- ggplot(data = environ_mod, aes(x = nncover, y = normalized_par)) + 
+  geom_point() +
+labs(title = "Normalized PAR by Non-native cover (%)", x = "Non-native cover (%)", y = "Nomalized PAR") +
+  geom_smooth(method="lm")+
+  theme_bw()
+ggplotly(parscatter.7)
 
 # scatterplot: normpar x mafacover (%) x month
 parscatter.2 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
