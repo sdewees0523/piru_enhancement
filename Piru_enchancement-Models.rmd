@@ -250,6 +250,11 @@ tdrmod_nncover <- tdrmod %>%
                                TRUE ~ treatment)) %>% 
   left_join(nnmod_nodate, by = (c("year", "site", "plot_number", "treatment", "mafacover")))
 
+# join nnmod + tdrmod_nodate + parmod_nodate
+nnmod_environ <- nnmod %>% 
+  left_join(tdrmod_nodate, by = (c("year", "site", "plot_number", "treatment")))
+# HOW DO I JOIN TDR AND PAR WITH NNCOVER? CHOOSE MAX PAR AND MAX TDR?
+## PAR from May or July and TDR from December 
 view(environ_mod)
 environ_mod %>%  # check number of data points
   group_by(year, treatment) %>% 
@@ -325,6 +330,19 @@ qqline(ranef(MOD)$plot_number[,1]) # unique plots
 ```{r parmod anova, include = TRUE}
 # run together
 print(lme.parmod) # print 
+# fixed level effects, pvalues, etc.
+
+anova(lme.parmod) 
+# par is significant by mafa cover and month
+#Type III Analysis of Variance Table with Satterthwaite's method
+#           Sum Sq  Mean Sq NumDF   DenDF F value    Pr(>F)    
+#treatment 0.02174 0.010868     2  33.426  0.6394 0.5339143    
+#mafacover 0.25133 0.251334     1  80.455 14.7875 0.0002396 ***
+#site      0.02927 0.029268     1  37.217  1.7220 0.1974680    
+#month     1.77267 0.295445     6 242.617 17.3829 < 2.2e-16 ***
+#nncover   0.31190 0.311903     1 115.757 18.3512 3.814e-05 ***
+#year      0.00086 0.000865     1 272.537  0.0509 0.8217118    
+
 summary(lme.parmod) # p-values
 #Fixed effects:
 #                Estimate Std. Error         df t value Pr(>|t|)    
@@ -342,17 +360,6 @@ summary(lme.parmod) # p-values
 #nncover       -3.489e-03  8.145e-04  1.158e+02  -4.284 3.81e-05 ***
 #year2019       7.509e-03  3.329e-02  2.725e+02   0.226  0.82171 
 
-# fixed level effects, pvalues, etc.
-anova(lme.parmod) 
-# par is significant by mafa cover and month
-#Type III Analysis of Variance Table with Satterthwaite's method
-#           Sum Sq  Mean Sq NumDF   DenDF F value    Pr(>F)    
-#treatment 0.02174 0.010868     2  33.426  0.6394 0.5339143    
-#mafacover 0.25133 0.251334     1  80.455 14.7875 0.0002396 ***
-#site      0.02927 0.029268     1  37.217  1.7220 0.1974680    
-#month     1.77267 0.295445     6 242.617 17.3829 < 2.2e-16 ***
-#nncover   0.31190 0.311903     1 115.757 18.3512 3.814e-05 ***
-#year      0.00086 0.000865     1 272.537  0.0509 0.8217118    
 
 ```
 
@@ -364,17 +371,35 @@ emmip(lme.parmod, mafacover ~ month)
 # mafacover is 26.32... that values must be from the model
 
 # testing the difference between slopes
-parmod.interaction <- lm(normalized_par ~ mafacover * month * nncover, data = environ_mod)
+parmod.interaction <- lm(normalized_par ~ mafacover * month + nncover, data = environ_mod)
 anova(parmod.interaction) # p-values for the interaction
-#                         Df Sum Sq Mean Sq F value    Pr(>F)    
-#mafacover                 1 1.3002 1.30023 61.1155 1.343e-13 ***
-#month                     6 1.7738 0.29563 13.8958 1.058e-13 ***
-#nncover                   1 0.9288 0.92885 43.6592 2.198e-10 ***
-#mafacover:month           6 0.4314 0.07190  3.3795  0.003165 ** 
-#mafacover:nncover         1 0.0664 0.06644  3.1228  0.078376 .  
-#month:nncover             6 0.1149 0.01916  0.9005  0.495044    
-#mafacover:month:nncover   6 0.0679 0.01131  0.5315  0.784116  
+#Response: normalized_par
+#                 Df Sum Sq Mean Sq F value    Pr(>F)    
+#mafacover         1 1.3002 1.30023 61.4045 1.042e-13 ***
+#month             6 1.7738 0.29563 13.9615 7.517e-14 ***
+#nncover           1 0.9288 0.92885 43.8657 1.863e-10 ***
+#mafacover:month   6 0.4314 0.07190  3.3954  0.003017 ** 
+#Residuals       273 5.7807 0.02117 
 
+summary(parmod.interaction)
+#Coefficients:
+#                    Estimate Std. Error t value Pr(>|t|)    
+#(Intercept)        0.3862766  0.0497054   7.771 1.59e-13 ***
+#mafacover         -0.0005520  0.0011464  -0.482 0.630546    
+#month11            0.1821447  0.0587041   3.103 0.002118 ** 
+#month3             0.3314858  0.0587041   5.647 4.10e-08 ***
+#month4             0.1401540  0.0582609   2.406 0.016810 *  
+#month5             0.3909382  0.0587041   6.659 1.51e-10 ***
+#month7             0.3319017  0.0587041   5.654 3.95e-08 ***
+#month9             0.3116276  0.0497403   6.265 1.44e-09 ***
+#nncover           -0.0038419  0.0005844  -6.575 2.47e-10 ***
+#mafacover:month11 -0.0036555  0.0016074  -2.274 0.023733 *  
+#mafacover:month3  -0.0035133  0.0016074  -2.186 0.029691 *  
+#mafacover:month4  -0.0018175  0.0023060  -0.788 0.431274    
+#mafacover:month5  -0.0065078  0.0016074  -4.049 6.72e-05 ***
+#mafacover:month7  -0.0055906  0.0016074  -3.478 0.000588 ***
+#mafacover:month9  -0.0036851  0.0014646  -2.516 0.012440 *  
+  
 summary(aov(normalized_par ~ month, data = environ_mod))
 TukeyHSD(aov(normalized_par ~ month, data = environ_mod))
 plot(TukeyHSD(aov(normalized_par ~ month, data = environ_mod)))
@@ -609,7 +634,7 @@ ggplotly(parscatter.4)
 
 ```{r tdrmod test for normality, include = TRUE}
 
-lme.tdrmod <- lmer(soil_moisture ~ treatment + mafacover + site + year + month + nncover  +(1|plot_number), 
+lme.tdrmod <- lmer(soil_moisture ~ treatment + mafacover + site  + month + nncover  +(1|plot_number) , 
                    data = tdrmod_nncover)
 
 MOD <- lme.tdrmod
@@ -645,9 +670,6 @@ abline(h = 0)
 boxplot(E1 ~ site, data = tdrmod)
 abline(h = 0)
 
-boxplot(E1 ~ year, data = tdrmod)
-abline(h = 0)
-
 boxplot(E1 ~ month, data = tdrmod)
 abline(h = 0)
 
@@ -663,23 +685,34 @@ qqline(ranef(MOD)$plot_number[,1])
 # print 
 print(lme.tdrmod)
 
-summary(lme.tdrmod)
-
 anova(lme.tdrmod) # A significant p-value indicates that one or more significant differences 
 #Type III Analysis of Variance Table with Satterthwaite's method
 #          Sum Sq Mean Sq NumDF  DenDF  F value    Pr(>F)    
-#treatment   79.3    39.6     2 36.033   7.4954 0.0018977 ** 
-#mafacover    2.2     2.2     1 82.716   0.4221 0.5177001    
-#site        97.3    97.3     1 41.271  18.4008 0.0001053 ***
-#year       182.6   182.6     1 89.715  34.5215 7.058e-08 ***
-#month     3553.6  3553.6     1 68.910 671.7879 < 2.2e-16 ***
-#nncover     15.7    15.7     1 89.619   2.9706 0.0882366 .  
+#treatment   79.3   39.65     2 36.033   7.4954 0.0018977 ** 
+#mafacover    2.2    2.23     1 82.716   0.4221 0.5177001    
+#site        97.3   97.34     1 41.271  18.4008 0.0001053 ***
+#month     3704.8 1852.41     2 81.864 350.1884 < 2.2e-16 ***
+#nncover     15.7   15.71     1 89.619   2.9706 0.0882366 .  
+
+summary(lme.tdrmod)
+#Fixed effects:
+#               Estimate Std. Error        df t value Pr(>|t|)    
+#(Intercept)    26.98241    1.27198  79.10862  21.213  < 2e-16 ***
+#treatmenthalf  -1.32295    0.85992  36.15962  -1.538 0.132644    
+#treatmentnone  -3.51618    0.93338  40.52520  -3.767 0.000526 ***
+#mafacover       0.01694    0.02608  82.71644   0.650 0.517700    
+#site2          -3.24325    0.75607  41.27106  -4.290 0.000105 ***
+#month3         -3.84277    0.65403  89.71482  -5.875 7.06e-08 ***
+#month4        -14.05069    0.54210  68.91046 -25.919  < 2e-16 ***
+#nncover        -0.03718    0.02157  89.61930  -1.724 0.088237 .   
+
+
 ```
 
 ```{r tdrmod posthoc, include=TRUE}
 
 # visualize significant factors from anova(lme.tdrmod)
-emmip(lme.tdrmod, site ~ treatment)
+emmip(lme.tdrmod, treatment ~ year)
 # emmip(lme.tdrmod, month ~ treatment | site)
 
 tdrmod.site <- lm(soil_moisture ~ site, data = tdrmod_nncover)
@@ -687,7 +720,6 @@ anova(tdrmod.site)
 
 tdrmod.treat <- lm(soil_moisture ~ treatment, data = tdrmod_nncover)
 anova(tdrmod.treat)
-
 
 # stats on site treatment interactions
 tdrmod.interaction <- lm(soil_moisture ~ site*treatment, data = tdrmod_nncover)
