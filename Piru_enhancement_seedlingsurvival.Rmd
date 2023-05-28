@@ -1386,111 +1386,131 @@ par_site_1_graph + par_site_2_graph
 ```
 
 ### D3. Prediction of survival May 2018 by species
-```{r may 2018 glmer by species, include=TRUE}
+```{r may 2018 glmer by species CEOL, include=TRUE}
 #CEOL
 glme.may2018.modspp_CEOL <- glmer(may_alive ~ 
                             normalized_par * soil_moisture # significant from Q1
                           + exotic_percentcover # not significant from Q1
-                          + site + march_stem_height_cm 
+                          + site + volume_cm3 
                           + (1|plot_number),
                                 family = binomial, 
                          data = (height_march_surv_may %>% filter(species == "CEOL")))
+MOD <- glme.may2018.modspp_CEOL 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
 
+anova(glme.may2018.modspp_CEOL)
+summary(glme.may2018.modspp_CEOL)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)                    4.0037     2.3822   1.681   0.0928 .
+#normalized_par                 0.5641     0.3124   1.806   0.0710 .
+#soil_moisture                  0.1535     0.3249   0.472   0.6366  
+#exotic_percentcover            0.2004     0.2643   0.758   0.4482  
+#site2                         -1.6835     0.6806  -2.473   0.0134 *
+#volume_cm3                     8.5060     4.6305   1.837   0.0662 .
+#normalized_par:soil_moisture   0.3512     0.2823   1.244   0.2135 
+
+emmeans(glme.may2018.modspp_CEOL, list(pairwise ~ site), adjust = "tukey")
+#$`pairwise differences of site`
+# 1             estimate    SE  df z.ratio p.value
+# site1 - site2     1.68 0.681 Inf   2.473  0.0134
+```
+```{r may 2018 glmer by species HEAR}
 #HEAR
 glme.may2018.modspp_HEAR <- glmer(may_alive ~ 
                             normalized_par * soil_moisture # significant from Q1
                           + exotic_percentcover # not significant from Q1
-                          + site + march_stem_height_cm
+                          + site + volume_cm3
                           + (1|plot_number),
                                 family = binomial, 
                          data = (height_march_surv_may %>% filter(species == "HEAR")))
+MOD <- glme.may2018.modspp_HEAR 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
 
+anova(glme.may2018.modspp_HEAR)
+summary(glme.may2018.modspp_HEAR)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)                   -0.6858     0.4411  -1.555  0.12004   
+#normalized_par                 0.4987     0.3232   1.543  0.12281   
+#soil_moisture                  1.0860     0.3847   2.823  0.00476 **
+#exotic_percentcover            0.2710     0.2777   0.976  0.32915   
+#site2                          0.6094     0.6743   0.904  0.36613   
+#volume_cm3                     0.4077     0.1422   2.867  0.00414 **
+#normalized_par:soil_moisture   1.0546     0.3546   2.974  0.00294 **
+
+```
+```{r may 2018 glmer by species RHOV}
 #RHOV
 glme.may2018.modspp_RHOV <- glmer(may_alive ~ 
                             normalized_par * soil_moisture # significant from Q1
                           + exotic_percentcover # not significant from Q1
-                          + site + march_stem_height_cm 
+                          + site + volume_cm3 
                           + (1|plot_number),
                                 family = binomial, 
                          data = (height_march_surv_may %>% filter(species == "RHOV")))
-# error : boundary (singular) fit: see help('isSingular')
+MOD <- glme.may2018.modspp_RHOV 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
 
+anova(glme.may2018.modspp_RHOV)
+summary(glme.may2018.modspp_RHOV)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)                   5.30572    2.14883   2.469  0.01354 * 
+#normalized_par               -0.39429    0.28418  -1.387  0.16530   
+#soil_moisture                 0.06784    0.30305   0.224  0.82287   
+#exotic_percentcover          -0.38734    0.25989  -1.490  0.13612   
+#site2                        -0.54869    0.57549  -0.953  0.34038   
+#volume_cm3                   12.67430    4.40938   2.874  0.00405 **
+#normalized_par:soil_moisture  0.20739    0.27813   0.746  0.45587  
+
+```
+```{r may 2018 glmer by species SAAP}
 #SAAP
 glme.may2018.modspp_SAAP <- glmer(may_alive ~ 
-                            normalized_par * soil_moisture # significant from Q1
+                            normalized_par 
+                            + soil_moisture # significant from Q1
                           + exotic_percentcover # not significant from Q1
-                          + site + march_stem_height_cm 
+                          + site # omitting site removes the error message
+                          + volume_cm3 
                           + (1|plot_number),
                                 family = binomial, 
                          data = (height_march_surv_may %>% filter(species == "SAAP")))
-# error : boundary (singular) fit: see help('isSingular')
+# error : boundary (singular) fit: see help('isSingular') 
+# The model did fit, but it generated a warning because the random effects are very small. 
+# FROM: https://stackoverflow.com/questions/60028673/lme4-error-boundary-singular-fit-see-issingular
+ggplot(height_march_surv_may,aes(x=may_alive,y=volume_cm3,col=plot_number)) + 
+  geom_jitter() +
+  geom_boxplot(alpha=0.2) + 
+  facet_wrap(~site)
+ranef(glme.may2018.modspp_SAAP)
+
+MOD <- glme.may2018.modspp_SAAP 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.may2018.modspp_SAAP)
+summary(glme.may2018.modspp_SAAP)
+#Fixed effects:
+#                    Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)         -0.61197    0.42719  -1.433  0.15199   
+#normalized_par       0.28085    0.34757   0.808  0.41908   
+#soil_moisture       -0.02046    0.36101  -0.057  0.95480   
+#exotic_percentcover  0.13061    0.31289   0.417  0.67637   
+#site2               -2.34647    0.87205  -2.691  0.00713 **
+#volume_cm3           0.88201    0.65495   1.347  0.17808 
+
+emmeans(glme.may2018.modspp_SAAP, list(pairwise ~ site), adjust = "tukey")
+#$`pairwise differences of site`
+# 1             estimate    SE  df z.ratio p.value
+# site1 - site2     2.35 0.872 Inf   2.691  0.0071
 ```
 
 ```{r may 2018 glmer by species testing normality, include=TRUE}
-MOD <- glme.may2018.modspp_CEOL #or
-MOD <- glme.may2018.modspp_HEAR #or
-MOD <- glme.may2018.modspp_RHOV #or
-MOD <- glme.may2018.modspp_SAAP 
 
-
-# Calculate model's residual and fitted values
-F1 <- fitted(MOD)
-E1 <- residuals(MOD, "pearson")
-
-# See residuals as a histogram, look for normal distribution
-hist(E1) 
-# looks bimodal... 
-
-# Graph residuals against a normal distribution, look for all points to be on 1:1 line
-#need to call next two lines together
-qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
-qqline(E1) # ends are a bit wonky... 
-
-# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
-# run together 2 lines
-plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
-abline(h = 0) # looking for random scatter
-
-#
-#
-# code from here to the end of the section hasn't been checked. 
-#
-#
-
-# Check for crazy outliers, look for lines MUCH taller than the rest of data
-#plot(cooks.distance(MOD))
-
-# Plot a box plot for each factor, look for equal variance amount levels along the zero line
-# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
-# Random effects need the qqline just like normality. 
-# So, only site and treatment get box plots. 
-# exotic_cover is a covariate (continuous variable).
-
-boxplot(E1 ~ site, data = height_march_surv_may) # <---- make sure to change to df, not the lme
-abline(h = 0)
-# error message - variable lengths differ
-print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
-  group_by(site) %>% 
-  summarise(N = length(site)))
-
-boxplot(E1 ~ species, data = height_march_surv_may) # <---- make sure to change to df, not the lme
-abline(h = 0)
-# error message - variable lengths differ <-- omitting rgr in model it now runs
-print(height_march_surv_may %>%  # check number of individuals per plot in March 2018
-  group_by(species) %>% 
-  summarise(N = length(species)))
-# species N
-# CEOL	  130			
-# HEAR	  215			
-# RHOV	  136			
-# SAAP	  125	
-
-# Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
-qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
-qqline(ranef(MOD)$plot_number[,1]) # plot number
-
-#qqnorm(ranef(MOD)$individual[,1], main = "Plot Residuals")
-#qqline(ranef(MOD)$individual[,1]) # individual: blue, green, S, C, R
 ```
 
 ```{r may 2018 stats by species, include=TRUE}
@@ -3933,10 +3953,10 @@ emmeans(glme.nov2019.modcover, list(pairwise ~ species), adjust = "tukey")
 # 1           estimate    SE  df z.ratio p.value
 # CEOL - HEAR   -1.297 0.557 Inf  -2.326  0.0921
 # CEOL - RHOV    0.162 0.645 Inf   0.252  0.9944
-# CEOL - SAAP   -1.726 0.571 Inf  -3.019  0.0135
-# HEAR - RHOV    1.459 0.562 Inf   2.595  0.0466
+# CEOL - SAAP   -1.726 0.571 Inf  -3.019  0.0135 <-- 
+# HEAR - RHOV    1.459 0.562 Inf   2.595  0.0466 <--
 # HEAR - SAAP   -0.429 0.373 Inf  -1.149  0.6590
-# RHOV - SAAP   -1.888 0.574 Inf  -3.288  0.0056
+# RHOV - SAAP   -1.888 0.574 Inf  -3.288  0.0056 <--
 plot(emmeans(glme.nov2019.modcover, list(pairwise ~ species), adjust = "tukey"))
 
 emmeans(glme.nov2019.modcover, list(pairwise ~ site), adjust = "tukey")
@@ -3998,25 +4018,34 @@ dredge(glme.nov2019.modtreat)
 #16 -1.7200      0.3892   +   +   +  9 -121.899 262.6  0.00  0.630 <-- best model
 plot(allEffects(MOD))
 
-# par + tdr
-glme.nov2019.mod1 <- glmer(as.factor(nov_alive) ~ normalized_par + soil_moisture + exotic_percentcover + site + may_volume_cm3 + species 
+# par 
+glme.nov2019.mod1 <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3 + species 
                              + (1|plot_number) # random effect needed for glmer
                                 , 
                          family = binomial(link = "logit"), 
                          data = height_may_surv_nov_2019, na.action = "na.fail")
+anova(glme.nov2019.mod1)
 summary(glme.nov2019.mod1)
-#                   Estimate Std. Error z value Pr(>|z|)   
-#(Intercept)         -1.47809    0.52383  -2.822  0.00478 **
-#normalized_par      -0.24149    0.27152  -0.889  0.37378   
-#soil_moisture       -0.04485    0.26266  -0.171  0.86442   
-#exotic_percentcover -0.29803    0.20798  -1.433  0.15186   
-#site2               -0.88006    0.56134  -1.568  0.11693   
-#may_volume_cm3       0.44942    0.20136   2.232  0.02562 * <-- volume
-#speciesHEAR          1.18156    0.56462   2.093  0.03638 * <-- species
-#speciesRHOV         -0.13719    0.64679  -0.212  0.83202   
-#speciesSAAP          1.60602    0.57607   2.788  0.00530 ** <-- species
-
-
+#Fixed effects:
+#                    Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)          -1.4951     0.5152  -2.902  0.00371 **
+#normalized_par       -0.2230     0.2492  -0.895  0.37083   
+#exotic_percentcover  -0.2984     0.2083  -1.433  0.15194   
+#site2                -0.8456     0.5238  -1.614  0.10643   
+#may_volume_cm3        0.4490     0.2015   2.228  0.02590 * 
+#speciesHEAR           1.1858     0.5644   2.101  0.03563 * 
+#speciesRHOV          -0.1315     0.6460  -0.204  0.83865   
+#speciesSAAP           1.6117     0.5754   2.801  0.00509 **
+emmeans(glme.nov2019.mod1, list(pairwise ~ species), adjust = "tukey")
+plot(emmeans(glme.nov2019.mod1, list(pairwise ~ species), adjust = "tukey"))
+#$`pairwise differences of species`
+# 1           estimate    SE  df z.ratio p.value
+# CEOL - HEAR   -1.186 0.564 Inf  -2.101  0.1527
+# CEOL - RHOV    0.132 0.646 Inf   0.204  0.9970
+# CEOL - SAAP   -1.612 0.575 Inf  -2.801  0.0262 <-- 
+# HEAR - RHOV    1.317 0.568 Inf   2.318  0.0939
+# HEAR - SAAP   -0.426 0.376 Inf  -1.134  0.6687
+# RHOV - SAAP   -1.743 0.575 Inf  -3.032  0.0130 <-- 
 
 
 MOD <- glme.nov2019.mod1 
