@@ -3385,6 +3385,7 @@ summary(glmm_interactionmay2019_site)
 
 
 ### E5. May 2019 post hoc by species
+
 ```{r may 2019 glmer by species CEOL, include=TRUE}
 #CEOL
 glme.may2019.mod.full_CEOL <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
@@ -3412,7 +3413,7 @@ summary(glme.may2018.modspp_CEOL)
 #normalized_par                 0.5641     0.3124   1.806   0.0710 .
 #soil_moisture                  0.1535     0.3249   0.472   0.6366  
 #exotic_percentcover            0.2004     0.2643   0.758   0.4482  
-#site2                         -1.6835     0.6806  -2.473   0.0134 * <-- 
+#site2                         -1.6835     0.6806  -2.473   0.0134 * <-- site
 #volume_cm3                     8.5060     4.6305   1.837   0.0662 .
 #normalized_par:soil_moisture   0.3512     0.2823   1.244   0.2135 
 
@@ -3453,7 +3454,7 @@ summary(glme.may2019.mod.full_HEAR)
 #jan_volume_cm3               -0.029132   0.255309  -0.114  0.90916   
 #normalized_par:soil_moisture  0.003847   0.417743   0.009  0.99265   
 
-glme.may2019.mod.full_HEAR.scatter <- ggplot(data = height_jan_surv_may_2019, 
+glme.may2019.mod.full_HEAR.scatter <- ggplot(data = height_jan_surv_may_2019 %>%  filter(species == "HEAR"), 
                        aes(x = normalized_par, y = may2019_alive, col = normalized_par)) +
   geom_point(aes(color = normalized_par)) +
   geom_jitter(width = 0.0, height = 0.0) +
@@ -4135,6 +4136,7 @@ summary(glme.nov2019.modcover)
 #may_volume_cm3   0.3512     0.1891   1.857  0.06334 . 
 #site2           -0.8247     0.3939  -2.094  0.03628 * <-- site
 
+# glme.nov2019.modcover x species
 emmeans(glme.nov2019.modcover, list(pairwise ~ species), adjust = "tukey")
 #$`pairwise differences of species`
 # 1           estimate    SE  df z.ratio p.value
@@ -4146,6 +4148,8 @@ emmeans(glme.nov2019.modcover, list(pairwise ~ species), adjust = "tukey")
 # RHOV - SAAP   -1.888 0.574 Inf  -3.288  0.0056 <--
 plot(emmeans(glme.nov2019.modcover, list(pairwise ~ species), adjust = "tukey"))
 
+
+# glme.nov2019.modcover x species
 emmeans(glme.nov2019.modcover, list(pairwise ~ site), adjust = "tukey")
 #$`pairwise differences of site`
 # 1             estimate    SE  df z.ratio p.value
@@ -4178,6 +4182,13 @@ summary(glme.nov2019.modtreat)
 #may_volume_cm3   0.3892     0.1894   2.055 0.039896 *  <-- volume
 #site2           -1.2429     0.3720  -3.341 0.000834 *** <-- site
 
+emmeans(glme.nov2019.modtreat, list(pairwise ~ treatment), adjust = "tukey")
+plot(emmeans(glme.nov2019.modtreat, list(pairwise ~ treatment), adjust = "tukey"))
+#$`pairwise differences of treatment`
+# 1           estimate    SE  df z.ratio p.value
+# full - half   -1.066 0.403 Inf  -2.647  0.0221 <--
+# full - none   -0.201 0.407 Inf  -0.495  0.8738
+# half - none    0.864 0.400 Inf   2.160  0.0782
 emmeans(glme.nov2019.modtreat, list(pairwise ~ species), adjust = "tukey")
 #$`pairwise differences of species`
 # 1           estimate    SE  df z.ratio p.value
@@ -4205,7 +4216,7 @@ dredge(glme.nov2019.modtreat)
 #16 -1.7200      0.3892   +   +   +  9 -121.899 262.6  0.00  0.630 <-- best model
 plot(allEffects(MOD))
 
-# par 
+# par, no tdr
 glme.nov2019.mod1 <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3 + species 
                              + (1|plot_number) # random effect needed for glmer
                                 , 
@@ -4241,6 +4252,8 @@ testDispersion(simulationOutput)
 #data:  simulationOutput
 #dispersion = 1.0086, p-value = 0.84
 #alternative hypothesis: two.sided
+```
+```{r nov 2019 glmer sand box}
 dredge(glme.nov2019.mod1)
 #Model selection table 
 #     (Int) ext_prc may_vlm_cm3 nrm_par sit  sol_mst spc df   logLik  AICc delta weight
@@ -4338,9 +4351,8 @@ random.intercepts = ranef(MOD)$plot_number[["(Intercept)"]] # create vector of r
 plot.intercepts = fixef(MOD)[1] + random.intercepts # create intercepts estimates by adding effects together
 
 ```
-### F4. Nov 2019 post hoc
 
-```{r nov 2019 post hoc, include=TRUE}
+```{r nov 2019 glmer dredge and more models sandbox, include=TRUE}
 
 # mafacover is the best model
 glme.nov2019.best <- glmer(as.factor(nov_alive) ~ mafacover + species + may_volume_cm3 + site + (1|plot_number), 
@@ -4456,50 +4468,171 @@ summary(glmm_interactionNOV2019_vol)
 #may_volume_cm3   0.7734     0.1865   4.146 3.38e-05 ***
 ```
 
-```{r}
-glme.sep2019.mod <- glmer(as.factor(sep_alive) ~ normalized_par +  soil_moisture  + exotic_percentcover + site + may_stem_height_cm  + species + (1|plot_number), 
-                         family = binomial,
-                         data = height_may_surv_sep_2019)
-                         
+### F4. November 2019 glmer models - survival by species
 
-MOD <- glme.may2019.mod
+```{r nov 2019 summary survival by species, include = TRUE}
 
-# Calculate model's residual and fitted values
-F1 <- fitted(MOD)
-E1 <- residuals(MOD, "pearson")
-
-# See residuals as a histogram, look for normal distribution
-hist(E1)
-
-# Graph residuals against a normal distribution, look for all points to be on 1:1 line
-#need to call next two lines together
-qqnorm(E1, xlab = "Theoretical Quantiles", ylab = "Pearson Residuals")
-qqline(E1)
-
-# Graph residuals vs fitted values to inspect homogeneity of variance, look for a random scattering of plots
-# run together 2 lines
-plot(x=F1, y=E1, xlab="Fitted Model Values", ylab="Pearson Residuals", main = "Variance")
-abline(h = 0) # looking for random scatter
-
-# Check for crazy outliers, look for lines MUCH taller than the rest of data
-plot(cooks.distance(MOD))
-
-# Plot a box plot for each factor, look for equal variance amount levels along the zero line
-# Box plots need to be assessed for every fixed effect (categorical factor) for your model. 
-# Random effects need the qqline just like normality. 
-# So, only site and treatment get box plots. 
-# MAFA cover is a covariate (continuous variable).
-
-boxplot(E1 ~ site, data = height_march_surv_may_2019) # <---- make sure to change to df, not the lme
-abline(h = 0)
-
-# Plot each random effect in the model - things in the (1|_), look for dots along 1:1 line
-#qqnorm(ranef(MOD)$treatment[,1], main = "Plot Residuals")
-#qqline(ranef(MOD)$treatment[,1]) # unique dates
+print(height_may_surv_nov_2019_notransf %>%  
+  group_by(species) %>% 
+  summarise(N_May2019 = length(nov_alive), 
+            total_survived_NOV2019 = sum(nov_alive == "1"), 
+            total_died = sum(nov_alive == "0"),
+            percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
 
 ```
 
-```{r}
+
+```{r nov 2019 glmer by species CEOL, include=TRUE}
+glme.nov2019.mod1_ceol <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "CEOL")), na.action = "na.fail")
+# Warning:  Hessian is numerically singular: parameters are not uniquely determined
+# most CEOL die so it's not easy for the model to predict what lives. 
+view(height_may_surv_nov_2019 %>% filter(species == "CEOL"))
+
+MOD <- glme.nov2019.mod1_ceol 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.nov2019.mod1_ceol)
+summary(glme.nov2019.mod1_ceol)
+#Fixed effects:
+#                     Estimate Std. Error z value Pr(>|z|)
+#(Intercept)           -1.8324     1.3895  -1.319    0.187
+#normalized_par        -1.3809     1.3576  -1.017    0.309
+#exotic_percentcover   -0.3674     0.7910  -0.464    0.642
+#site2                -20.0969  2048.0003  -0.010    0.992
+#may_volume_cm3         0.7887     1.4961   0.527    0.598
+
+glme.nov2019.mod1_ceol.scatter <- ggplot(data = height_may_surv_nov_2019 %>%  filter (species == "CEOL"), 
+                       aes(x = normalized_par, y = nov_alive, col = normalized_par)) +
+  geom_point(aes(color = normalized_par)) +
+  geom_jitter(width = 0.0, height = 0.0) +
+  theme_classic()
+glme.nov2019.mod1_ceol.scatter
+
+glme.nov2019.mod1_ceol_site1 <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "CEOL")) %>%  filter(site == "1"), na.action = "na.fail")
+
+MOD <- glme.nov2019.mod1_ceol_site1 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.nov2019.mod1_ceol_site1)
+summary(glme.nov2019.mod1_ceol_site1)
+#Fixed effects:
+#                    Estimate Std. Error z value Pr(>|z|)
+#(Intercept)          -1.8324     1.3895  -1.319    0.187
+#normalized_par       -1.3809     1.3576  -1.017    0.309
+#exotic_percentcover  -0.3674     0.7910  -0.464    0.642
+#may_volume_cm3        0.7887     1.4961   0.527    0.598
+```
+
+```{r nov 2019 glmer by species HEAR, include=TRUE}
+glme.nov2019.mod1_HEAR <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "HEAR")), na.action = "na.fail")
+
+MOD <- glme.nov2019.mod1_HEAR 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.nov2019.mod1_HEAR)
+summary(glme.nov2019.mod1_HEAR)
+#Fixed effects:
+#                    Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)          -0.5497     0.5430  -1.012   0.3114  
+#normalized_par       -0.6535     0.4629  -1.412   0.1580  
+#exotic_percentcover  -0.2429     0.3827  -0.635   0.5256  
+#site2                -0.7217     0.9611  -0.751   0.4527  
+#may_volume_cm3        0.6435     0.3852   1.671   0.0948 .
+
+glme.nov2019.mod1_HEAR.scatter <- ggplot(data = height_may_surv_nov_2019 %>%  filter(species == "HEAR"), 
+                       aes(x = normalized_par, y = nov_alive, col = normalized_par)) +
+  geom_point(aes(color = normalized_par)) +
+  geom_jitter(width = 0.0, height = 0.0) +
+  theme_classic()
+glme.nov2019.mod1_HEAR.scatter
+```
+
+```{r nov 2019 glmer by species RHOV, include=TRUE}
+glme.nov2019.mod1_rhov <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "RHOV")), na.action = "na.fail")
+# boundary (singular) fit: see help('isSingular')
+view(height_may_surv_nov_2019 %>% filter(species == "RHOV"))
+
+MOD <- glme.nov2019.mod1_rhov 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.nov2019.mod1_rhov)
+summary(glme.nov2019.mod1_rhov)
+#Fixed effects:
+#                     Estimate Std. Error z value Pr(>|z|)
+#(Intercept)           -1.8324     1.3895  -1.319    0.187
+#normalized_par        -1.3809     1.3576  -1.017    0.309
+#exotic_percentcover   -0.3674     0.7910  -0.464    0.642
+#site2                -20.0969  2048.0003  -0.010    0.992
+#may_volume_cm3         0.7887     1.4961   0.527    0.598
+
+glme.nov2019.mod1_rhov.scatter <- ggplot(data = height_may_surv_nov_2019 %>%  filter(species == "RHOV"), 
+                       aes(x = normalized_par, y = nov_alive, col = normalized_par)) +
+  geom_point(aes(color = normalized_par)) +
+  geom_jitter(width = 0.0, height = 0.0) +
+  theme_classic()
+glme.nov2019.mod1_rhov.scatter
+
+print(height_may_surv_nov_2019_notransf %>%  
+  group_by(species, site) %>% 
+  summarise(N_May2019 = length(nov_alive), 
+            total_survived_NOV2019 = sum(nov_alive == "1"), 
+            total_died = sum(nov_alive == "0"),
+            percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
+```
+
+```{r nov 2019 glmer by species SAAP, include=TRUE}
+glme.nov2019.mod1_SAAP <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "SAAP")), na.action = "na.fail")
+# Warning:  Hessian is numerically singular: parameters are not uniquely determined
+# most CEOL die so it's not easy for the model to predict what lives. 
+view(height_may_surv_nov_2019 %>% filter(species == "SAAP"))
+
+MOD <- glme.nov2019.mod1_SAAP 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.nov2019.mod1_SAAP)
+summary(glme.nov2019.mod1_SAAP)
+#Fixed effects:
+#                     Estimate Std. Error z value Pr(>|z|)
+#(Intercept)           -1.8324     1.3895  -1.319    0.187
+#normalized_par        -1.3809     1.3576  -1.017    0.309
+#exotic_percentcover   -0.3674     0.7910  -0.464    0.642
+#site2                -20.0969  2048.0003  -0.010    0.992
+#may_volume_cm3         0.7887     1.4961   0.527    0.598
+
+glme.nov2019.mod1_SAAP.scatter <- ggplot(data = height_may_surv_nov_2019 %>%  filter(species == "SAAP"), 
+                       aes(x = normalized_par, y = nov_alive, col = normalized_par)) +
+  geom_point(aes(color = normalized_par)) +
+  geom_jitter(width = 0.0, height = 0.0) +
+  theme_classic()
+glme.nov2019.mod1_SAAP.scatter
+```
+
+
+# G. May - September 2019
+
+## G1. September 2019 Predictions
+
+```{r september 2019 predictions, include=FALSE}
 print(glme.sep2019.mod)
 summary(glme.sep2019.mod)
 
@@ -4581,10 +4714,11 @@ height_site1_plot_2019 + height_site2_plot_2019
 
 ```
 
-## Repeat each model for each species
+## G2. September 2019 Predictions by species
 
 ### CEOL 
-```{r}
+
+```{r predictions sept 2019 ceol}
 ceol_2019_sep <- height_may_surv_sep_2019 %>% 
   filter(species == "CEOL")
   
@@ -4647,7 +4781,7 @@ ggplot()+
 
 ### RHOV
 
-```{r} 
+```{r predictions sept 2019 rhov} 
 rhov_2019_sep <- height_may_surv_sep_2019 %>% 
   filter(species == "RHOV")
 
@@ -4695,7 +4829,7 @@ summary(rhov_2019_sep_model)
 
 ### HEAR
 
-```{r}
+```{r predictions sept 2019 hear}
 hear_2019_sep <- height_may_surv_sep_2019 %>% 
   filter(species == "HEAR")
 
@@ -4787,9 +4921,9 @@ hear_exotic_site1_plot_2019 + hear_exotic_site2_plot_2019
 
 ```
 
+### SAAP
 
-
-```{r}
+```{r predictions sept 2019 saap}
 saap_2019_sep <- height_may_surv_sep_2019 %>%
   filter(species == "SAAP")
 
