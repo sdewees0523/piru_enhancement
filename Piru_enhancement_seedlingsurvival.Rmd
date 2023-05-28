@@ -1400,6 +1400,14 @@ simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) # follows binomial distribution
 
 anova(glme.may2018.modspp_CEOL)
+#Analysis of Variance Table
+#                             npar Sum Sq Mean Sq F value
+#normalized_par                  1 0.4337  0.4337  0.4337
+#soil_moisture                   1 2.8874  2.8874  2.8874
+#exotic_percentcover             1 0.4425  0.4425  0.4425
+#site                            1 7.1409  7.1409  7.1409
+#volume_cm3                      1 3.6865  3.6865  3.6865
+#normalized_par:soil_moisture    1 1.5720  1.5720  1.5720
 summary(glme.may2018.modspp_CEOL)
 #Fixed effects:
 #                             Estimate Std. Error z value Pr(>|z|)  
@@ -2483,7 +2491,7 @@ height_jan_surv_may_2019_notransf <- full_join(height_jan_2019, survival_may_201
   left_join(site_cond_may2019, by = "plot_number") %>% 
   rename(exotic_percentcover = cover_percent) %>% 
   dplyr::select(!MAFA_removal)
-view(height_jan_surv_may_2019_notransf)
+print(height_jan_surv_may_2019_notransf)
 write.csv(height_jan_surv_may_2019_notransf, "data/processed/height_jan_surv_may_2019_notransf.csv")
 
 # full join - with data transformation
@@ -2500,7 +2508,7 @@ height_jan_surv_may_2019 <- full_join(height_jan_2019, survival_may_2019, by = c
          mafacover = scale(mafacover),
          jan_stem_height_cm = scale(jan_stem_height_cm),
          jan_volume_cm3 = scale(jan_volume_cm3))
-view(height_jan_surv_may_2019)
+glimpse(height_jan_surv_may_2019)
 
 # check number of individuals per plot
 print(height_jan_surv_may_2019 %>%  
@@ -2996,6 +3004,13 @@ summary(glme_rgr_may2018.1)
 glme.may2019.modcover <- glmer(as.factor(may2019_alive) ~ mafacover + species + jan_volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
                          data = height_jan_surv_may_2019, na.action = "na.fail")
+MOD <- glme.may2019.modcover 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) 
+#data:  simulationOutput
+#dispersion = 1.0068, p-value = 0.856
+#alternative hypothesis: two.sided
+
 anova(glme.may2019.modcover)
 summary(glme.may2019.modcover)
 #Fixed effects:
@@ -3007,12 +3022,7 @@ summary(glme.may2019.modcover)
 #speciesSAAP     0.15371    0.36818   0.417  0.67632   
 #jan_volume_cm3  0.20678    0.19061   1.085  0.27800   
 #site2          -1.34081    0.42527  -3.153  0.00162 **
-MOD <- glme.may2019.modcover 
-simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
-testDispersion(simulationOutput) 
-#data:  simulationOutput
-#dispersion = 1.0068, p-value = 0.856
-#alternative hypothesis: two.sided
+
 dredge(glme.may2019.modcover)
 #Model selection table 
 #    (Int) jan_vlm_cm3      mfc sit spc df   logLik  AICc delta weight
@@ -3343,7 +3353,154 @@ summary(glmm_interactionmay2019_site)
 ```
 
 
-### E5. May 2018 Predictions
+### E5. May 2019 post hoc by species
+```{r may 2019 glmer by species CEOL, include=TRUE}
+#CEOL
+glme.may2019.mod.full_CEOL <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_jan_surv_may_2019 %>% filter(species == "CEOL")))
+
+MOD <- glme.may2019.mod.full_CEOL 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.may2018.modspp_CEOL)
+#Analysis of Variance Table
+#                             npar Sum Sq Mean Sq F value
+#normalized_par                  1 0.4337  0.4337  0.4337
+#soil_moisture                   1 2.8874  2.8874  2.8874
+#exotic_percentcover             1 0.4425  0.4425  0.4425
+#site                            1 7.1409  7.1409  7.1409
+#volume_cm3                      1 3.6865  3.6865  3.6865
+#normalized_par:soil_moisture    1 1.5720  1.5720  1.5720
+summary(glme.may2018.modspp_CEOL)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)                    4.0037     2.3822   1.681   0.0928 .
+#normalized_par                 0.5641     0.3124   1.806   0.0710 .
+#soil_moisture                  0.1535     0.3249   0.472   0.6366  
+#exotic_percentcover            0.2004     0.2643   0.758   0.4482  
+#site2                         -1.6835     0.6806  -2.473   0.0134 * <-- 
+#volume_cm3                     8.5060     4.6305   1.837   0.0662 .
+#normalized_par:soil_moisture   0.3512     0.2823   1.244   0.2135 
+
+emmeans(glme.may2018.modspp_CEOL, list(pairwise ~ site), adjust = "tukey")
+#$`pairwise differences of site`
+# 1             estimate    SE  df z.ratio p.value
+# site1 - site2     1.68 0.681 Inf   2.473  0.0134
+```
+
+```{r may 2019 glmer by species RHOV, include=TRUE}
+#HEAR
+glme.may2019.mod.full_HEAR <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_jan_surv_may_2019 %>% filter(species == "HEAR")))
+
+MOD <- glme.may2019.mod.full_HEAR 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.may2019.mod.full_HEAR)
+#Analysis of Variance Table
+#                             npar Sum Sq Mean Sq F value
+#normalized_par                  1 5.8742  5.8742  5.8742
+#soil_moisture                   1 5.0897  5.0897  5.0897
+#exotic_percentcover             1 0.3782  0.3782  0.3782
+#site                            1 3.5767  3.5767  3.5767
+#jan_volume_cm3                  1 0.0137  0.0137  0.0137
+#normalized_par:soil_moisture    1 0.0001  0.0001  0.0001
+summary(glme.may2019.mod.full_HEAR)
+#Fixed effects:
+#                              Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)                   2.544377   0.851639   2.988  0.00281 **
+#normalized_par               -0.726634   0.361734  -2.009  0.04456 * <-- normPAR
+#soil_moisture                 0.063631   0.501135   0.127  0.89896   
+#exotic_percentcover          -0.136961   0.310149  -0.442  0.65878   
+#site2                        -1.881442   1.026064  -1.834  0.06671 . 
+#jan_volume_cm3               -0.029132   0.255309  -0.114  0.90916   
+#normalized_par:soil_moisture  0.003847   0.417743   0.009  0.99265   
+
+glme.may2019.mod.full_HEAR.scatter <- ggplot(data = height_jan_surv_may_2019, 
+                       aes(x = normalized_par, y = may2019_alive, col = normalized_par)) +
+  geom_point(aes(color = normalized_par)) +
+  geom_jitter(width = 0.0, height = 0.0) +
+  theme_classic()
+glme.may2019.mod.full_HEAR.scatter
+```
+
+```{r may 2019 glmer by species RHOV, include=TRUE}
+#RHOV
+glme.may2019.mod.full_RHOV <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_jan_surv_may_2019 %>% filter(species == "RHOV")))
+
+MOD <- glme.may2019.mod.full_RHOV 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.may2019.mod.full_RHOV)
+#Analysis of Variance Table
+#                             npar Sum Sq Mean Sq F value
+#normalized_par                  1 0.8118  0.8118  0.8118
+#soil_moisture                   1 8.3508  8.3508  8.3508
+#exotic_percentcover             1 0.8740  0.8740  0.8740
+#site                            1 4.4811  4.4811  4.4811
+#jan_volume_cm3                  1 2.9589  2.9589  2.9589
+#normalized_par:soil_moisture    1 1.9824  1.9824  1.9824
+summary(glme.may2019.mod.full_RHOV)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)                    2.6449     1.7022   1.554   0.1202  
+#normalized_par                -0.2989     0.2627  -1.138   0.2551  
+#soil_moisture                  0.4456     0.3121   1.428   0.1534  
+#exotic_percentcover            0.2373     0.2455   0.967   0.3338  
+#site2                         -1.1758     0.6447  -1.824   0.0682 .
+#jan_volume_cm3                 4.2517     2.5625   1.659   0.0971 .
+#normalized_par:soil_moisture   0.3956     0.2809   1.408   0.1591  
+
+```
+
+```{r may 2019 glmer by species SAAP, include=TRUE}
+#SAAP
+glme.may2019.mod.full_SAAP <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_jan_surv_may_2019 %>% filter(species == "SAAP")))
+
+MOD <- glme.may2019.mod.full_SAAP 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.may2019.mod.full_SAAP)
+#Analysis of Variance Table
+#                             npar  Sum Sq Mean Sq F value
+#normalized_par                  1 0.11317 0.11317  0.1132
+#soil_moisture                   1 0.11398 0.11398  0.1140
+#exotic_percentcover             1 0.04935 0.04935  0.0494
+#site                            1 0.04983 0.04983  0.0498
+#jan_volume_cm3                  1 0.88477 0.88477  0.8848
+#normalized_par:soil_moisture    1 1.14394 1.14394  1.1439
+summary(glme.may2019.mod.full_SAAP)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)
+#(Intercept)                   0.55568    0.50568   1.099    0.272
+#normalized_par               -0.08395    0.29822  -0.282    0.778
+#soil_moisture                 0.16461    0.39791   0.414    0.679
+#exotic_percentcover          -0.20883    0.30271  -0.690    0.490
+#site2                         0.36695    0.83894   0.437    0.662
+#jan_volume_cm3                0.31944    0.37434   0.853    0.393
+#normalized_par:soil_moisture  0.33512    0.32698   1.025    0.305
+
+emmeans(glme.may2019.mod.full_SAAP, list(pairwise ~ site), adjust = "tukey")
+#$`pairwise differences of site`
+# 1             estimate    SE  df z.ratio p.value
+# site1 - site2     1.68 0.681 Inf   2.473  0.0134
+```
+
+### E6. May 2019 Predictions
 ```{r , include = FALSE}
 ## Soil moisture
 
@@ -3468,7 +3625,7 @@ site_1_sh_plot + site_2_sh_plot
 ```
 
 
-### E6. Predictions for each species
+### E7. Predictions for each species
 
 #### CEOL 
 ```{r}
