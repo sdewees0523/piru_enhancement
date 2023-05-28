@@ -3022,6 +3022,20 @@ summary(glme.may2019.modcover)
 #speciesSAAP     0.15371    0.36818   0.417  0.67632   
 #jan_volume_cm3  0.20678    0.19061   1.085  0.27800   
 #site2          -1.34081    0.42527  -3.153  0.00162 **
+emmeans(glme.may2019.modcover, list(pairwise ~ species), adjust = "tukey")
+#$`pairwise differences of species`
+# 1           estimate    SE  df z.ratio p.value
+# CEOL - HEAR   -0.562 0.449 Inf  -1.251  0.5943
+# CEOL - RHOV    1.104 0.353 Inf   3.122  0.0097 <--
+# CEOL - SAAP   -0.154 0.368 Inf  -0.417  0.9755
+# HEAR - RHOV    1.666 0.442 Inf   3.772  0.0009 <--
+# HEAR - SAAP    0.409 0.358 Inf   1.142  0.6634
+# RHOV - SAAP   -1.257 0.348 Inf  -3.609  0.0017 <--
+plot(emmeans(glme.may2019.modcover, list(pairwise ~ species), adjust = "tukey"))
+emmeans(glme.may2019.modcover, list(pairwise ~ site), adjust = "tukey")
+#$`pairwise differences of site`
+# 1             estimate    SE  df z.ratio p.value
+# site1 - site2     1.34 0.425 Inf   3.153  0.0016
 
 dredge(glme.may2019.modcover)
 #Model selection table 
@@ -3055,6 +3069,23 @@ summary(glme.may2019.modtreat)
 #speciesSAAP      0.1490     0.3680   0.405 0.685580    
 #jan_volume_cm3   0.2083     0.1897   1.098 0.272077    
 #site2           -1.3638     0.3490  -3.908 9.32e-05 *** <-- site
+emmeans(glme.may2019.modtreat, list(pairwise ~ species), adjust = "tukey")
+#$`pairwise differences of species`
+# 1           estimate    SE  df z.ratio p.value
+# CEOL - HEAR   -0.562 0.449 Inf  -1.251  0.5943
+# CEOL - RHOV    1.104 0.353 Inf   3.122  0.0097 <--
+# CEOL - SAAP   -0.154 0.368 Inf  -0.417  0.9755
+# HEAR - RHOV    1.666 0.442 Inf   3.772  0.0009 <--
+# HEAR - SAAP    0.409 0.358 Inf   1.142  0.6634
+# RHOV - SAAP   -1.257 0.348 Inf  -3.609  0.0017 <--
+plot(emmeans(glme.may2019.modtreat, list(pairwise ~ species), adjust = "tukey"))
+
+emmeans(glme.may2019.modtreat, list(pairwise ~ site), adjust = "tukey")
+#$`pairwise differences of site`
+# 1             estimate    SE  df z.ratio p.value
+# site1 - site2     1.36 0.349 Inf   3.908  0.0001
+plot(emmeans(glme.may2019.modtreat, list(pairwise ~ site), adjust = "tukey"))
+
 MOD <- glme.may2019.modtreat 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) 
@@ -3852,11 +3883,10 @@ par_nov2019 <- dplyr::filter(par, year == "2019" & month =="11") %>%
   dplyr::select(site, plot_number, treatment, normalized_par) 
 glimpse(par_nov2019)
 
-tdr_july2019 <- tdr %>% 
-  dplyr::filter(year == "2019" & month == "3")
-  
-# tdr March 2019 - df created from May 2019 
-glimpse(tdr_march2019)
+# OMIT TDR since TDR was only recorded in March 2019 and this is for May-November 2019
+#tdr_july2019 <- tdr %>% 
+#  dplyr::filter(year == "2019" & month == "3") # tdr March 2019 - df created from May 2019 
+#glimpse(tdr_march2019)
 #tdr_march2019 <- tdr %>% 
 #  dplyr::filter(year == "2019" & month == "3") %>% 
 #  dplyr::select(site, plot_number, treatment, soil_moisture)  %>% 
