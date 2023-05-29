@@ -77,7 +77,7 @@ surv_19_byplot <- surv_all %>%
   rename(sd = fn2) %>% 
   mutate(plot_number = as.character(plot_number))
 
-# 2018 seedling survival all
+# 2019 seedling survival all
 surv_19_all <- surv_19_byplot %>%
   group_by(month_count) %>% 
   summarise_at(vars(sum), list(mean,sd)) %>% 
@@ -160,6 +160,21 @@ ggplotly(line1_surv_19_all)
 ```
 
 ```{r additional figures, include=FALSE}
+
+# survival by species 2018
+survival_species_2018 <- ggplot(
+  data = survival_species_2018,
+  aes(x = month_count, y = mean, color = species)) +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd)) +
+  geom_line(aes(color = species, linetype = species)) + 
+  geom_point(size=2, shape=16) +
+  theme(legend.position="top") +
+  theme_classic() +
+  labs(title="survival_species in 2018",x="Months Since Planting", y = "Amount Alive") 
+  #geom_smooth()
+ggplot(survival_species_2018)
+
+# 2019 by treatment
 survival_treatment_G <- ggplot(
   data = survival_treatment,
   aes(x = month_count, y = mean, color = treatment)) +
@@ -172,6 +187,14 @@ survival_treatment_G <- ggplot(
   #geom_smooth()
 ggplotly(survival_treatment_G)
 
+survival_species_2018 <- surv_all %>%
+   filter(year == "2018"
+  #        ,month == "M"
+  #        ,species == "S"
+   ) %>%
+  filter(month_count == "0" | month_count == "1" | month_count == "4" | month_count == "11" ) %>%  
+  group_by(species, month_count) %>%
+  summarise_at(vars(alive), funs(mean,sd))
 
 survival_species <- surv_all %>%
    filter(year == "2019"
@@ -181,7 +204,7 @@ survival_species <- surv_all %>%
   group_by(species, month_count) %>%
   summarise_at(vars(alive), funs(mean,sd))
 
-
+# survival by species
 survival_species_G <- ggplot(
   data = survival_species,
   aes(x = month_count, y = mean, color = species)) +
