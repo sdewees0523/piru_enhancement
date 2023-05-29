@@ -797,6 +797,7 @@ ggplot(stomatal_moisture, aes(x = soil_moisture, y = stomatal_conductance, group
        y = "Stomatal conductance")+
   facet_wrap(~species)
 
+# CEOL
 ceol_sm_1 <- stomatal_moisture %>% 
   filter(species == "ceanothus") %>% 
   filter(treatment == "drought") %>% 
@@ -815,7 +816,6 @@ ceol_1_parameters <- summary(ceol_1_nls)[["coefficients"]] %>%
          gsw50_moist = H,
          gsw0_moist = c) %>% 
   mutate(gsw50_moist = gsw50_moist + gsw0_moist)
-
 
 
 ceol_sm_12 <- stomatal_moisture %>% 
@@ -958,6 +958,8 @@ ggplot()+
   theme_classic()+
   ylim(0, 0.4)
 
+
+# HEAR
 hear_sm <- stomatal_moisture %>% 
   filter(species == "heteromeles")
 
@@ -973,6 +975,7 @@ ggplot()+
   geom_line(data = hear_predict, aes(x = soil_moisture, y = stomatal_conductance), size = 1)+
   theme_classic()
 
+# RHOV
 rhov_sm <- stomatal_moisture %>% 
   filter(species == "rhus") %>% 
   filter(treatment == "drought")
@@ -998,9 +1001,12 @@ ceanothus <- stomatal_moisture %>%
   dplyr::select(stomatal_conductance, soil_moisture) %>% 
   rename(intensity = stomatal_conductance, time = soil_moisture) %>% 
   filter(intensity > -0.3)
+
 ceanothus_normal <- ceanothus %>% 
   normalizeData()
+
 ceanothus_curve <- sigmoidalFitFunction(ceanothus_normal, tryCounter = 1)
+
 ceanothusTheoretical <- sigmoidalFitFormula(time,
                                            maximum = ceanothus_curve$maximum_Estimate,
                                            slopeParam = ceanothus_curve$slopeParam_Estimate,
@@ -1132,7 +1138,6 @@ ggplot(water_potential, aes(x = predawn_water_potential, y = kstem)) +
 
 ```{r, echo=FALSE, message= FALSE, warning=FALSE}
 leaf_areas <- read.csv(here("data/drought_experiment_data/data", "leaf_areas.csv")) %>% 
-  rename(species = ï..species) %>% 
   mutate(treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
                                species == "hear" & id %in% drought_hear$id ~ "drought",
                                TRUE ~ "wet"))
@@ -1141,6 +1146,7 @@ stem_areas <- read.csv(here("data/drought_experiment_data/data", "stem_areas.csv
   summarise(diameter_mm = mean(diameter_mm)) %>% 
   mutate(radius_cm = diameter_mm/20,
          stem_area = pi * radius_cm^2)
+
 la_sa <- right_join(leaf_areas, stem_areas, by = c("species", "id")) %>% 
   mutate(la_sa = leaf_area_cm2/stem_area) %>% 
   full_join(water_potential, by = c("species", "id"))
