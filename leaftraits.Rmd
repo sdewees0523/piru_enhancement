@@ -41,6 +41,11 @@ glimpse(leaftraits)
 ### 1) SLA
 ```{r sla, include=TRUE}
 
+print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="HEAR")))) # leaf sla is similar between individuals
+print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="SAAP")))) # leaf sla is similar between individuals
+print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="CEOL")))) # leaf sla is similar between individuals
+print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="RHOV"))))
+
 # highlight all and run as one command
 SLA <- aov(SLA_m2kg ~ species, data = leaftraits)
 print(summary(SLA))
