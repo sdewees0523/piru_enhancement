@@ -52,16 +52,10 @@ library(knitr)
 ```
 
 ```{r par, include=FALSE}
-parmod_exotdr <- read_csv("data/processed/parmod_exotdr.csv")
-glimpse(parmod_exotdr)
-parmod_exotdr$treatment <- as.factor(parmod_exotdr$treatment)
-parmod_exotdr$month <- factor(parmod_exotdr$month, levels = c(1,3,4,5,7,9,11))
-parmod_exotdr$site <- as.factor(parmod_exotdr$site)
-
-lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + nncover+ year+ (1|plot_number),
-                   data = parmod_exotdr)
-
-anova(lme.parmod) 
+# save.image(file='myEnvironment.RData')
+# dir()
+# quit(save='no')
+load('myEnvironment.RData')
 ```
 
 
