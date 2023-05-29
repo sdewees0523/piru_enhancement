@@ -15,7 +15,7 @@ library(ggnewscale)
 # library(here) # similar to set working directory
 ```
 
-```{r, echo=FALSE, warning=FALSE}
+```{r load 2_Final xlsx, echo=FALSE, warning=FALSE}
 #pulling the photo + ParI data and sorting it by species
 Data_unsort <- read_excel("2_Final - R.xlsx")
 
@@ -25,7 +25,7 @@ Data_RHOV <- Data_unsort[73:112,]
 Data_SAAP <- Data_unsort[113:152,]
 ```
 
-```{r, echo=FALSE, warning=FALSE}
+```{r plot allline, echo=FALSE, warning=FALSE}
 allline <- ggplot() + 
     geom_smooth(method = stats::loess, formula = y ~ x, data = Data_CEOL, aes(x=PAR, y=Photo, color = "CEOL", Species = "Ceonthus Oliganthus")) +
     geom_smooth(method = stats::loess, formula = y ~ x, data = Data_HEAR, aes(x=PAR, y=Photo, color = "HEAR", Species = "Heteromeles arbutifolia")) +
@@ -37,7 +37,7 @@ allline <- ggplot() +
 ggplotly(allline, tooltip = c("Species"))
 ```
 
-```{r, echo=FALSE, warning=FALSE}
+```{r plot allpoint, echo=FALSE, warning=FALSE}
 allpoint <- ggplot() + 
     geom_point(data = Data_CEOL, aes(x=PAR, y=Photo, color = "CEOL", Species = "Ceonthus Oliganthus", ID = ID)) +
     geom_point(data = Data_HEAR, aes(x=PAR, y=Photo, color = "HEAR", Species = "Heteromeles arbutifolia", ID = ID)) +
@@ -51,7 +51,7 @@ ggplotly(allpoint, tooltip = c("Species", "PAR", "Photo", "ID"))
 
 ```
 
-```{r, echo=FALSE, warning=FALSE}
+```{r plot lines and points, echo=FALSE, warning=FALSE}
 all <- ggplot() + 
     geom_point(data = Data_CEOL, aes(x=PAR, y=Photo, color = "CEOL", Species = "Ceonthus Oliganthus", ID = ID)) +
     geom_point(data = Data_HEAR, aes(x=PAR, y=Photo, color = "HEAR", Species = "Heteromeles arbutifolia", ID = ID)) +
@@ -69,3 +69,9 @@ all <- ggplot() +
 
 ggplotly(all, tooltip = c("Species", "PAR", "Photo", "ID"))
 ```
+
+# Excel
+```{r}
+
+```
+
