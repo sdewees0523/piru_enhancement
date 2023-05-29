@@ -71,7 +71,29 @@ ggplotly(all, tooltip = c("Species", "PAR", "Photo", "ID"))
 ```
 
 # Excel
-```{r}
+```{r photo at par levels}
+lightcurve <- read_excel("lightcurve_data.xlsx")
+
+par_2000 <- aov(Photo ~ species, data = lightcurve %>%  filter(PAR =="2000"))
+par_1000 <- aov(Photo ~ species, data = lightcurve %>%  filter(PAR =="1000"))
+par_500 <- aov(Photo ~ species, data = lightcurve %>%  filter(PAR =="500"))
+par_250 <- aov(Photo ~ species, data = lightcurve %>%  filter(PAR =="250"))
+par_100 <- aov(Photo ~ species, data = lightcurve %>%  filter(PAR =="100"))
+par_50 <- aov(Photo ~ species, data = lightcurve %>%  filter(PAR =="50"))
+par_25 <- aov(Photo ~ species, data = lightcurve %>%  filter(PAR =="25"))
+
+summary(par_2000)
+summary(par_1000)
+summary(par_500)
+summary(par_250)
+summary(par_100)
+summary(par_50)
+summary(par_25)
+
+# if there are differences, run post hoc Tukey test
+print(TukeyHSD(par_2000))
+emmeans(par_2000, list(pairwise ~ species), adjust = "tukey")
+plot(emmeans(par_2000, list(pairwise ~ species), adjust = "tukey"))
 
 ```
 
