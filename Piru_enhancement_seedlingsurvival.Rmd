@@ -4577,6 +4577,8 @@ glme.nov2019.mod1_HEAR <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_p
                          family = binomial(link = "logit"), 
                          data = (height_may_surv_nov_2019 %>% filter(species == "HEAR")), na.action = "na.fail")
 
+view(height_may_surv_nov_2019 %>% filter(species == "HEAR"))
+
 MOD <- glme.nov2019.mod1_HEAR 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) # follows binomial distribution
@@ -4591,12 +4593,34 @@ summary(glme.nov2019.mod1_HEAR)
 #site2                -0.7217     0.9611  -0.751   0.4527  
 #may_volume_cm3        0.6435     0.3852   1.671   0.0948 .
 
+# scatter
 glme.nov2019.mod1_HEAR.scatter <- ggplot(data = height_may_surv_nov_2019 %>%  filter(species == "HEAR"), 
                        aes(x = normalized_par, y = nov_alive, col = normalized_par)) +
   geom_point(aes(color = normalized_par)) +
   geom_jitter(width = 0.0, height = 0.0) +
   theme_classic()
 glme.nov2019.mod1_HEAR.scatter
+
+# with mafacover 
+glme.nov2019.mod1_HEAR_cover <- glmer(as.factor(nov_alive) ~ mafacover  +normalized_par + exotic_percentcover + site + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "HEAR")), na.action = "na.fail")
+summary(glme.nov2019.mod1_HEAR_cover)
+
+# with treatment 
+glme.nov2019.mod1_HEAR_treat <- glmer(as.factor(nov_alive) ~ treatment  +normalized_par + exotic_percentcover + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "HEAR") %>%  filter(site =="1")), na.action = "na.fail")
+summary(glme.nov2019.mod1_HEAR_treat)
+
+# with treatment and mafa cover
+glme.nov2019.mod1_HEAR_treat_site1 <- glmer(as.factor(nov_alive) ~ treatment  +normalized_par + exotic_percentcover  + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "HEAR") %>%  filter(site == "1")), na.action = "na.fail")
+summary(glme.nov2019.mod1_HEAR_treat_site1)
 ```
 
 ```{r nov 2019 glmer by species RHOV, include=TRUE}
@@ -4676,6 +4700,26 @@ summary(glme.nov2019.mod1_SAAP_cover)
 ggplot(height_may_surv_nov_2019,aes(x=nov_alive,y=may_vol,col=treatment)) + geom_jitter() + geom_boxplot(alpha=0.2) + facet_wrap(~treatment)
 
 
+# with mafacover - Site 1
+glme.nov2019.mod1_SAAP_cover <- glmer(as.factor(nov_alive) ~ mafacover  +normalized_par + exotic_percentcover  + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "SAAP") %>%  filter(site =="1")), na.action = "na.fail")
+summary(glme.nov2019.mod1_SAAP_cover)
+
+# with treatment 
+glme.nov2019.mod1_SAAP_treat <- glmer(as.factor(nov_alive) ~ treatment  +normalized_par + exotic_percentcover + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "SAAP") %>%  filter(site =="1")), na.action = "na.fail")
+summary(glme.nov2019.mod1_SAAP_treat)
+
+# with treatment and mafa cover
+glme.nov2019.mod1_SAAP_treat_site1 <- glmer(as.factor(nov_alive) ~ treatment  +normalized_par + exotic_percentcover  + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "SAAP") %>%  filter(site == "1")), na.action = "na.fail")
+summary(glme.nov2019.mod1_SAAP_treat_site1)
 ```
 
 
