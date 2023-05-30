@@ -1146,28 +1146,27 @@ nnscatter.1 <- ggplot(data = nnmod, aes(x = mafacover, y = nncover)) +
   theme_bw()
 ggplotly(nnscatter.1)
 
-nncover_mafacover.lm <- lm(mafacover ~ nncover, data = environ_mod) 
+nncover_mafacover.lm <- lm( nncover ~ mafacover, data = na.omit(environ_mod))
 summary(nncover_mafacover.lm)
-#Residuals:
-#   Min     1Q Median     3Q    Max 
-#-35.03 -14.57  -3.22  11.53  47.29 
-
-#Coefficients:
-#            Estimate Std. Error t value Pr(>|t|)    
-#(Intercept) 41.23873    3.04699  13.534  < 2e-16 ***
-#nncover     -0.38816    0.07349  -5.282 2.54e-07 ***
-
-#Residual standard error: 19.42 on 286 degrees of freedom
-#  (36 observations deleted due to missingness)
-#Multiple R-squared:  0.08888,	Adjusted R-squared:  0.08569 <-- same as...
-#F-statistic:  27.9 on 1 and 286 DF,  p-value: 2.536e-07
-
-MOD <- nncover_mafacover 
+MOD <- nncover_mafacover.lm 
 r2(MOD)
-# R2 for Linear Regression
-#       R2: 0.089 <-- ... this call
-#  adj. R2: 0.086
 
+
+# nncover x treatment
+nncover_treat.lm <- lm( nncover ~ treatment, data = na.omit(environ_mod) )
+summary(nncover_treat.lm)
+
+# nncover x site
+nncover_site.lm <- lm( nncover ~ site, data = na.omit(environ_mod))
+summary(nncover_site.lm)
+
+environ_mod %>%  
+  na.omit() %>% 
+  group_by(year, site) %>% 
+  summarize(avg_nncover = mean(nncover), 
+            SD = sd(nncover),
+            N = length(nncover), 
+            SE = ((sd(nncover))/sqrt(length((nncover)))))
 ```
 
 ### Non-native grass height and density
