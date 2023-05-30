@@ -244,6 +244,12 @@ parmod_nodate <- parmod %>%
 environ_mod <- full_join(parmod, nnmod_nodate, by = c("year", "site", "plot_number", "treatment", "mafacover")) %>% 
   full_join(tdrmod_nodate, by = c("year", "month", "site", "plot_number", "treatment", "mafacover"))
 
+# join parmod + nncover
+parmod_nncover <- parmod %>% 
+   mutate(treatment = case_when(treatment == "nonene" ~ "none", 
+                               TRUE ~ treatment)) %>% 
+  left_join(nnmod_nodate, by = (c("year", "site", "plot_number", "treatment", "mafacover")))
+
 # join tdrmod + nncover
 tdrmod_nncover <- tdrmod %>% 
    mutate(treatment = case_when(treatment == "nonene" ~ "none", 
@@ -481,7 +487,7 @@ pairs(parmod.lst)
 # mean, SE: mafacover x month
 parmod %>% 
   group_by(month, ) %>% 
-  summarise(MEAN_par=mean(normalized_par, na.rm = TRUE),
+  summarise(MEAN_normPAR=mean(normalized_par, na.rm = TRUE),
             SD = sd(normalized_par, na.rm = TRUE),
             N = length(normalized_par), 
             SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
@@ -492,7 +498,7 @@ parmod %>%
 # mean, SE: normpar x month
 parmod %>% 
   group_by(month) %>% 
-  summarise(MEAN_par=mean(normalized_par, na.rm = TRUE),
+  summarise(MEAN_normPAR=mean(normalized_par, na.rm = TRUE),
             SD = sd(normalized_par, na.rm = TRUE),
             N = length(normalized_par), 
             SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
@@ -511,7 +517,7 @@ parmod %>%
 # mean, SE: normpar x year x month
 parmod %>% 
   group_by(year, month) %>% 
-  summarise(MEAN_par=mean(normalized_par, na.rm = TRUE),
+  summarise(MEAN_normPAR=mean(normalized_par, na.rm = TRUE),
             SD = sd(normalized_par, na.rm = TRUE),
             N = length(normalized_par), 
             SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
@@ -520,11 +526,40 @@ parmod %>%
 # mean, SE: normpar x year x treatment
 parmod %>% 
   group_by(year, treatment) %>% 
-  summarise(MEAN_par=mean(normalized_par, na.rm = TRUE),
+  summarise(MEAN_normPAR=mean(normalized_par, na.rm = TRUE),
             SD = sd(normalized_par, na.rm = TRUE),
             N = length(normalized_par), 
             SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
             )
+
+# mean, SE: normpar x treatment
+parmod %>% 
+  group_by(treatment) %>% 
+  summarise(MEAN_normPAR=mean(normalized_par, na.rm = TRUE),
+            SD = sd(normalized_par, na.rm = TRUE),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
+            )
+# A tibble: 3 × 5
+#  treatment MEAN_par    SD     N     SE
+#  <chr>        <dbl> <dbl> <int>  <dbl>
+#1 full         0.423 0.209    96 0.0214
+#2 half         0.370 0.185    96 0.0189
+#3 none         0.340 0.161    96 0.0164
+
+# mean, SE: normpar x site
+parmod %>% 
+  group_by(site) %>% 
+  summarise(MEAN_normPAR=mean(normalized_par, na.rm = TRUE),
+            SD = sd(normalized_par, na.rm = TRUE),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
+            )
+# A tibble: 2 × 5
+#  site  MEAN_par    SD     N     SE
+#  <chr>    <dbl> <dbl> <int>  <dbl>
+#1 1        0.328 0.179   144 0.0149
+#2 2        0.427 0.185   144 0.0154
 ```
 
 ```{r parmod extra stats code, include=FALSE}
@@ -557,6 +592,15 @@ summary(parmod.r2)
 summary(parmod.r2)$r.squared 
 #[1] 0.1272865
 
+parmod_mafacovver = lm(normalized_par ~ mafacover, data = parmod_nncover) # p is same as above
+summary(parmod_mafacovver)
+
+# par x nncover
+parmod.nn = lm(normalized_par ~ nncover, data = parmod_nncover) 
+summary(parmod.nn)
+summary(parmod.nn)$r.squared 
+
+
 # par x treatment
 parmod.treat = lm(normalized_par ~ treatment, data = parmod) 
 # Extracting R-squared parameter from summary 
@@ -574,6 +618,10 @@ summary(parmod.treat)
 #Residual standard error: 0.1861 on 285 degrees of freedom
 #Multiple R-squared:  0.03327,	Adjusted R-squared:  0.02649 
 #F-statistic: 4.905 on 2 and 285 DF,  p-value: 0.008051
+
+parmod %>% 
+  group_by(treatment) %>% 
+  summarize
 
 # par x month
 parmod.month = lm(normalized_par ~ month, data = parmod) 
@@ -793,11 +841,23 @@ summary(lme.tdrmod)
 emmip(lme.tdrmod, treatment ~ year)
 # emmip(lme.tdrmod, month ~ treatment | site)
 
+tdrmod.mafacover <- lm(soil_moisture ~ mafacover, data = tdrmod_nncover %>%  filter(year == "2019"))
+anova(tdrmod.mafacover)
+summary(tdrmod.mafacover)
+
+tdrmod.nn <- lm(soil_moisture ~ nncover, data = tdrmod_nncover %>% filter(year == "2019"))
+anova(tdrmod.nn)
+summary(tdrmod.nn)
+
 tdrmod.site <- lm(soil_moisture ~ site, data = tdrmod_nncover)
+tdrmod.site <- lm(soil_moisture ~ site, data = tdrmod_nncover %>%  filter(year == "2019"))
 anova(tdrmod.site)
+summary(tdrmod.site)
 
 tdrmod.treat <- lm(soil_moisture ~ treatment, data = tdrmod_nncover)
+tdrmod.treat <- lm(soil_moisture ~ treatment, data = tdrmod_nncover %>%  filter(year == "2019"))
 anova(tdrmod.treat)
+summary(tdrmod.treat)
 
 # stats on site treatment interactions
 tdrmod.interaction <- lm(soil_moisture ~ site*treatment, data = tdrmod_nncover)
@@ -852,6 +912,15 @@ tdrmod_nncover %>%
 #2 half          17.3  7.11    36 1.19 
 #3 nonene        15.1  5.95    36 0.992
             
+# mean, SE: tdr x treatment in 2019
+tdrmod_nncover %>% 
+  filter(year == "2019") %>% 
+  group_by(month, treatment) %>% 
+  summarise(MEAN_tdr_2019 = mean(soil_moisture, na.rm = TRUE),
+            SD = sd(soil_moisture, na.rm = TRUE),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture, na.rm = TRUE))/sqrt(length((soil_moisture))))
+  )
 # mean, SE: tdr x site
 tdrsite_mean <- tdrmod_nncover %>% 
   group_by(site) %>% 
