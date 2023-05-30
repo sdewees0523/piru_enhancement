@@ -542,6 +542,7 @@ ggplot(parmod, aes(x = month, y = normalized_par)) +
  # facet_grid(site ~ year, margins = TRUE) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 
+# par x cover
 parmod.r2 = lm(normalized_par ~ mafacover, data = parmod) 
 # Extracting R-squared parameter from summary 
 summary(parmod.r2)
@@ -555,6 +556,51 @@ summary(parmod.r2)
 #F-statistic: 41.71 on 1 and 286 DF,  p-value: 4.527e-10
 summary(parmod.r2)$r.squared 
 #[1] 0.1272865
+
+# par x treatment
+parmod.treat = lm(normalized_par ~ treatment, data = parmod) 
+# Extracting R-squared parameter from summary 
+summary(parmod.treat)
+#Residuals:
+#     Min       1Q   Median       3Q      Max 
+#-0.39880 -0.13899 -0.00101  0.13941  0.43514 
+
+#Coefficients:
+#              Estimate Std. Error t value Pr(>|t|)    
+#(Intercept)    0.42334    0.01900  22.283  < 2e-16 ***
+#treatmenthalf -0.05365    0.02687  -1.997  0.04678 *  
+#treatmentnone -0.08297    0.02687  -3.088  0.00221 ** 
+
+#Residual standard error: 0.1861 on 285 degrees of freedom
+#Multiple R-squared:  0.03327,	Adjusted R-squared:  0.02649 
+#F-statistic: 4.905 on 2 and 285 DF,  p-value: 0.008051
+
+# par x month
+parmod.month = lm(normalized_par ~ month, data = parmod) 
+# Extracting R-squared parameter from summary 
+summary(parmod.month)
+#Coefficients:
+#            Estimate Std. Error t value Pr(>|t|)    
+#(Intercept)  0.21923    0.02874   7.629 3.70e-13 ***
+#month11      0.07380    0.04064   1.816  0.07046 .  
+#month3       0.22736    0.04064   5.594 5.26e-08 ***
+#month4       0.12994    0.04064   3.197  0.00155 ** 
+#month5       0.19806    0.04064   4.873 1.84e-06 ***
+#month7       0.16620    0.04064   4.089 5.65e-05 ***
+#month9       0.23662    0.03520   6.723 9.93e-11 ***
+
+# par x site
+parmod.site = lm(normalized_par ~ site, data = parmod) 
+# Extracting R-squared parameter from summary 
+summary(parmod.site)
+#Residuals:
+#     Min       1Q   Median       3Q      Max 
+#-0.40294 -0.13266 -0.00328  0.12013  0.53036 
+
+#Coefficients:
+#            Estimate Std. Error t value Pr(>|t|)    
+#(Intercept)  0.32812    0.01519  21.599  < 2e-16 ***
+#site2        0.09936    0.02148   4.625 5.68e-06 ***
 
 olr.parmod <- polr(normalized_par ~ month + mafacover, data = parmod, Hess=TRUE)
 summary(olr.parmod)
@@ -574,6 +620,7 @@ parbox.1 <- ggplot(data = parmod,
   geom_boxplot() +
   theme_bw() 
 ggplotly(parbox.1)
+
 
 # scatterplot: normpar x mafacover
 parscatter.6 <- ggplot(data = environ_mod, aes(x = mafacover, y = normalized_par)) + 
@@ -654,6 +701,7 @@ parscatter.4 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) +
 ggplotly(parscatter.4)
 
 ```
+
 
 ------------------------------------------------------------------------
 
