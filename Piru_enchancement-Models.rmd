@@ -542,9 +542,19 @@ ggplot(parmod, aes(x = month, y = normalized_par)) +
  # facet_grid(site ~ year, margins = TRUE) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
 
-parmod.r2 = lm(normalized_par ~ mafa_cover_all, data = parmod) 
+parmod.r2 = lm(normalized_par ~ mafacover, data = parmod) 
 # Extracting R-squared parameter from summary 
-summary(ml)$r.squared 
+summary(parmod.r2)
+#Coefficients:
+#              Estimate Std. Error t value Pr(>|t|)    
+#(Intercept)  0.4650392  0.0170491  27.276  < 2e-16 ***
+#mafacover   -0.0033141  0.0005131  -6.459 4.53e-10 ***
+
+#Residual standard error: 0.1766 on 286 degrees of freedom
+#Multiple R-squared:  0.1273,	Adjusted R-squared:  0.1242 
+#F-statistic: 41.71 on 1 and 286 DF,  p-value: 4.527e-10
+summary(parmod.r2)$r.squared 
+#[1] 0.1272865
 
 olr.parmod <- polr(normalized_par ~ month + mafacover, data = parmod, Hess=TRUE)
 summary(olr.parmod)
@@ -572,6 +582,7 @@ labs(title = "Normalized PAR by Mature Shrub cover (%)", x = "MAFA cover (%)", y
   geom_smooth(method="lm")+
   theme_bw()
 ggplotly(parscatter.6)
+
 # scatterplot: normpar x nncover
 parscatter.7 <- ggplot(data = environ_mod, aes(x = nncover, y = normalized_par)) + 
   geom_point() +
@@ -580,6 +591,7 @@ labs(title = "Normalized PAR by Non-native cover (%)", x = "Non-native cover (%)
   theme_bw()
 ggplotly(parscatter.7)
 parscatter.6+parscatter.7
+
 # scatterplot: normpar x mafacover (%) x month
 parscatter.2 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = month)) +
@@ -588,6 +600,14 @@ parscatter.2 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) +
              aes(color=month)) +
   theme_bw()
 ggplotly(parscatter.2)
+
+environ_mod_bycovertype <- read_csv("data/environ_mod_bycovertype.csv") 
+parscatter.8 <-  ggplot(data = environ_mod_bycovertype, aes(x = percent_cover, y = normalized_par, col = cover_type)) + 
+  geom_point() +
+labs(title = "Normalized PAR by Shrub and Non-native cover (%)", x = "Percent Cover (%)", y = "Nomalized PAR") +
+  geom_smooth(method="lm")+
+  theme_bw()
+print(parscatter.8)
 ```
 
 ```{r parmod additional figures, include=TRUE}
@@ -945,8 +965,6 @@ abline(h = 0)
 boxplot(E1 ~ site, data = nnmod)
 abline(h = 0)
 
-boxplot(E1 ~ year, data = nnmod)
-abline(h = 0)
 
 # Plot each random effect in the model, look for dots along 1:1 line
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
@@ -985,7 +1003,7 @@ summary(lme.nnmod)
 
 ```{r nnmod posthoc, include=TRUE}
 # visualize significant factors from anova(lme.tdrmod)
-emmip(lme.nnmod, site ~ year)
+emmip(lme.nnmod, treatment ~ site)
 # emmip(lme.tdrmod, month ~ treatment | site)
 
 # convert from character to number
@@ -1079,6 +1097,29 @@ nnscatter.1 <- ggplot(data = nnmod, aes(x = mafacover, y = nncover)) +
   geom_smooth(method="lm")+
   theme_bw()
 ggplotly(nnscatter.1)
+
+nncover_mafacover.lm <- lm(mafacover ~ nncover, data = environ_mod) 
+summary(nncover_mafacover.lm)
+#Residuals:
+#   Min     1Q Median     3Q    Max 
+#-35.03 -14.57  -3.22  11.53  47.29 
+
+#Coefficients:
+#            Estimate Std. Error t value Pr(>|t|)    
+#(Intercept) 41.23873    3.04699  13.534  < 2e-16 ***
+#nncover     -0.38816    0.07349  -5.282 2.54e-07 ***
+
+#Residual standard error: 19.42 on 286 degrees of freedom
+#  (36 observations deleted due to missingness)
+#Multiple R-squared:  0.08888,	Adjusted R-squared:  0.08569 <-- same as...
+#F-statistic:  27.9 on 1 and 286 DF,  p-value: 2.536e-07
+
+MOD <- nncover_mafacover 
+r2(MOD)
+# R2 for Linear Regression
+#       R2: 0.089 <-- ... this call
+#  adj. R2: 0.086
+
 ```
 
 ### Non-native grass height and density
