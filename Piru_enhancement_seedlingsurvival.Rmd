@@ -88,6 +88,43 @@ survmort <- survmort_load %>%
   dplyr::select(year, month, plot_number, treatment, species, alive, dead, site, month_count, transplanted) # %>%  
 #  mutate(treatment = recode(treatment, no = "none"))
 
+tdr_april2018$site <- factor(tdr_april2018$site, levels = c("1", "2"))
+
+
+# total alive 2018 - SPECIES
+survmort %>% 
+  filter (year == "2018" & month_count == "1") %>%  
+   group_by(year, month, month_count, species) %>% 
+  summarize(sum_alive = sum(alive), 
+            sum_dead = sum(dead))
+
+survmort %>% 
+  filter (year == "2018" & month_count == "4") %>%  
+   group_by(year, month, month_count, species) %>% 
+  summarize(sum_alive = sum(alive), 
+            sum_dead = sum(dead))
+
+# total alive 2018 - SPECIES
+survmort %>% 
+  filter (year == "2019" & month_count == "12") %>%  
+    group_by(year, month, month_count, species) %>% 
+  summarize(sum_alive = sum(alive), 
+            sum_dead = sum(dead))
+
+survmort %>% 
+  filter (year == "2019" & month_count == "16") %>%  
+     group_by(year, month, month_count, species) %>% 
+  summarize(sum_alive = sum(alive), 
+            sum_dead = sum(dead))
+
+survmort %>% 
+  filter (year == "2019" & month_count == "22") %>%  
+   group_by(year, month, month_count, species) %>% 
+  summarize(sum_alive_Nov2019 = sum(alive), 
+            sum_dead = sum(dead))
+
+
+
 # survival and mortality data WITHOUT species
 survmortnospp <- survmort_load %>% 
   dplyr::select(year, month, plot_number, treatment, alive, dead, site, month_count, transplanted) %>% 
@@ -3036,6 +3073,7 @@ emmeans(glme.may2019.modcover, list(pairwise ~ site), adjust = "tukey")
 #$`pairwise differences of site`
 # 1             estimate    SE  df z.ratio p.value
 # site1 - site2     1.34 0.425 Inf   3.153  0.0016
+plot(emmeans(glme.may2019.modcover, list(pairwise ~ species), adjust = "tukey"))
 
 dredge(glme.may2019.modcover)
 #Model selection table 
@@ -3226,7 +3264,7 @@ glme.may2019 <- (glmer(as.factor(may2019_alive) ~ species + site + (1|plot_numbe
                          family = binomial, 
                          data = height_jan_surv_may_2019))
 
-MOD <- glme.may2019.best 
+MOD <- glme.may2019 
 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput)
