@@ -545,6 +545,18 @@ write.csv(surv_all, "data//processed/surv_all.csv")
 surv_months <- unique(surv_all$month_count)
 surv_months
 # [1]  0  1  3  4  8 11 12 14 15 16 17 18 20 22 26 27 28 33 37 39
+
+surv_all %>% 
+  filter(month_count == "39") %>% 
+  summarize(totalalive = sum(alive))
+# 9 alive
+
+view(surv_all %>% 
+  filter(month_count == "39" & alive  != "0"))
+
+month39 <- surv_all %>% 
+    filter(month_count == "39") 
+view(month39)
 ```
 
 
