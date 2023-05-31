@@ -602,9 +602,10 @@ summary(parmod.nn)$r.squared
 
 
 # par x treatment
-parmod.treat = lm(normalized_par ~ treatment, data = parmod) 
+parmod.treat = aov(normalized_par ~ treatment, data = parmod) 
 # Extracting R-squared parameter from summary 
 summary(parmod.treat)
+TukeyHSD(parmod.treat)
 #Residuals:
 #     Min       1Q   Median       3Q      Max 
 #-0.39880 -0.13899 -0.00101  0.13941  0.43514 
@@ -618,6 +619,14 @@ summary(parmod.treat)
 #Residual standard error: 0.1861 on 285 degrees of freedom
 #Multiple R-squared:  0.03327,	Adjusted R-squared:  0.02649 
 #F-statistic: 4.905 on 2 and 285 DF,  p-value: 0.008051
+
+#Fit: aov(formula = normalized_par ~ treatment, data = parmod)
+
+#$treatment
+#                 diff         lwr          upr     p adj
+#half-full -0.05365265 -0.11695323  0.009647926 0.1147974
+#none-full -0.08296590 -0.14626648 -0.019665321 0.0062500 <-- 
+#none-half -0.02931325 -0.09261383  0.033987332 0.5204084
 
 parmod %>% 
   group_by(treatment) %>% 
@@ -854,10 +863,11 @@ tdrmod.site <- lm(soil_moisture ~ site, data = tdrmod_nncover %>%  filter(year =
 anova(tdrmod.site)
 summary(tdrmod.site)
 
-tdrmod.treat <- lm(soil_moisture ~ treatment, data = tdrmod_nncover)
-tdrmod.treat <- lm(soil_moisture ~ treatment, data = tdrmod_nncover %>%  filter(year == "2019"))
+tdrmod.treat <- aov(soil_moisture ~ treatment, data = tdrmod_nncover)
+tdrmod.treat <- aov(soil_moisture ~ treatment, data = tdrmod_nncover %>%  filter(year == "2019"))
 anova(tdrmod.treat)
 summary(tdrmod.treat)
+TukeyHSD(tdrmod.treat)
 
 # stats on site treatment interactions
 tdrmod.interaction <- lm(soil_moisture ~ site*treatment, data = tdrmod_nncover)
@@ -1220,10 +1230,10 @@ summary(nncover_mafacover.lm)
 MOD <- nncover_mafacover.lm 
 r2(MOD)
 
-
 # nncover x treatment
-nncover_treat.lm <- lm( nncover ~ treatment, data = na.omit(environ_mod) )
+nncover_treat.lm <- aov( nncover ~ treatment, data = na.omit(environ_mod) )
 summary(nncover_treat.lm)
+TukeyHSD(nncover_treat.lm)
 
 # nncover x site
 nncover_site.lm <- lm( nncover ~ site, data = na.omit(environ_mod))
