@@ -85,7 +85,16 @@ par_25 <- aov(Photo ~ species, data = lightcurve %>%  filter(PAR =="25"))
 summary(par_2000)
 summary(par_1000)
 summary(par_500)
-summary(par_250)
+summary(par_250) # p = 0.098
+print(TukeyHSD(par_250))
+#$species
+#                diff       lwr       upr     p adj
+#HEAR-CEOL -4.4347577 -9.637942 0.7684269 0.0974616
+#RHOV-CEOL -2.6913912 -7.894576 2.5117934 0.4030446
+#SAAP-CEOL -3.8891192 -9.092304 1.3140654 0.1557642
+#RHOV-HEAR  1.7433665 -3.459818 6.9465512 0.7143464
+#SAAP-HEAR  0.5456385 -4.657546 5.7488232 0.9859946
+#SAAP-RHOV -1.1977280 -6.400913 4.0054567 0.8795412
 summary(par_100)
 summary(par_50)
 summary(par_25)
@@ -93,7 +102,7 @@ summary(par_25)
 # if there are differences, run post hoc Tukey test
 print(TukeyHSD(par_2000))
 emmeans(par_2000, list(pairwise ~ species), adjust = "tukey")
-plot(emmeans(par_2000, list(pairwise ~ species), adjust = "tukey"))
+plot(emmeans(par_0, list(pairwise ~ species), adjust = "tukey"))
 
 ```
 
