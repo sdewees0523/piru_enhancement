@@ -1,0 +1,494 @@
+---
+title: "shane licor analysis"
+output: html_document
+date: "2023-06-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(here)
+library(tidyverse)
+library(lubridate)
+library(DescTools)
+library(gmodels)
+library(janitor)
+library(sicegar)
+library(multcompView)
+```
+
+```{r}
+licor <- read.csv(here("data", "lightcurve_data.csv")) %>% 
+  dplyr::select(species, ID, PAR_actual, Photo) %>% 
+  mutate(ID = str_sub(ID, -1))
+
+ceol_licor <- licor %>% 
+  filter(species == "CEOL")
+
+hear_licor <- licor %>% 
+  filter(species == "HEAR")
+
+rhov_licor <- licor %>% 
+  filter(species == "RHOV")
+
+saap_licor <- licor %>% 
+  filter(species == "SAAP")
+```
+
+```{r}
+##CEOL
+ceol_1 <- ceol_licor %>% 
+  filter(ID == 1)
+
+ceol_1_sum <- summary(ceol_1$Photo)
+ceol_1_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = ceol_1,
+                  start = list(a = ceol_1_sum[6], H = 1000, c = 0))
+ceol_1_parameters <- summary(ceol_1_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+ceol_2 <- ceol_licor %>% 
+  filter(ID == 2)
+
+ceol_2_sum <- summary(ceol_2$Photo)
+ceol_2_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = ceol_2,
+                  start = list(a = ceol_2_sum[6], H = 1000, c = 0))
+ceol_2_parameters <- summary(ceol_2_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+ceol_3 <- ceol_licor %>% 
+  filter(ID == 3)
+
+ceol_3_sum <- summary(ceol_3$Photo)
+ceol_3_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = ceol_3,
+                  start = list(a = ceol_3_sum[6], H = 1000, c = 0))
+ceol_3_parameters <- summary(ceol_3_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+ceol_4 <- ceol_licor %>% 
+  filter(ID == 4)
+
+ceol_4_sum <- summary(ceol_4$Photo)
+ceol_4_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = ceol_4,
+                  start = list(a = ceol_4_sum[6], H = 1000, c = 0))
+ceol_4_parameters <- summary(ceol_4_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+ceol_6 <- ceol_licor %>% 
+  filter(ID == 6)
+
+ceol_6_sum <- summary(ceol_6$Photo)
+ceol_6_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = ceol_6,
+                  start = list(a = ceol_6_sum[6], H = 1000, c = 0))
+ceol_6_parameters <- summary(ceol_6_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+ceol_parameters <- rbind(ceol_1_parameters,
+                         ceol_2_parameters,
+                         ceol_3_parameters,
+                         ceol_4_parameters,
+                         ceol_6_parameters) %>% 
+  mutate(species = "ceol")
+
+##RHOV
+rhov_1 <- rhov_licor %>% 
+  filter(ID == 1)
+
+rhov_1_sum <- summary(rhov_1$Photo)
+rhov_1_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = rhov_1,
+                  start = list(a = rhov_1_sum[6], H = 1000, c = 0))
+rhov_1_parameters <- summary(rhov_1_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+rhov_2 <- rhov_licor %>% 
+  filter(ID == 2)
+
+rhov_2_sum <- summary(rhov_2$Photo)
+rhov_2_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = rhov_2,
+                  start = list(a = rhov_2_sum[6], H = 1000, c = 0))
+rhov_2_parameters <- summary(rhov_2_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+rhov_3 <- rhov_licor %>% 
+  filter(ID == 3)
+
+rhov_3_sum <- summary(rhov_3$Photo)
+rhov_3_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = rhov_3,
+                  start = list(a = rhov_3_sum[6], H = 1000, c = 0))
+rhov_3_parameters <- summary(rhov_3_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+rhov_4 <- rhov_licor %>% 
+  filter(ID == 4)
+
+rhov_4_sum <- summary(rhov_4$Photo)
+rhov_4_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = rhov_4,
+                  start = list(a = rhov_4_sum[6], H = 1000, c = 0))
+rhov_4_parameters <- summary(rhov_4_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+rhov_5 <- rhov_licor %>% 
+  filter(ID == 5)
+
+rhov_5_sum <- summary(rhov_5$Photo)
+rhov_5_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = rhov_5,
+                  start = list(a = rhov_5_sum[6], H = 1000, c = 0))
+rhov_5_parameters <- summary(rhov_5_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+rhov_6 <- rhov_licor %>% 
+  filter(ID == 6)
+
+rhov_6_sum <- summary(rhov_6$Photo)
+rhov_6_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = rhov_6,
+                  start = list(a = rhov_6_sum[6], H = 1000, c = 0))
+rhov_6_parameters <- summary(rhov_6_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+rhov_parameters <- rbind(rhov_1_parameters,
+                         rhov_2_parameters,
+                         rhov_3_parameters,
+                         rhov_4_parameters,
+                         rhov_6_parameters) %>% 
+  mutate(species = "rhov")
+
+##HEAR
+
+hear_1 <- hear_licor %>% 
+  filter(ID == 1)
+
+hear_1_sum <- summary(hear_1$Photo)
+hear_1_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = hear_1,
+                  start = list(a = hear_1_sum[6], H = 1000, c = 0))
+hear_1_parameters <- summary(hear_1_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+hear_2 <- hear_licor %>% 
+  filter(ID == 2)
+
+hear_2_sum <- summary(hear_2$Photo)
+hear_2_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = hear_2,
+                  start = list(a = hear_2_sum[6], H = 1000, c = 0))
+hear_2_parameters <- summary(hear_2_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+hear_3 <- hear_licor %>% 
+  filter(ID == 3)
+
+hear_3_sum <- summary(hear_3$Photo)
+hear_3_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = hear_3,
+                  start = list(a = hear_3_sum[6], H = 1000, c = 0))
+hear_3_parameters <- summary(hear_3_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+hear_4 <- hear_licor %>% 
+  filter(ID == 4)
+
+hear_4_sum <- summary(hear_4$Photo)
+hear_4_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = hear_4,
+                  start = list(a = hear_4_sum[6], H = 1000, c = 0))
+hear_4_parameters <- summary(hear_4_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+hear_5 <- hear_licor %>% 
+  filter(ID == 5)
+
+hear_5_sum <- summary(hear_5$Photo)
+hear_5_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = hear_5,
+                  start = list(a = hear_5_sum[6], H = 1000, c = 0))
+hear_5_parameters <- summary(hear_5_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+hear_6 <- hear_licor %>% 
+  filter(ID == 6)
+
+hear_6_sum <- summary(hear_6$Photo)
+hear_6_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = hear_6,
+                  start = list(a = hear_6_sum[6], H = 1000, c = 0))
+hear_6_parameters <- summary(hear_6_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+hear_7 <- hear_licor %>% 
+  filter(ID == 7)
+
+hear_7_sum <- summary(hear_7$Photo)
+hear_7_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = hear_7,
+                  start = list(a = hear_7_sum[6], H = 1000, c = 0))
+hear_7_parameters <- summary(hear_7_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+hear_parameters <- rbind(hear_1_parameters,
+                         hear_2_parameters,
+                         hear_3_parameters,
+                         hear_4_parameters,
+                         hear_6_parameters,
+                         hear_7_parameters) %>% 
+  mutate(species = "hear")
+
+## SAAP
+saap_1 <- saap_licor %>% 
+  filter(ID == 1)
+
+saap_1_sum <- summary(saap_1$Photo)
+saap_1_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = saap_1,
+                  start = list(a = saap_1_sum[6], H = 1000, c = 0))
+saap_1_parameters <- summary(saap_1_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+saap_2 <- saap_licor %>% 
+  filter(ID == 2)
+
+saap_2_sum <- summary(saap_2$Photo)
+saap_2_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = saap_2,
+                  start = list(a = saap_2_sum[6], H = 1000, c = 0))
+saap_2_parameters <- summary(saap_2_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+saap_3 <- saap_licor %>% 
+  filter(ID == 3)
+
+saap_3_sum <- summary(saap_3$Photo)
+saap_3_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = saap_3,
+                  start = list(a = saap_3_sum[6], H = 1000, c = 0))
+saap_3_parameters <- summary(saap_3_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+saap_4 <- saap_licor %>% 
+  filter(ID == 4)
+
+saap_4_sum <- summary(saap_4$Photo)
+saap_4_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = saap_4,
+                  start = list(a = saap_4_sum[6], H = 1000, c = 0))
+saap_4_parameters <- summary(saap_4_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(A_max = a, 
+         A50_par = H,
+         A0_par = c) %>% 
+  mutate(A50_par = A50_par + A0_par)
+
+saap_parameters <- rbind(saap_1_parameters,
+                         saap_2_parameters,
+                         saap_3_parameters,
+                         saap_4_parameters) %>% 
+  mutate(species = "saap")
+
+light_parameters <- rbind(ceol_parameters,
+                            hear_parameters,
+                            rhov_parameters,
+                            saap_parameters)
+
+
+
+A_max_tukey <- TukeyHSD(aov(A_max~species, data = light_parameters))
+A50_par_tukey <- TukeyHSD(aov(A50_par~species, data = light_parameters))
+A0_par_tukey <- TukeyHSD(aov(A0_par~species, data = light_parameters))
+
+A_max <- multcompLetters(A_max_tukey$species[,4]) %>% 
+  as.data.frame.list() %>% 
+  rownames_to_column(var = "species") %>% 
+  select(species, Letters) %>% 
+  rename(A_max_lettters = Letters)
+
+A50_par <- multcompLetters(A50_par_tukey$species[,4]) %>% 
+  as.data.frame.list() %>% 
+  rownames_to_column(var = "species") %>% 
+  select(species, Letters) %>% 
+  rename(A50_letters = Letters)
+
+A0_par <- multcompLetters(A0_par_tukey$species[,4]) %>% 
+  as.data.frame.list() %>% 
+  rownames_to_column(var = "species") %>% 
+  select(species, Letters) %>% 
+  rename(A0_letters = Letters)
+
+light_parameters_stats <- light_parameters %>% 
+  left_join(A50_par, by = "species") %>% 
+  left_join(A_max, by = "species") %>% 
+  left_join(A0_par, by = "species")
+
+ggplot(light_parameters_stats) + 
+  geom_boxplot(aes(x = species, y = A_max)) + 
+  geom_text(aes(x = species, y = 25, label = A_max_lettters), check_overlap = TRUE) +
+  theme_classic()
+
+ggplot(light_parameters_stats) + 
+  geom_boxplot(aes(x = species, y = A50_par)) + 
+  geom_text(aes(x = species, y = 800, label = A50_letters), check_overlap = TRUE) +
+  theme_classic()
+
+ggplot(light_parameters_stats) + 
+  geom_boxplot(aes(x = species, y = A0_par)) + 
+  geom_text(aes(x = species, y = 250, label = A0_letters), check_overlap = TRUE) +
+  theme_classic()
+```
+
