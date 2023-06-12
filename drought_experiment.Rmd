@@ -14,6 +14,7 @@ library(DescTools)
 library(gmodels)
 library(janitor)
 library(sicegar)
+library(multcompView)
 ```
 
 use t.test then broom::tidy to get mean, pvalue and confidence intervals. 
@@ -287,311 +288,229 @@ midday_stomata <- read.csv(here("data", "drought_experiment_data", "data", "midd
   rbind(gsw_7) %>% 
   rbind(gsw_8) %>% 
   rbind(gsw_9)
-
-gsw_hour <- read.csv(here("data", "drought_experiment_data", "data", "gsw light adap", "2022-04-11", "gsw_light_adap_Shane_2022_04_12T21_31_07_207Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "id", "gsw", "PhiPS2", "Date", "Time") %>% 
-  mutate(Time = hms(Time),
-         Time = case_when(Time > hms("06:00:00") & Time < hms("07:30:00") ~ hms("08:00:00"),
-                          Time > hms("07:30:00") & Time < hms("08:30:00") ~ hms("09:00:00"),
-                          Time > hms("08:30:00") & Time < hms("09:30:00") ~ hms("10:00:00"),
-                          Time > hms("09:30:00") & Time < hms("010:30:00") ~ hms("11:00:00"),
-                          Time > hms("10:30:00") & Time < hms("11:30:00") ~ hms("12:00:00"))) %>% 
-  rename(hour = Time) %>% 
-  rename(stomatal_conductance = gsw) %>% 
-  rename(light_adapted_flourescence = PhiPS2) %>% 
-  rename(date = Date) %>% 
-  mutate(id = as.numeric(id),
-         light_adapted_flourescence = as.numeric(light_adapted_flourescence),
-         stomatal_conductance = as.numeric(stomatal_conductance),
-         date = mdy(date),
-         hour = as.character(hour),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         hour = case_when(hour == "8H 0M 0S" ~ "8:00",
-                          hour == "9H 0M 0S" ~ "9:00",
-                          hour == "10H 0M 0S" ~ "10:00",
-                          hour == "11H 0M 0S" ~ "11:00",
-                          hour == "12H 0M 0S" ~ "12:00"))
-
-gsw_hour_2 <- read.csv(here("data", "drought_experiment_data", "data", "gsw light adap", "2022-04-18", "gsw_light_adap_Shane_2022_04_18T22_45_49_663Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "id", "gsw", "PhiPS2", "Date", "Time") %>% 
-  rename(stomatal_conductance = gsw) %>% 
-  rename(light_adapted_flourescence = PhiPS2) %>% 
-  rename(date = Date) %>% 
-  mutate(id = as.numeric(id),
-         light_adapted_flourescence = as.numeric(light_adapted_flourescence),
-         stomatal_conductance = as.numeric(stomatal_conductance),
-         date = ymd(date),
-         Time = hms(Time),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet")) %>% 
-  filter((species == "hear" & id %in% c(13, 12, 2, 9, 25, 20, 23, 22, 16))) %>% 
-    mutate(Time = case_when(Time > hms("06:00:00") & Time < hms("07:30:00") ~ hms("08:00:00"),
-                          Time > hms("07:30:00") & Time < hms("08:30:00") ~ hms("09:00:00"),
-                          Time > hms("08:30:00") & Time < hms("09:30:00") ~ hms("10:00:00"),
-                          Time > hms("09:30:00") & Time < hms("010:30:00") ~ hms("11:00:00"),
-                          Time > hms("10:30:00") & Time < hms("11:30:00") ~ hms("12:00:00"))) %>% 
-  rename(hour = Time) %>% 
-  mutate(hour = as.character(hour),
-         hour = case_when(hour == "8H 0M 0S" ~ "8:00",
-                          hour == "9H 0M 0S" ~ "9:00",
-                          hour == "10H 0M 0S" ~ "10:00",
-                          hour == "11H 0M 0S" ~ "11:00",
-                          hour == "12H 0M 0S" ~ "12:00"))
-  
-  
-
-hourly_stomata <- read.csv(here("data", "drought_experiment_data", "data", "hourly_stomatal_conductance.csv"))%>% 
-  mutate(treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"), 
-         date = mdy(date)) %>% 
-  rbind(gsw_hour) %>% 
-  rbind(gsw_hour_2)
-
-
-dark_adapted <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-03-31", "dark_adapted_Shane_Dewees_2022_03_31T19_26_28_179Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = ymd(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-dark_adapted_1 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-04", "dark_adapted_Shane_Dewees_2022_04_04T19_19_53_994Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = mdy(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-
-dark_adapted_2 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-06", "dark_adapted_Shane_Dewees_2022_04_07T19_00_28_340Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = ymd(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-
-dark_adapted_3 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-08", "dark_adapted_Shane_Dewees_2022_04_10T21_36_14_544Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = ymd(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-
-dark_adapted_4 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-10", "dark_adapted_Shane_Dewees_2022_04_10T21_36_14_611Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = ymd(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-
-dark_adapted_5 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-11", "dark_adapted_Shane_Dewees_2022_04_12T21_31_07_113Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = ymd(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-
-dark_adapted_6 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-12", "dark_adapted_Shane_Dewees_2022_04_12T21_31_58_622Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = mdy(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-
-dark_adapted_7 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-14", "dark_adapted_Shane_Dewees_2022_04_14T21_06_02_120Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = ymd(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-
-dark_adapted_8 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-16", "dark_adapted_Shane_Dewees_2022_04_18T22_45_49_639Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = ymd(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-dark_adapted_9 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-18", "dark_adapted_Shane_Dewees_2022_04_18T22_45_49_684Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = ymd(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-dark_adapted_10 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-19", "dark_adapted_Shane_Dewees_2022_04_21T18_44_48_821Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = ymd(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-dark_adapted_11 <- read.csv(here("data", "drought_experiment_data", "data", "dark adapted", "2022-04-20", "dark_adapted_Shane_Dewees_2022_04_21T18_44_48_863Z_1.csv")) %>% 
-  row_to_names(1) %>% 
-  filter(!row_number() %in% c(1)) %>% 
-  dplyr::select("species", "plant id", "Fv/Fm", "Date") %>% 
-  rename("id" = "plant id") %>% 
-  rename("dark_adapted_flourescence" = "Fv/Fm") %>% 
-  rename(date = Date) %>% 
-  mutate(date = ymd(date),
-         id = str_remove(id, "0"),
-         id = as.numeric(id),
-         dark_adapted_flourescence = as.numeric(dark_adapted_flourescence),
-         treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         water_potential_predawn = NA,
-         water_potential_midday = NA)
-
-flourescence <- read.csv(here("data", "drought_experiment_data", "data", "flourescence_water_potentials.csv")) %>% 
-  mutate(treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "rhov" & id %in% drought_rhov$id ~ "drought", 
-                               species == "hear" & id %in% drought_hear$id ~ "drought", 
-                               TRUE ~ "wet"),
-         date = mdy(date)) %>% 
-  rbind(dark_adapted) %>% 
-  rbind(dark_adapted_1) %>% 
-  rbind(dark_adapted_2) %>% 
-  rbind(dark_adapted_3) %>% 
-  rbind(dark_adapted_4) %>% 
-  rbind(dark_adapted_5) %>% 
-  rbind(dark_adapted_6) %>% 
-  rbind(dark_adapted_7) %>% 
-  rbind(dark_adapted_8) %>% 
-  rbind(dark_adapted_9) %>% 
-  rbind(dark_adapted_10) %>% 
-  rbind(dark_adapted_11) %>% 
-  drop_na(date) %>% 
-  filter(!species == "")
 ```
+
+```{r}
+saap_moisture <- read.csv(here("data", "drought_experiment_data", "saap", "saap_moisture.csv")) %>% 
+  dplyr::select(Date, Moisture, Note) %>% 
+  mutate(Note = str_remove(Note, "-actual")) %>% 
+  separate(Note, into = c("species", "id")) %>% 
+  mutate(species = case_when(species == "SAAP" ~ "saap",
+                             TRUE ~ species),
+         Date = mdy(Date),
+         id = as.numeric(id)) %>% 
+  rename(date = Date, 
+         soil_moisture = Moisture)
+
+saap_gsw_1 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-08",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_679Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_2 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-09",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_708Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_3 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-10",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_726Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_4 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-13",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_744Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_5 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-14",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_759Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_6 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-16",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_776Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_7 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-17",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_794Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_8 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-22",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_810Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_9 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-23",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_828Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_10 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-24",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_844Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_11 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-27",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_860Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_12 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-02-28",
+                            "gsw_light_adap_Shane_2023_02_28T21_54_43_876Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_13 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-01",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_494Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_14 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-02",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_511Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_15 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-03",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_531Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_16 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-06",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_550Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_17 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-13",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_573Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_18 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-14",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_597Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_19 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-15",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_616Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_20 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-16",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_638Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_21 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-17",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_658Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_22 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-20",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_674Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_23 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-21",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_692Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_24 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-24",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_705Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_25 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-28",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_720Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_26 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-29",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_736Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_27 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-03-30",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_751Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_28 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-04-03",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_768Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw_29 <- read.csv(here("data", "drought_experiment_data", "saap", "gsw light adap", "2023-04-04",
+                            "gsw_light_adap_Shane_2023_05_31T15_40_08_780Z_1.csv"), skip = 1) %>% 
+  filter(!row_number() == 1) %>% 
+  mutate(date = ymd(Date)) %>% 
+  dplyr::select(date, id, gsw)
+
+saap_gsw <- rbind(saap_gsw_1,
+                  saap_gsw_2,
+                  saap_gsw_3,
+                  saap_gsw_4,
+                  saap_gsw_5,
+                  saap_gsw_6,
+                  saap_gsw_7,
+                  saap_gsw_8,
+                  saap_gsw_9,
+                  saap_gsw_10,
+                  saap_gsw_11,
+                  saap_gsw_12,
+                  saap_gsw_13,
+                  saap_gsw_14,
+                  saap_gsw_15,
+                  saap_gsw_16,
+                  saap_gsw_17,
+                  saap_gsw_18,
+                  saap_gsw_19,
+                  saap_gsw_20,
+                  saap_gsw_21,
+                  saap_gsw_22,
+                  saap_gsw_23,
+                  saap_gsw_24,
+                  saap_gsw_25,
+                  saap_gsw_26,
+                  saap_gsw_27,
+                  saap_gsw_28,
+                  saap_gsw_29) %>% 
+  rename(stomatal_conductance = gsw) %>% 
+  mutate(stomatal_conductance = as.numeric(stomatal_conductance))
+
+saap_gsw_moisture <- inner_join(saap_moisture, saap_gsw, by = c("date", "id"))
+```
+
 
 ```{r, echo=FALSE, message= FALSE, warning=FALSE}
 plant_height <- read.csv(here("data", "drought_experiment_data", "data", "plant_height.csv"))%>% 
@@ -599,185 +518,7 @@ plant_height <- read.csv(here("data", "drought_experiment_data", "data", "plant_
                                species == "rhov" & id %in% drought_rhov$id ~ "drought", 
                                species == "hear" & id %in% drought_hear$id ~ "drought", 
                                TRUE ~ "wet"))
-
-leaf_conductance <- read.csv(here("data", "drought_experiment_data", "data", "leaf_conductance.csv")) %>%
-  mutate(flow_rate_g_s = delta_weight/time_sec) %>% 
-  group_by(species, id) %>% 
-  summarise(flow_rate_g_s = mean(flow_rate_g_s, na.rm = TRUE),
-            mpa = mean(c(leaf_1, leaf_2, leaf_3), na.rm = TRUE),
-            leaf_area_cm2 = mean(leaf_area)) %>% 
-  mutate(flow_rate_g_s = abs(flow_rate_g_s),
-         kleaf = flow_rate_g_s/mpa,
-         leaf_area_m2 = leaf_area_cm2/10000,
-         kleaf_per_area = kleaf/leaf_area_m2,
-         treatment = "wet",
-         date = mdy("03/07/2022")) %>% 
-  dplyr::select(species, id, kleaf_per_area, treatment, date)
-
-kleaf <- read.csv(here("data", "drought_experiment_data", "data", "kleaf.csv")) %>% 
-  mutate(leaf_area_m2 = leaf_area_cm2/10000) %>% 
-  rename("kleaf" = "k_g_s_MPa") %>% 
-  mutate(kleaf_per_area = kleaf/leaf_area_m2,
-         treatment = case_when(sp == "ceol" & numbr %in% drought_ceol$id ~ "drought",
-                               sp == "rhov" & numbr %in% drought_rhov$id ~ "drought",
-                               sp == "hear" & numbr %in% drought_hear$id ~ "drought",
-                               TRUE ~ "wet"),
-         date = mdy(date)) %>% 
-  rename("species" = "sp",
-         "id" = "numbr") %>% 
-  dplyr::select(species, id, kleaf_per_area, treatment, date) %>% 
-  rbind(leaf_conductance)
-  
 ```
-
-```{r, echo=FALSE, message= FALSE, warning=FALSE}
-soil_moisture_mean <- soil_moisture %>% 
-  dplyr::select(!id) %>% 
-  group_by(species, date, treatment) %>% 
-  nest(data = soil_moisture) %>% 
-  mutate(ci = map(data, ~ MeanCI(.x$soil_moisture))) %>% 
-  unnest_wider(ci)
-
-
-ggplot(soil_moisture_mean, aes(x= date, y = mean, col = treatment)) +
-  geom_point()+
-  geom_errorbar(aes(ymin = lwr.ci, ymax = upr.ci)) +
-  labs(x = "date",
-       y = "soil moisture (%)")+
-  facet_wrap(~species)
-
-flourescence_mean <- flourescence %>% 
-  group_by(species, date, treatment) %>% 
-  summarise(mean_flourescence = ci(dark_adapted_flourescence, na.rm = TRUE)[1],
-            flourescence_low = ci(dark_adapted_flourescence, na.rm = TRUE)[2],
-            flourescence_high = ci(dark_adapted_flourescence, na.rm = TRUE)[3],
-            mean_predawn = ci(water_potential_predawn, na.rm = TRUE)[1],
-            predawn_low = ci(water_potential_predawn, na.rm = TRUE)[2],
-            predawn_high = ci(water_potential_predawn, na.rm = TRUE)[3],
-            mean_midday = ci(water_potential_midday, na.rm = TRUE)[1],
-            midday_low = ci(water_potential_midday, na.rm = TRUE)[2],
-            midday_high = ci(water_potential_midday, na.rm = TRUE)[3])
-
-ggplot(flourescence_mean, aes(date, mean_flourescence, color = treatment))+
-  geom_point()+
-  geom_errorbar(aes(ymin=flourescence_low, ymax = flourescence_high))+
-  labs(x = "date",
-       y = "dark adapted flourescence") +
-  facet_wrap(~species)
-
-#ggplot(flourescence_mean, aes(species, mean_predawn))+
- # geom_point()+ 
-  #geom_errorbar(aes(ymin = mean_predawn-sd_predawn, ymax = mean_predawn+sd_predawn))
-
-#ggplot(flourescence_mean, aes(species, mean_midday))+
- # geom_point()+ 
-  #geom_errorbar(aes(ymin = mean_midday-sd_midday, ymax = mean_midday+sd_midday))
-
-#ggplot(flourescence_mean, aes(species, mean_water_potential_change)) +
- # geom_point()
-
-#ggplot(flourescence_mean, aes(mean_midday, mean_predawn))+
-  #geom_point(aes(color = species))+
-  #geom_abline(slope = 1, intercept = 0)
-
-plant_height_mean <- plant_height %>% 
-  group_by(species, treatment) %>% 
-  summarise(mean = ci(height)[1],
-            lowCI = ci(height)[2],
-            highCI = ci(height)[3])
-
-ggplot(plant_height_mean, aes(species, mean, color = treatment))+
-  geom_point()+
-  geom_errorbar(aes(ymin=lowCI, ymax=highCI)) +
-  labs(x = "species",
-       y = "plant height (cm)")
-```
-
-```{r, echo=FALSE, message= FALSE, warning=FALSE}
-hourly_stomata_mean <- hourly_stomata %>% 
-  group_by(species, treatment, date, hour) %>% 
-  summarise(mean = ci(stomatal_conductance)[1],
-            lowci = ci(stomatal_conductance)[2],
-            highci = ci(stomatal_conductance)[3]) %>% 
-  ungroup() %>% 
-  mutate(time_hour = hm(hour))
-
-ggplot(hourly_stomata_mean, aes(x= time_hour@hour, y = mean, col = treatment, shape = as.factor(species)))+
-  geom_point(alpha = 0.5)+
-  geom_line(aes(x = time_hour@hour, y = mean)) +
-  geom_errorbar(aes(ymin=lowci, ymax=highci), size = 0.25) +
-  labs(x = "time of day",
-       y = "stomatal conductance") +
-  facet_wrap(~date)
-```
-
-```{r, echo=FALSE, message= FALSE, warning=FALSE}
-midday_stomata_mean <- midday_stomata %>%
-  group_by(species, date, treatment) %>% 
-  summarise(mean = ci(stomatal_conductance)[1],
-            lowci = ci(stomatal_conductance)[2],
-            highci = ci(stomatal_conductance)[3])
-
-ggplot(midday_stomata_mean, aes(date, mean, color = treatment))+
-  geom_point()+
-  geom_errorbar(aes(ymin = lowci, ymax = highci)) + 
-  labs(x = "date",
-       y = "stomatal conductance") +
-  facet_wrap(~species)
-```
-
-```{r, echo=FALSE, message= FALSE, warning=FALSE}
-kleaf_summary <- kleaf %>% 
-  dplyr::select(!id) %>% 
-  group_by(species, date, treatment) %>% 
-  nest(data = kleaf_per_area) %>% 
-  mutate(ci = map(data, ~MeanCI(.x$kleaf_per_area))) %>% 
-  unnest_wider(ci) %>%
-  dplyr::select(!data) %>% 
-  as.data.frame() %>% 
-  mutate(lwr.ci = case_when(lwr.ci < 0 ~ 0,
-                            TRUE~ lwr.ci))
-
-ggplot(kleaf_summary, aes(as.factor(date), mean, col = treatment))+
-  geom_point()+
-  geom_errorbar(aes(ymin=lwr.ci, ymax=upr.ci)) +
-  labs(x = "date",
-       y = "kleaf (g/sMpam2)") +
-  facet_wrap(~species)
-
-ceol_kleaf <- kleaf %>% 
-  filter(species == "ceol")
-
-hear_kleaf <- kleaf %>% 
-  filter(species == "hear")
-
-ggplot(kleaf, aes(as.factor(date), kleaf_per_area, col = treatment)) +
-  geom_jitter() +
-  labs(x = "date",
-       y = "kleaf (g/sMpam2)") +
-  facet_wrap(~species)
-
-#ggplot(kleaf_summary, aes(treatment, mean_area)) +
-#  geom_point() + 
-#  geom_errorbar(aes(ymin = low_area, ymax = high_area)) +
-#  labs(x = "treatment",
-#       y = "leaf area (cm2)")
-
-kleaf_flourescence <- kleaf %>% 
-  right_join(flourescence, by = c("species", "id", "date", "treatment")) %>% 
-  drop_na(kleaf_per_area) %>% 
-  group_by(species, id, date, treatment) %>% 
-  summarise(kleaf_per_area = mean(kleaf_per_area, na.rm = TRUE),
-            dark_adapted_flourescence = mean(dark_adapted_flourescence, na.rm = TRUE)) %>% 
-  filter(date == "2022-03-22")
-
-ggplot(kleaf_flourescence, aes(x = dark_adapted_flourescence, y = kleaf_per_area, col = treatment)) +
-  geom_point() +
-  facet_wrap(~species)
-
-```
-
-
 
 ```{r, echo=FALSE, message= FALSE, warning=FALSE}
 stomatal_moisture <- right_join(midday_stomata, soil_moisture, by = c("species", "id", "date", "treatment")) %>% 
@@ -787,15 +528,6 @@ stomatal_moisture <- right_join(midday_stomata, soil_moisture, by = c("species",
          stomatal_conductance = case_when(stomatal_conductance <= 0 ~ 0.0001,
                                           TRUE ~ stomatal_conductance)) %>% 
   filter(stomatal_conductance < 0.5)
-
-ggplot(stomatal_moisture, aes(x = soil_moisture, y = stomatal_conductance, group = species)) +
-  geom_point(alpha = 0.25) +
-  geom_smooth(method = "glm",
-              method.args = list(family = poisson)) +
-  theme_classic() +
-  labs(x = "Soil moisture (%)",
-       y = "Stomatal conductance")+
-  facet_wrap(~species)
 
 # CEOL
 ceol_sm_1 <- stomatal_moisture %>% 
@@ -939,234 +671,402 @@ ceol_parameters <- rbind(ceol_1_parameters,
                          ceol_20_parameters, 
                          ceol_21_parameters, 
                          ceol_40_parameters, 
-                         ceol_41_parameters)
-
-ceol_sm <- stomatal_moisture %>% 
-  filter(species == "ceanothus") %>% 
-  filter(treatment == "drought")
-ceol_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), data = ceol_sm,
-                start = list(a = 0.21, H = 21, c = 7))
-summary(ceol_nls)
-
-ceol_predict <- as.data.frame(seq(1:62)) %>% 
-  rename(soil_moisture = "seq(1:62)") %>% 
-  mutate(stomatal_conductance = predict(ceol_nls, newdata = ., type = "response"))
-
-ggplot()+
-  geom_point(data = ceol_sm, aes(x = soil_moisture, y = stomatal_conductance), alpha = 0.25)+
-  geom_line(data = ceol_predict, aes(x = soil_moisture, y = stomatal_conductance), size = 1)+
-  theme_classic()+
-  ylim(0, 0.4)
+                         ceol_41_parameters) %>% 
+  mutate(species = "ceol")
 
 
 # HEAR
 hear_sm <- stomatal_moisture %>% 
-  filter(species == "heteromeles")
+  filter(species == "heteromeles") %>% 
+  filter(treatment == "drought")
 
-hear_gamma <- glm(stomatal_conductance ~ soil_moisture, data = hear_sm, family = Gamma)
-summary(hear_gamma)
+hear_sm_6 <- hear_sm %>% 
+  filter(id == "6")
 
-hear_predict <- as.data.frame(seq(1:62)) %>% 
-  rename(soil_moisture = "seq(1:62)") %>% 
-  mutate(stomatal_conductance = predict(hear_gamma, newdata = ., type = "response"))
+hear_6_sum <- summary(hear_sm_6$stomatal_conductance)
+hear_6_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = hear_sm_6,
+                  start = list(a = hear_6_sum[6], H = 20, c = 8))
+hear_6_parameters <- summary(hear_6_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
 
-ggplot()+
-  geom_point(data = hear_sm, aes(x = soil_moisture, y = stomatal_conductance), alpha = 0.25)+
-  geom_line(data = hear_predict, aes(x = soil_moisture, y = stomatal_conductance), size = 1)+
-  theme_classic()
+hear_sm_8 <- hear_sm %>% 
+  filter(id == "8") %>% 
+  filter(stomatal_conductance < 0.4)
+
+hear_8_sum <- summary(hear_sm_8$stomatal_conductance)
+hear_8_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = hear_sm_8,
+                  start = list(a = hear_8_sum[6], H = 19, c = 9))
+hear_8_parameters <- summary(hear_8_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+hear_sm_10 <- hear_sm %>% 
+  filter(id == "10")
+
+hear_10_sum <- summary(hear_sm_10$stomatal_conductance)
+hear_10_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = hear_sm_10,
+                  start = list(a = hear_10_sum[6], H = 16, c = 9))
+hear_10_parameters <- summary(hear_10_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+hear_sm_12 <- hear_sm %>% 
+  filter(id == "12")
+
+hear_12_sum <- summary(hear_sm_12$stomatal_conductance)
+hear_12_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = hear_sm_12,
+                  start = list(a = hear_12_sum[6], H = 19, c = 9))
+hear_12_parameters <- summary(hear_12_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+hear_sm_13 <- hear_sm %>% 
+  filter(id == "13")
+
+hear_13_sum <- summary(hear_sm_13$stomatal_conductance)
+hear_13_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = hear_sm_13,
+                  start = list(a = hear_13_sum[6], H = 19, c = 11))
+hear_13_parameters <- summary(hear_13_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+hear_sm_14 <- hear_sm %>% 
+  filter(id == "14")
+
+hear_14_sum <- summary(hear_sm_14$stomatal_conductance)
+hear_14_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = hear_sm_14,
+                  start = list(a = hear_14_sum[6], H = 25, c = 12))
+hear_14_parameters <- summary(hear_14_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+hear_sm_18 <- hear_sm %>% 
+  filter(id == "18")
+
+hear_18_sum <- summary(hear_sm_18$stomatal_conductance)
+hear_18_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = hear_sm_18,
+                  start = list(a = hear_18_sum[6], H = 16, c = 8))
+hear_18_parameters <- summary(hear_18_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+hear_sm_22 <- hear_sm %>% 
+  filter(id == "22")
+
+hear_22_sum <- summary(hear_sm_22$stomatal_conductance)
+hear_22_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = hear_sm_22,
+                  start = list(a = hear_22_sum[6], H = 20, c = 10))
+hear_22_parameters <- summary(hear_22_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+hear_parameters <- rbind(hear_10_parameters, 
+                         hear_12_parameters, 
+                         hear_13_parameters,
+                         hear_14_parameters,
+                         hear_18_parameters,
+                         hear_22_parameters,
+                         hear_6_parameters,
+                         hear_8_parameters) %>% 
+  mutate(species = "hear")
 
 # RHOV
 rhov_sm <- stomatal_moisture %>% 
   filter(species == "rhus") %>% 
   filter(treatment == "drought")
 
-rhov_gamma <- glm(stomatal_conductance ~ soil_moisture, data = rhov_sm, family = "Gamma")
-summary(rhov_gamma)
+rhov_sm_11 <- rhov_sm %>% 
+  filter(id == "11")
 
-rhov_predict <- as.data.frame(seq(1:62)) %>% 
-  rename(soil_moisture = "seq(1:62)") %>% 
-  mutate(stomatal_conductance = predict(rhov_gamma, newdata = ., type = "response"))
+rhov_11_sum <- summary(rhov_sm_11$stomatal_conductance)
+rhov_11_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = rhov_sm_11,
+                  start = list(a = rhov_11_sum[6], H = 21, c = 14))
+rhov_11_parameters <- summary(rhov_11_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
 
-ggplot()+
-  geom_point(data = rhov_sm, aes(x = soil_moisture, y = stomatal_conductance), alpha = 0.25)+
-  geom_line(data = rhov_predict, aes(x = soil_moisture, y = stomatal_conductance), size = 1)+
+rhov_sm_34 <- rhov_sm %>% 
+  filter(id == "34")
+
+rhov_34_sum <- summary(rhov_sm_34$stomatal_conductance)
+rhov_34_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = rhov_sm_34,
+                  start = list(a = rhov_34_sum[6], H = 22, c = 15),
+                  control = nls.control(maxiter = 100))
+rhov_34_parameters <- summary(rhov_34_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+rhov_sm_38 <- rhov_sm %>% 
+  filter(id == "38")
+
+rhov_38_sum <- summary(rhov_sm_38$stomatal_conductance)
+rhov_38_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = rhov_sm_38,
+                  start = list(a = rhov_38_sum[6], H = 28, c = 17))
+rhov_38_parameters <- summary(rhov_38_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+rhov_sm_39 <- rhov_sm %>% 
+  filter(id == "39")
+
+rhov_39_sum <- summary(rhov_sm_39$stomatal_conductance)
+rhov_39_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = rhov_sm_39,
+                  start = list(a = rhov_39_sum[6], H = 27, c = 20))
+rhov_39_parameters <- summary(rhov_39_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+rhov_sm_42 <- rhov_sm %>% 
+  filter(id == "42")
+
+rhov_42_sum <- summary(rhov_sm_42$stomatal_conductance)
+rhov_42_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = rhov_sm_42,
+                  start = list(a = rhov_42_sum[6], H = 20, c = 17))
+rhov_42_parameters <- summary(rhov_42_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+rhov_parameters <- rbind(rhov_11_parameters,
+                         rhov_34_parameters,
+                         rhov_38_parameters,
+                         rhov_39_parameters,
+                         rhov_42_parameters) %>% 
+  mutate(species = "rhov")
+
+## SAAP
+
+saap_sm_1 <- saap_gsw_moisture %>% 
+  filter(id == "1")
+
+saap_1_sum <- summary(saap_sm_1$stomatal_conductance)
+saap_1_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = saap_sm_1,
+                  start = list(a = saap_1_sum[6], H = 20, c = 7))
+saap_1_parameters <- summary(saap_1_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+saap_sm_2 <- saap_gsw_moisture %>% 
+  filter(id == "2")
+
+saap_2_sum <- summary(saap_sm_2$stomatal_conductance)
+saap_2_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = saap_sm_2,
+                  start = list(a = saap_2_sum[6], H = 25, c = 8))
+saap_2_parameters <- summary(saap_2_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+saap_sm_3 <- saap_gsw_moisture %>% 
+  filter(id == "3")
+
+saap_3_sum <- summary(saap_sm_3$stomatal_conductance)
+saap_3_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = saap_sm_3,
+                  start = list(a = saap_3_sum[6], H = 20, c = 7),
+                  control = nls.control(maxiter = 100))
+saap_3_parameters <- summary(saap_3_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+saap_sm_4 <- saap_gsw_moisture %>% 
+  filter(id == "4")
+
+saap_4_sum <- summary(saap_sm_4$stomatal_conductance)
+saap_4_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = saap_sm_4,
+                  start = list(a = saap_4_sum[6], H = 20, c = 8))
+saap_4_parameters <- summary(saap_4_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+saap_sm_5 <- saap_gsw_moisture %>% 
+  filter(id == "5")
+
+saap_5_sum <- summary(saap_sm_5$stomatal_conductance)
+saap_5_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = saap_sm_5,
+                  start = list(a = saap_5_sum[6], H = 20, c = 6),
+                  control = nls.control(maxiter = 100))
+saap_5_parameters <- summary(saap_5_nls)[["coefficients"]] %>% 
+  as.data.frame() %>% 
+  rownames_to_column(var = "parameters") %>% 
+  dplyr::select(parameters, Estimate) %>% 
+  pivot_wider(values_from = Estimate, names_from = parameters) %>% 
+  rename(gsw_max = a, 
+         gsw50_moist = H,
+         gsw0_moist = c) %>% 
+  mutate(gsw50_moist = gsw50_moist + gsw0_moist)
+
+saap_parameters <- rbind(saap_1_parameters,
+                         saap_2_parameters,
+                         saap_3_parameters,
+                         saap_4_parameters,
+                         saap_5_parameters) %>% 
+  mutate(species = "saap")
+
+drought_parameters <- rbind(ceol_parameters,
+                            hear_parameters,
+                            rhov_parameters,
+                            saap_parameters)
+
+
+
+gsw_max_tukey <- TukeyHSD(aov(gsw_max~species, data = drought_parameters))
+gsw50_moist_tukey <- TukeyHSD(aov(gsw50_moist~species, data = drought_parameters))
+gsw0_moist_tukey <- TukeyHSD(aov(gsw0_moist~species, data = drought_parameters))
+
+gsw_max <- multcompLetters(gsw_max_tukey$species[,4]) %>% 
+  as.data.frame.list() %>% 
+  rownames_to_column(var = "species") %>% 
+  select(species, Letters) %>% 
+  rename(gsw_max_lettters = Letters)
+
+gsw50_moist <- multcompLetters(gsw50_moist_tukey$species[,4]) %>% 
+  as.data.frame.list() %>% 
+  rownames_to_column(var = "species") %>% 
+  select(species, Letters) %>% 
+  rename(gsw50_letters = Letters)
+
+gsw0_moist <- multcompLetters(gsw0_moist_tukey$species[,4]) %>% 
+  as.data.frame.list() %>% 
+  rownames_to_column(var = "species") %>% 
+  select(species, Letters) %>% 
+  rename(gsw0_letters = Letters)
+
+drought_parameters_stats <- drought_parameters %>% 
+  left_join(gsw50_moist, by = "species") %>% 
+  left_join(gsw_max, by = "species") %>% 
+  left_join(gsw0_moist, by = "species")
+
+ggplot(drought_parameters_stats) + 
+  geom_boxplot(aes(x = species, y = gsw_max)) + 
+  geom_text(aes(x = species, y = 0.4, label = gsw_max_lettters), check_overlap = TRUE) +
+  theme_classic()
+
+ggplot(drought_parameters_stats) + 
+  geom_boxplot(aes(x = species, y = gsw50_moist)) + 
+  geom_text(aes(x = species, y = 40, label = gsw50_letters), check_overlap = TRUE) +
+  theme_classic()
+
+ggplot(drought_parameters_stats) + 
+  geom_boxplot(aes(x = species, y = gsw0_moist)) + 
+  geom_text(aes(x = species, y = 17, label = gsw0_letters), check_overlap = TRUE) +
   theme_classic()
 ```
-
-
-```{r}
-ceanothus <- stomatal_moisture %>% 
-  filter(species == "ceanothus") %>% 
-  mutate(soil_moisture = as.numeric(soil_moisture)) %>% 
-  dplyr::select(stomatal_conductance, soil_moisture) %>% 
-  rename(intensity = stomatal_conductance, time = soil_moisture) %>% 
-  filter(intensity > -0.3)
-
-ceanothus_normal <- ceanothus %>% 
-  normalizeData()
-
-ceanothus_curve <- sigmoidalFitFunction(ceanothus_normal, tryCounter = 1)
-
-ceanothusTheoretical <- sigmoidalFitFormula(time,
-                                           maximum = ceanothus_curve$maximum_Estimate,
-                                           slopeParam = ceanothus_curve$slopeParam_Estimate,
-                                           midPoint = ceanothus_curve$midPoint_Estimate) %>% 
-  as.data.frame() %>% 
-  rownames_to_column(var = "soil_moisture") %>% 
-  rename(stomatal_conductance = ".") %>% 
-  mutate(soil_moisture = as.numeric(soil_moisture))
-
-
-
-ggplot() +
-geom_point(data = ceanothus, aes(x = time, y = intensity))+
-geom_line(data = ceanothusTheoretical, aes(x = soil_moisture, y = stomatal_conductance))+
-  expand_limits(x = 0, y = 0)
-
-rhov <- stomatal_moisture %>% 
-  filter(species == "rhus")%>% 
-  mutate(soil_moisture = as.numeric(soil_moisture)) %>% 
-  select(stomatal_conductance, soil_moisture) %>% 
-  rename(intensity = stomatal_conductance, time = soil_moisture) %>% 
-  filter(intensity < 0.3)
-rhov_normal <- rhov %>% 
-  normalizeData()
-rhov_curve <- sigmoidalFitFunction(rhov_normal, tryCounter = 1)
-rhovTheoretical <- sigmoidalFitFormula(time,
-                                           maximum = rhov_curve$maximum_Estimate,
-                                           slopeParam = rhov_curve$slopeParam_Estimate,
-                                           midPoint = rhov_curve$midPoint_Estimate) %>% 
-  as.data.frame() %>% 
-  rownames_to_column(var = "soil_moisture") %>% 
-  rename(stomatal_conductance = ".") %>% 
-  mutate(soil_moisture = as.numeric(soil_moisture))
-
-
-
-ggplot() +
-geom_point(data = rhov, aes(x = time, y = intensity))+
-geom_line(data = rhovTheoretical, aes(x = soil_moisture, y = stomatal_conductance))+
-  expand_limits(x =0, y = 0)
-
-hear <- stomatal_moisture %>% 
-  filter(species == "heteromeles")%>% 
-  mutate(soil_moisture = as.numeric(soil_moisture)) %>% 
-  select(stomatal_conductance, soil_moisture) %>% 
-  rename(intensity = stomatal_conductance, time = soil_moisture) 
-hear_normal <- hear %>% 
-  normalizeData()
-hear_curve <- sigmoidalFitFunction(hear_normal, tryCounter = 1)
-hearTheoretical <- sigmoidalFitFormula(time,
-                                           maximum = hear_curve$maximum_Estimate,
-                                           slopeParam = hear_curve$slopeParam_Estimate,
-                                           midPoint = hear_curve$midPoint_Estimate) %>% 
-  as.data.frame() %>% 
-  rownames_to_column(var = "soil_moisture") %>% 
-  rename(stomatal_conductance = ".") %>% 
-  mutate(soil_moisture = as.numeric(soil_moisture))
-
-
-
-ggplot() +
-geom_point(data = hear, aes(x = time, y = intensity))+
-geom_line(data = hearTheoretical, aes(x = soil_moisture, y = stomatal_conductance))+
-  expand_limits(x = 0, y = 0)
-
-ggplot(ceanothus, aes(soil_moisture, stomatal_conductance, group = id))+
-  geom_point()+
-  geom_smooth(method = "glm",
-              method.args = list(family = Gamma), se = F) + 
-  labs(x = "Soil Moisture",
-       y = "stomatal conductance") +
-  theme_classic()
-
-ggplot(rhov, aes(date, mean, color = treatment))+
-  geom_point()+
-  geom_errorbar(aes(ymin = lowci, ymax = highci)) + 
-  labs(x = "date",
-       y = "stomatal conductance") +
-  theme_classic()
-
-ggplot(hear, aes(date, mean, color = treatment))+
-  geom_point()+
-  geom_errorbar(aes(ymin = lowci, ymax = highci)) + 
-  labs(x = "date",
-       y = "stomatal conductance") +
-  theme_classic() +
-  labs(x = "Soil moisture (%)",
-       y = "Stomatal conductance(mol/m^-2 s^-2 )")
-
-```
-
-```{r, echo=FALSE, message= FALSE, warning=FALSE}
-kstem <- read.csv(here("data/drought_experiment_data/data", "hear_kstem.csv")) %>% 
-  rename(species = sp) %>% 
-  rename(id = numbr) %>% 
-  rename(kstem = Ks.g.s.MPa.mm) %>% 
-  mutate(treatment = case_when(id %in% drought_hear$id ~ "drought",
-                               TRUE ~ "wet"),
-         kstem = kstem * -1,
-         date = mdy("04/18/2022")) %>% 
-  dplyr::select(species, id, kstem, treatment, date)
-
-ggplot(kstem, aes(x = treatment, y = kstem, col = treatment)) +
-  geom_point()
-```
-
-```{r, echo=FALSE, message= FALSE, warning=FALSE}
-water_potential <- read.csv(here("data/drought_experiment_data/data", "flourescence_water_potentials.csv")) %>% 
-  filter(is.na(water_potential_predawn) == FALSE) %>% 
-  dplyr::select(!dark_adapted_flourescence) %>% 
-  mutate(date = mdy(date)) %>% 
-  group_by(species, id, date) %>% 
-  summarise(predawn_water_potential = mean(water_potential_predawn, na.rm = FALSE)) %>% 
-  ungroup() %>% 
-  right_join(kleaf, by = c("species", "id", "date")) %>% 
-  full_join(kstem, by = c("species", "id", "date")) %>% 
-  filter(species != "rhov")
-
-ggplot(water_potential, aes(x = predawn_water_potential, y = kleaf_per_area)) +
-  geom_point()+
-  geom_smooth(method = "lm", formula = y~x) +
-  facet_wrap(~species)
-
-ggplot(water_potential, aes(x = predawn_water_potential, y = kstem)) +
-  geom_point()+
-  geom_smooth(method = "lm", formula = y~x)
-```
-
-
-```{r, echo=FALSE, message= FALSE, warning=FALSE}
-leaf_areas <- read.csv(here("data/drought_experiment_data/data", "leaf_areas.csv")) %>% 
-  mutate(treatment = case_when(species == "ceol" & id %in% drought_ceol$id ~ "drought",
-                               species == "hear" & id %in% drought_hear$id ~ "drought",
-                               TRUE ~ "wet"))
-stem_areas <- read.csv(here("data/drought_experiment_data/data", "stem_areas.csv")) %>%
-  group_by(species, id) %>% 
-  summarise(diameter_mm = mean(diameter_mm)) %>% 
-  mutate(radius_cm = diameter_mm/20,
-         stem_area = pi * radius_cm^2)
-
-la_sa <- right_join(leaf_areas, stem_areas, by = c("species", "id")) %>% 
-  mutate(la_sa = leaf_area_cm2/stem_area) %>% 
-  full_join(water_potential, by = c("species", "id"))
-
-ggplot(leaf_areas, aes(x = treatment, y = leaf_area_cm2, color = treatment)) +
-  geom_jitter() +
-  facet_wrap(~species)
-
-ggplot(la_sa, aes(x = treatment, y = la_sa, color = treatment))+
-  geom_jitter() + 
-  facet_wrap(~species)
-
-ggplot(filter(la_sa, species == "hear"), aes(x = predawn_water_potential, y = la_sa))+
-  geom_point() + 
-  geom_smooth(method = "lm", formula = y~x) +
-  facet_wrap(~species)
-
-ggplot(filter(la_sa, species == "ceol"), aes(x = predawn_water_potential, y = la_sa))+
-  geom_point() + 
-  geom_smooth(method = "lm", formula = y~x) +
-  facet_wrap(~species)
-```
-
