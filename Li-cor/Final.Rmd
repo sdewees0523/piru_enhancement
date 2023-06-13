@@ -101,8 +101,20 @@ summary(par_25)
 
 # if there are differences, run post hoc Tukey test
 print(TukeyHSD(par_2000))
-emmeans(par_2000, list(pairwise ~ species), adjust = "tukey")
-plot(emmeans(par_0, list(pairwise ~ species), adjust = "tukey"))
+emmeans(par_250, list(pairwise ~ species), adjust = "tukey")
+plot(emmeans(par_50, list(pairwise ~ species), adjust = "tukey"))
+
+```
+```{r CEOL0819_1 from Excel, include=TRUE}
+# x = par value
+x <- 2000
+
+# y = stomatal conductance value
+y <- 0.907*log(x) + 3.4661
+y # max stomatal conductance
+
+x1 <- 10^(((y/2) - 3.4661) / 0.907)
+x1 # PAR at 50% stomatal conductance
 
 ```
 
