@@ -24,6 +24,7 @@ library(patchwork)
 library(effects)
 library(lattice)
 library(MuMIn)
+# library(Hmisc)
 ```
 
 ```{r colors for figures, include=FALSE}
@@ -2569,7 +2570,7 @@ height_jan_surv_may_2019 <- height_jan_surv_may_2019 %>%
          species = as.factor(species),
          site = as.factor(site))
 glimpse(height_jan_surv_may_2019)
-
+describe(height_jan_surv_may_2019)
 write.csv(height_jan_surv_may_2019, "data/processed/height_jan_surv_may_2019.csv")
 
 ```
@@ -3266,12 +3267,20 @@ may2019_box_values <- height_jan_surv_may_2019  %>%
             SE = ((sd(as.integer(may2019_alive)))/sqrt(length((as.integer(may2019_alive))))))
 print(may2019_box_values)
 
+
 glme.may2019.modcover.box1 <- ggplot(data = may2019_box_values, 
-       aes(x = site, y = sum_may2019_alive, col = species)) +
-  labs(title = "Jan-May 2019 seedling survival by site", x = "Site", y = "Total alive (N)") +
-  geom_boxplot() +
-  theme_bw() 
+       aes(x = site, y = sum_may2019_alive, fill = species)) +
+  geom_bar() + 
+  #scale_x_discrete(labels = c("Site 1", "Site 2")) +
+ # theme_bw() +
+  geom_text(aes(label = paste(sum_may2019_alive, "N"))) +
+  labs(x = "Site", 
+       y = "Total alive (N)", 
+       title = "Jan-May 2019 seedling survival by site")
 plot(glme.may2019.modcover.box1)
+
+# How to make column graphs with nested x-axis labels
+# https://stackoverflow.com/questions/18165863/multirow-axis-labels-with-nested-grouping-variables
 
 
 glme.may2019.modcover <- glmer(as.factor(may2019_alive) ~ mafacover + species + jan_volume_cm3 + site + (1|plot_number), 

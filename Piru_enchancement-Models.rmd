@@ -31,6 +31,9 @@ library(multcomp) # functions: multcompLetters2, multcompLetters3, multcompLette
 #mafa_cover_all = MAFA % cover 2018 and 2019
 #exotic_cover_all = exotic % cover 2018 and 2019
 
+R.Version()
+citation() 
+
 ```
 
 # Load colors for graphs
@@ -295,6 +298,8 @@ write.csv(environ_mod, "data/processed/full_environ_mod.csv")
 #                   data = parmod)
 lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + nncover+ year + (1|plot_number) ,
                    data = environ_mod)
+lme.parmod <- lmer(normalized_par ~  mafacover  + month + nncover+ (1|plot_number) ,
+                   data = environ_mod)
 
 MOD <- lme.parmod
 
@@ -382,8 +387,11 @@ summary(lme.parmod) # p-values
 ```{r parmod posthoc, include=TRUE}
 # post-hoc Tukey test
 # visualize significant factors from anova(lme.parrmod)
+r2(lme.parmod)
+emmeans(lme.parmod, list(pairwise ~ month), adjust = "tukey") #pvaues
+r.squaredGLMM(lme.parmod) 
 
-emmip(lme.parmod, mafacover ~ month)
+emmip(lme.parmod, mafacover ~ month) # graph
 # mafacover is 26.32... that values must be from the model
 
 # testing the difference between slopes
@@ -594,6 +602,7 @@ summary(parmod.r2)$r.squared
 
 parmod_mafacovver = lm(normalized_par ~ mafacover, data = parmod_nncover) # p is same as above
 summary(parmod_mafacovver)
+anova(parmod_mafacovver)
 
 # par x nncover
 parmod.nn = lm(normalized_par ~ nncover, data = parmod_nncover) 
@@ -635,7 +644,7 @@ parmod %>%
 # par x month
 parmod.month = lm(normalized_par ~ month, data = parmod) 
 # Extracting R-squared parameter from summary 
-summary(parmod.month)
+anova(parmod.month)
 #Coefficients:
 #            Estimate Std. Error t value Pr(>|t|)    
 #(Intercept)  0.21923    0.02874   7.629 3.70e-13 ***
@@ -645,6 +654,17 @@ summary(parmod.month)
 #month5       0.19806    0.04064   4.873 1.84e-06 ***
 #month7       0.16620    0.04064   4.089 5.65e-05 ***
 #month9       0.23662    0.03520   6.723 9.93e-11 ***
+parmod.month.may = lm(normalized_par ~ mafacover, data = parmod %>% filter((month == "5"))) 
+summary(parmod.month.may)
+parmod.month.july = lm(normalized_par ~ mafacover, data = parmod %>% filter((month == "7"))) 
+summary(parmod.month.july)
+parmod.month.jan = lm(normalized_par ~ mafacover, data = parmod %>% filter((month == "1"))) 
+summary(parmod.month.jan)
+
+anova(parmod.month)
+anova(aov(normalized_par ~ month, data = parmod))
+TukeyHSD(aov(normalized_par ~ month, data = parmod) )
+plot(TukeyHSD(aov(normalized_par ~ month, data = parmod)))
 
 # par x site
 parmod.site = lm(normalized_par ~ site, data = parmod) 
@@ -680,7 +700,7 @@ ggplotly(parbox.1)
 
 
 # scatterplot: normpar x mafacover
-parscatter.6 <- ggplot(data = environ_mod, aes(x = mafacover, y = normalized_par)) + 
+parscatter.6 <- ggplot(data = environ_mod, aes(x = mafacover, y = normalized_par, col = month)) + 
   geom_point() +
 labs(title = "Normalized PAR by Mature Shrub cover (%)", x = "MAFA cover (%)", y = "Nomalized PAR") +
   geom_smooth(method="lm")+
@@ -688,7 +708,7 @@ labs(title = "Normalized PAR by Mature Shrub cover (%)", x = "MAFA cover (%)", y
 ggplotly(parscatter.6)
 
 # scatterplot: normpar x nncover
-parscatter.7 <- ggplot(data = environ_mod, aes(x = nncover, y = normalized_par)) + 
+parscatter.7 <- ggplot(data = environ_mod, aes(x = nncover, y = normalized_par, col = month)) + 
   geom_point() +
 labs(title = "Normalized PAR by Non-native cover (%)", x = "Non-native cover (%)", y = "Nomalized PAR") +
   geom_smooth(method="lm")+
@@ -902,7 +922,10 @@ emmeans(lme.tdrmod, list(pairwise ~ site*treatment), adjust = "tukey")
 # site2 half - site2 nonene      2.302 0.798 33.0   2.883  0.0688
 # site1 nonene - site2 nonene    3.939 0.875 50.9   4.500  0.0005
 
-
+# tdr by month
+tdrmod_nncover_bymonth <- aov(soil_moisture ~ month, data = tdrmod_nncover)
+anova(tdrmod_nncover_bymonth)
+TukeyHSD(aov(soil_moisture ~ month, data = tdrmod_nncover))
 ```
 
 ```{r tdrmod means SD SE, include = TRUE}
@@ -986,6 +1009,8 @@ anova(tdrmod_treat)
 # treatment   2  154.9  77.446  1.6663 0.1939
  
 # For TDR and nn cover, the significant plots may explain results we see later, but the fact that there are 2-3 plots that are significantly different from each other doesn't tell us the sites or treatments are significantly different from each other. 
+
+
 ```
 
 4.  figures
@@ -1163,11 +1188,31 @@ nnmod %>%
 #  <chr>        <dbl>      <dbl> <int>      <dbl>
 #1 2018          36.0       12.9    36       2.16
 #2 2019          39.2       16.6    36       2.76
+
+nnmod %>% 
+  group_by(treatment) %>% 
+  summarise(mean_nncover=mean(nncover, na.rm = TRUE),
+            sd_nncover = sd(nncover, na.rm = TRUE), 
+            N = length(nncover),
+            SE_nncover=((sd(nncover, na.rm = TRUE))/sqrt(length((nncover))))
+            )
 ```
 
 ```{r nnmod - additional stats, include=TRUE}
 # non-native cover by treatment
 nnmod_treat <- aov(nncover ~ treatment, data = nnmod) 
+nnmod_treat <- aov(nncover ~ treatment, data = na.omit(environ_mod))
+anova(nnmod_treat)
+TukeyHSD(nnmod_treat)
+plot(TukeyHSD(nnmod_treat))
+
+# nn by normPAR
+nnmod_normpar <- lm(nncover ~ normalized_par, data = na.omit(environ_mod))
+anova(nnmod_normpar)
+summary(nnmod_normpar)
+
+# nn by soilmoisture
+nnmod_treat <- aov(nncover ~ treatment, data = na.omit(environ_mod))
 anova(nnmod_treat)
 TukeyHSD(nnmod_treat)
 plot(TukeyHSD(nnmod_treat))
@@ -1229,6 +1274,25 @@ nncover_mafacover.lm <- lm( nncover ~ mafacover, data = na.omit(environ_mod))
 summary(nncover_mafacover.lm)
 MOD <- nncover_mafacover.lm 
 r2(MOD)
+
+# nn x normPAR
+nnscatter.2 <- ggplot(data = na.omit(environ_mod), aes(x = normalized_par, y = nncover)) + 
+  geom_point() +
+  geom_smooth(method="lm")+
+  theme_bw()
+ggplotly(nnscatter.2)
+
+nncover_normpar.lm <- lm( nncover ~ normalized_par, data = na.omit(environ_mod))
+summary(nncover_normpar.lm)
+MOD <- nncover_normpar.lm 
+r2(MOD)
+
+# nn x soilmoisture
+nncover_soilmoisture.lm <- lm( nncover ~ soil_moisture, data = na.omit(environ_mod))
+summary(nncover_soilmoisture.lm)
+MOD <- nncover_soilmoisture.lm 
+r2(MOD)
+
 
 # nncover x treatment
 nncover_treat.lm <- aov( nncover ~ treatment, data = na.omit(environ_mod) )
