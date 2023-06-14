@@ -27,6 +27,7 @@ library(multcomp)
 library(multcompView)
 library(emmeans) # includes lsmeans
 library(multcomp) # functions: multcompLetters2, multcompLetters3, multcompLetters4 using aov object
+library(rgl)
 
 #mafa_cover_all = MAFA % cover 2018 and 2019
 #exotic_cover_all = exotic % cover 2018 and 2019
@@ -700,21 +701,60 @@ ggplotly(parbox.1)
 
 
 # scatterplot: normpar x mafacover
-parscatter.6 <- ggplot(data = environ_mod, aes(x = mafacover, y = normalized_par, col = month)) + 
+parscatter.6 <- ggplot(data = environ_mod, aes(x = mafacover, y = normalized_par)) + 
   geom_point() +
-labs(title = "Normalized PAR by Mature Shrub cover (%)", x = "MAFA cover (%)", y = "Nomalized PAR") +
-  geom_smooth(method="lm")+
+labs(title = "Normalized PAR by Mature Shrub cover (%)", x = "MAFA cover (%)", y = "Nomalized PAR") + 
+  geom_smooth()+
   theme_bw()
 ggplotly(parscatter.6)
 
 # scatterplot: normpar x nncover
-parscatter.7 <- ggplot(data = environ_mod, aes(x = nncover, y = normalized_par, col = month)) + 
+parscatter.7 <- ggplot(data = environ_mod, aes(x = nncover, y = normalized_par)) + 
   geom_point() +
 labs(title = "Normalized PAR by Non-native cover (%)", x = "Non-native cover (%)", y = "Nomalized PAR") +
-  geom_smooth(method="lm")+
+  geom_smooth()+
   theme_bw()
 ggplotly(parscatter.7)
 parscatter.6+parscatter.7
+
+plot3D(environ_mod$mafacover, environ_mod$nncover, environ_mod$normalized_par, colvar = NULL, pch = 16,
+          xlab = "Shrub Cover (%)", ylab = "Non-Native Cover (%)", zlab = "Sunlight",
+          theta = 30, phi = 30)
+
+scatterplot3d(environ_mod$mafacover, environ_mod$nncover, environ_mod$normalized_par,
+              xlab = "Shrub Cover (%)", ylab = "Non-Native Cover (%)", zlab = "Sunlight",
+              color = "blue", pch = 16, angle = 55)
+
+plot3D:: (environ_mod$mafacover, environ_mod$nncover, environ_mod$normalized_par, col = "blue",
+       xlab = "Shrub Cover (%)", ylab = "Non-Native Cover (%)", zlab = "Sunlight",
+       type = "s", size = 1)
+
+# par in winter
+winter_par <- ggplot(environ_mod %>% filter(month =="1" | month == "11" ), aes(x = mafacover, y = normalized_par)) +
+  geom_point(aes(color = mafacover, y = normalized_par), shape = 16) +
+  geom_smooth( se = FALSE, color = "forestgreen", formula = y ~ x) + 
+  geom_point(aes(x = nncover), shape = 16) +
+  geom_smooth(aes(x = nncover, y = normalized_par),  se = FALSE, color = "gold", formula = y ~ x) +
+  labs(x = "Percent cover (%)", y = "Normalized PAR in winter", color = "Legend") +
+  #scale_color_manual(values = c(mafacover = "blue", nncover = "green")) +
+  theme_minimal()
+
+# par in spring/summer
+spring_par <- ggplot(environ_mod %>% filter(month =="5" | month == "7" ), aes(x = mafacover, y = normalized_par)) +
+  geom_point(aes(color = mafacover, y = normalized_par), shape = 16) +
+  geom_smooth( se = FALSE, color = "forestgreen", formula = y ~ x) + 
+  geom_point(aes(x = nncover), shape = 16) +
+  geom_smooth(aes(x = nncover, y = normalized_par),  se = FALSE, color = "gold", formula = y ~ x) +
+  labs(x = "Percent cover (%)", y = "Normalized PAR in spring", color = "Legend") +
+  #scale_color_manual(values = c(mafacover = "blue", nncover = "green")) +
+  theme_minimal()
+
+winter_par+spring_par  
+  
+  $mafacover, environ_mod$normalized_par, pch = 16, col =  "blue", xlab = "Cover (%)", ylab = "Normalized PAR", main = "Normalized PAR by Shrub cover and Non-native cover") 
+points(environ_mod$nncover, environ_mod$normalized_par, pch = 16, col = "green") 
+legend("topright", legend = c("Shrub Cover", "Grass Cover"), col = c("blue", "green"), pch = 16)
+
 
 # scatterplot: normpar x mafacover (%) x month
 parscatter.2 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
