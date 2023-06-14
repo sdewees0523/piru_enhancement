@@ -92,16 +92,41 @@ survmort <- survmort_load %>%
 tdr_april2018$site <- factor(tdr_april2018$site, levels = c("1", "2"))
 
 
-# total alive 2018 - SPECIES
+# total alive 2018
 survmort %>% 
-  filter (year == "2018" & month_count == "1") %>%  
-   group_by(year, month, month_count, species) %>% 
+  filter (year == "2018" & month_count == "0") %>%  
+   group_by(year) %>% 
   summarize(sum_alive = sum(alive), 
             sum_dead = sum(dead))
 
 survmort %>% 
-  filter (year == "2018" & month_count == "4") %>%  
-   group_by(year, month, month_count, species) %>% 
+  filter (year == "2018" & month_count == "1") %>%  
+   group_by(year) %>% 
+  summarize(sum_alive = sum(alive), 
+            sum_dead = sum(dead))
+
+survmort %>% 
+  filter (year == "2018" & month_count == "12") %>%  
+   group_by(year) %>% 
+  summarize(sum_alive = sum(alive), 
+            sum_dead = sum(dead))
+
+# total alive 2019
+survmort %>% 
+  filter (year == "2019" & month_count == "0") %>%  
+   group_by(year) %>% 
+  summarize(sum_alive = sum(alive), 
+            sum_dead = sum(dead))
+
+survmort %>% 
+  filter (year == "2019" & month_count == "1") %>%  
+   group_by(year) %>% 
+  summarize(sum_alive = sum(alive), 
+            sum_dead = sum(dead))
+
+survmort %>% 
+  filter (year == "2019" & month_count == "4") %>%  
+   group_by(year) %>% 
   summarize(sum_alive = sum(alive), 
             sum_dead = sum(dead))
 
@@ -3282,6 +3307,51 @@ plot(glme.may2019.modcover.box1)
 # How to make column graphs with nested x-axis labels
 # https://stackoverflow.com/questions/18165863/multirow-axis-labels-with-nested-grouping-variables
 
+
+glme.may2019.modcover.box1 <- ggplot(data = may2019_box_values, 
+        aes(x = site, y = sum_may2019_alive, col = species)) +
+   geom_col() + 
+   scale_x_discrete(labels = c("Site 1", "Site 2")) +
+   theme_bw() +
+   labs(x = "Site", 
+        y = "Total alive (N)", 
+        title = "Jan-May 2019 seedling survival by site")
+plot(glme.may2019.modcover.box1)
+
+glme.may2019.modcover.box1 <- ggplot(data = may2019_box_values, 
+                                     aes(x = site, y = sum_may2019_alive, col = species)) +
+  labs(title = "Jan-May 2019 seedling survival by site", x = "Site", y = "Total alive (N)") +
+   geom_boxplot() +
+   theme_bw() 
+ plot(glme.may2019.modcover.box1)
+ 
+ glme.may2019.modcover.box1 <- ggplot(data = may2019_box_values, 
+        aes(x = site, y = sum_may2019_alive, fill = species)) +
+   geom_boxplot() + 
+   scale_x_discrete(labels = c("CEOL /n Site 1", "HEAR /n Site 1", "RHOV /n Site 1", "SAAP /n Site 1", "CEOL /n Site 2", "HEAR /n Site 2", "RHOV /n Site 2", "SAAP /n Site 2")) +
+   theme_bw() +
+   labs(x = "Site", 
+        y = "Total alive (N)", 
+        title = "Jan-May 2019 seedling survival by site")
+ plot(glme.may2019.modcover.box1)
+ glme.may2019.modcover.box1 <- ggplot(data = may2019_box_values, 
+        aes(x = site, y = sum_may2019_alive, fill = species)) +
+ geom_col(color = "black") +
+   scale_x_discrete(labels = c("CEOL /n Site 1", "HEAR /n Site 1", "RHOV /n Site 1", "SAAP /n Site 1", "CEOL /n Site 2", "HEAR /n Site 2", "RHOV /n Site 2", "SAAP /n Site 2")) +
+   theme_bw() +
+   labs(x = "Site", 
+        y = "Total alive (N)", 
+        title = "Jan-May 2019 seedling survival by site")
+ plot(glme.may2019.modcover.box1)
+ glme.may2019.modcover.box1 <- ggplot(data = may2019_box_values, 
+        aes(x = site, y = sum_may2019_alive, fill = species)) +
+   geom_boxplot() + 
+   scale_x_discrete(labels = c("CEOL /n Site 1", "HEAR /n Site 1", "RHOV /n Site 1", "SAAP /n Site 1", "CEOL /n Site 2", "HEAR /n Site 2", "RHOV /n Site 2", "SAAP /n Site 2")) +
+   theme_bw() +
+   labs(x = "Site", 
+        y = "Total alive (N)", 
+        title = "Jan-May 2019 seedling survival by site")
+ plot(glme.may2019.modcover.box1)
 
 glme.may2019.modcover <- glmer(as.factor(may2019_alive) ~ mafacover + species + jan_volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
