@@ -310,6 +310,7 @@ E1 <- residuals(MOD, "pearson")
 
 # See residuals as a histogram, look for normal distribution
 hist(E1)
+# website notes: https://www.ucd.ie/ecomodel/Resources/QQplots_WebVersion.html#:~:text=The%20normal%20distribution%20is%20symmetric,deviate%20from%20the%20straight%20line)
 
 # Graph residuals against a normal distribution, look for all points to be on 1:1 line
 #need to call next two lines together
