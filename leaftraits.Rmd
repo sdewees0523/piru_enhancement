@@ -54,7 +54,6 @@ print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(speci
 #rhov-9-rhov-2   2.2440442  0.02224239  4.46584593 0.0474970 <-- 2 and 9
 #rhov-9-rhov-6   2.7444555  0.52265369  4.96625723 0.0147640 <-- 6 and 9
 
-
 # highlight all and run as one command
 SLA <- aov(SLA_m2kg ~ species, data = leaftraits)
 print(summary(SLA))
@@ -69,6 +68,21 @@ leaftraits %>%
 ### 2) LDMC 
 ```{r ldmc, include=TRUE}
 
+print(TukeyHSD(aov(leaf_LDMC_proportion ~ individual_ID, data = leaftraits %>%  filter(species =="HEAR")))) # ldmc is not similar
+#$individual_ID
+#              diff          lwr          upr     p adj
+#H2-H1  0.054775069  0.028450382  0.081099756 0.0002401 <-- 1 and 2
+#H4-H1  0.030006824  0.003682137  0.056331510 0.0242512 <-- 1 and 4
+#H3-H2 -0.058831491 -0.085156178 -0.032506805 0.0001230 <-- 3 and 2
+#H4-H3  0.034063246  0.007738560  0.060387933 0.0108842 <-- 3 and 4
+print(TukeyHSD(aov(leaf_LDMC_proportion ~ individual_ID, data = leaftraits %>%  filter(species =="SAAP")))) # leaf ldmc is not similar
+#$individual_ID
+#              diff         lwr          upr     p adj
+#S5-S2 -0.081518376 -0.15076894 -0.012267814 0.0199746 <-- 5 and 2
+#S5-S4 -0.074509568 -0.14376013 -0.005259006 0.0338004 <-- 5 and 4
+print(TukeyHSD(aov(leaf_LDMC_proportion ~ individual_ID, data = leaftraits %>%  filter(species =="CEOL")))) # leaf ldmc is similar between individuals
+print(TukeyHSD(aov(leaf_LDMC_proportion ~ individual_ID, data = leaftraits %>%  filter(species =="RHOV")))) # RHOV 9 and 2 are not the same
+
 # highlight all and run as one command
 LDMC <- aov(leaf_LDMC_proportion ~ species, data = leaftraits)
 print(summary(LDMC))
@@ -82,6 +96,19 @@ leaftraits %>%
 ```
 ### 3) leaf thickness  
 ```{r leaf thickness, include=TRUE}
+
+print(TukeyHSD(aov(leaf_thickness_cm ~ individual_ID, data = leaftraits %>%  filter(species =="HEAR")))) # leaf thickness is similar among leaves
+print(TukeyHSD(aov(leaf_thickness_cm ~ individual_ID, data = leaftraits %>%  filter(species =="SAAP")))) # leaf thickness is not similar among the four leaves
+#$individual_ID
+#          diff           lwr         upr     p adj
+#S4-S2  0.00900  0.0021035594 0.015896441 0.0102785 <-- 4 and 2
+#S5-S2  0.00775  0.0008535594 0.014646441 0.0263699 <-- 2 and 5 
+#S4-S3  0.00725  0.0003535594 0.014146441 0.0384030 <-- 4 and 3
+print(TukeyHSD(aov(leaf_thickness_cm ~ individual_ID, data = leaftraits %>%  filter(species =="CEOL")))) # leaf thickness is similar among leaves
+print(TukeyHSD(aov(leaf_thickness_cm ~ individual_ID, data = leaftraits %>%  filter(species =="RHOV")))) # leaf thickness is not similar among the four leaves
+#rhov-9-rhov-2  -0.01275 -0.022624665 -0.0028753349 0.0110423 <-- 9 and 2
+#rhov-9-rhov-6  -0.01075 -0.020624665 -0.0008753349 0.0316464 <-- 9 and 6
+
 
 # highlight all and run as one command
 Lt <- aov(leaf_thickness_cm ~ species, data = leaftraits)
