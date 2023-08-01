@@ -44,7 +44,16 @@ glimpse(leaftraits)
 print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="HEAR")))) # leaf sla is similar between individuals
 print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="SAAP")))) # leaf sla is similar between individuals
 print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="CEOL")))) # leaf sla is similar between individuals
-print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="RHOV"))))
+print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="RHOV")))) # leaf sla is NOT similar between RHOV individuals
+#$individual_ID
+#                     diff         lwr         upr     p adj
+#rhov-2-rhov-12 -1.7328279 -3.95462970  0.48897384 0.1488349
+#rhov-6-rhov-12 -2.2332392 -4.45504100 -0.01143746 0.0486974 <-- 6 and 12
+#rhov-9-rhov-12  0.5112162 -1.71058554  2.73301800 0.9015383
+#rhov-6-rhov-2  -0.5004113 -2.72221307  1.72139047 0.9068663
+#rhov-9-rhov-2   2.2440442  0.02224239  4.46584593 0.0474970 <-- 2 and 9
+#rhov-9-rhov-6   2.7444555  0.52265369  4.96625723 0.0147640 <-- 6 and 9
+
 
 # highlight all and run as one command
 SLA <- aov(SLA_m2kg ~ species, data = leaftraits)
