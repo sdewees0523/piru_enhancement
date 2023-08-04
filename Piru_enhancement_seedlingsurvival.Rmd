@@ -764,6 +764,16 @@ emmeans(glme.may2018.mod.2, list(pairwise ~ species), adjust = "tukey")
 # HEAR - SAAP    1.216 0.330 Inf   3.683  0.0013
 # RHOV - SAAP    0.617 0.324 Inf   1.900  0.2278
 
+height_march_surv_may %>% 
+  group_by(species, treatment) %>% 
+  summarise(totalsurvival = sum(may_alive))
+
+ggplot(data = height_march_surv_may, 
+       x = species, 
+       y = height_march_surv_may %>% sum(may_alive)) +
+         geom_point() + geom_boxplot()
+                                                          
+
 # AIC: 684.9
 #Fixed effects:
 #                             Estimate Std. Error z value Pr(>|z|)    
@@ -1899,7 +1909,7 @@ moisture_CEOL_graph + moisture_HEAR_graph + moisture_RHOV_graph +moisture_SAAP_g
 #     normalized_par * soil_moisture + exotic_percentcover + species + site + march_stem_height_cm + 
 #     (1 | plot_number), data: height_march_surv_may)
 
-# par x MIN par x HEAR
+# par x MIN tdr x HEAR
 par_low_moisture_HEAR <- seq(from = -1.7, to = 2.1, by = 0.1) %>% 
   as.data.frame() %>% 
   rename(normalized_par = ".") %>% 
