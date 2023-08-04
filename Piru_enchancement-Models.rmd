@@ -22,12 +22,14 @@ library(dplyr)
 library(olsrr)
 #library(survival)
 library(lme4)
-library(lmerTest)
+#library(lmerTest)
 library(multcomp)
 library(multcompView)
 library(emmeans) # includes lsmeans
 library(multcomp) # functions: multcompLetters2, multcompLetters3, multcompLetters4 using aov object
 library(rgl)
+library(ggrepel)
+library(ggpmisc)
 
 #mafa_cover_all = MAFA % cover 2018 and 2019
 #exotic_cover_all = exotic % cover 2018 and 2019
@@ -280,7 +282,24 @@ environ_mod %>%  # check number of data points
   group_by(year, treatment) %>% 
   summarise(N_mafacover = length(mafacover), 
             N_exocover = length(nncover))
+
+
 write.csv(environ_mod, "data/processed/full_environ_mod.csv")
+
+environ_mod %>% 
+  group_by(treatment) %>% 
+  summarise(
+     average_MAFAcover = mean(mafacover), 
+            SD = sd(mafacover, na.rm = TRUE),
+            N = length(mafacover), 
+            SE = ((sd(mafacover, na.rm = TRUE))/sqrt(length((mafacover)))),
+         min = min(mafacover), 
+     max = max(mafacover)
+  )
+hist(environ_mod$mafacover)
+ggplot(data = environ_mod, aes(x = treatment, y = mafacover))+
+  geom_boxplot() +
+  geom_point()
 ```
 
 ------------------------------------------------------------------------
@@ -426,7 +445,7 @@ summary(parmod.interaction)
 #mafacover:month7  -0.0055906  0.0016074  -3.478 0.000588 ***
 #mafacover:month9  -0.0036851  0.0014646  -2.516 0.012440 *  
   
-summary(aov(normalized_par ~ month, data = environ_mod))
+summary(aov(normalized_par ~ month, data = environ_mod)) # anova norm_par by month
 TukeyHSD(aov(normalized_par ~ month, data = environ_mod))
 plot(TukeyHSD(aov(normalized_par ~ month, data = environ_mod)))
 #  Tukey multiple comparisons of means
@@ -505,14 +524,19 @@ parmod %>%
 ```
 
 ```{r parmod means SD SE, include=TRUE}
+
 # mean, SE: normpar x month
 parmod %>% 
-  group_by(month) %>% 
+#  group_by(month) %>% 
   summarise(MEAN_normPAR=mean(normalized_par, na.rm = TRUE),
             SD = sd(normalized_par, na.rm = TRUE),
             N = length(normalized_par), 
-            SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par))))
+            SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par)))), 
+            min = min(normalized_par), 
+            max = max(normalized_par)
             )
+min(parmod)
+
 # A tibble: 7 × 5
 #  month MEAN_par    SD     N     SE
 #  <fct>    <dbl> <dbl> <int>  <dbl>
@@ -523,6 +547,7 @@ parmod %>%
 #5 7        0.385 0.192    36 0.0320
 #6 9        0.456 0.158    72 0.0187
 #7 11       0.293 0.172    36 0.0286
+
 
 # mean, SE: normpar x year x month
 parmod %>% 
@@ -702,18 +727,21 @@ ggplotly(parbox.1)
 
 
 # scatterplot: normpar x mafacover
-parscatter.6 <- ggplot(data = environ_mod, aes(x = mafacover, y = normalized_par)) + 
+parscatter.6 <- (data = environ_mod, aes(x = mafacover, y = normalized_par)) + 
+ stat_poly_line() + # R2 = 0.13
+  stat_poly_eq(use_label(c("eq", "R2")))+
   geom_point() +
-labs(title = "Normalized PAR by Mature Shrub cover (%)", x = "MAFA cover (%)", y = "Nomalized PAR") + 
-  geom_smooth()+
+  labs(title = "Normalized PAR by Mature Shrub cover (%)", x = "MAFA cover (%)", y = "Nomalized PAR") +
   theme_bw()
 ggplotly(parscatter.6)
 
 # scatterplot: normpar x nncover
 parscatter.7 <- ggplot(data = environ_mod, aes(x = nncover, y = normalized_par)) + 
+  stat_poly_line()+
+  stat_poly_eq(use_label(c("eq", "R2"))) + # R2 = 0.03
   geom_point() +
 labs(title = "Normalized PAR by Non-native cover (%)", x = "Non-native cover (%)", y = "Nomalized PAR") +
-  geom_smooth()+
+  #geom_smooth()+
   theme_bw()
 ggplotly(parscatter.7)
 parscatter.6+parscatter.7
@@ -761,10 +789,31 @@ legend("topright", legend = c("Shrub Cover", "Grass Cover"), col = c("blue", "gr
 parscatter.2 <- ggplot(data = parmod, aes(x = mafacover, y = normalized_par)) + 
   geom_point(aes(color = month)) +
   labs(title = "Normalized PAR by MAFA cover (%)", x = "MAFA canopy cover (%)", y = "Normalized PAR") +
-  geom_smooth(method="lm", se = FALSE, fullrange = TRUE, 
-             aes(color=month)) +
+  geom_smooth(method ="lm", 
+              se = FALSE, 
+              fullrange = TRUE, 
+              aes(color = month)) +
   theme_bw()
 ggplotly(parscatter.2)
+
+# normPAR slope in May and July 
+ggplot(data = parmod %>% filter(month =="5" | month == "7"), aes(x = mafacover, y = normalized_par)) + 
+  ylim(0,1) +
+  #xlim(1,100) +
+  stat_poly_line()+
+  stat_poly_eq(use_label(c("eq", "R2"))) + # slope = -0.00562
+  geom_point(aes(color = month)) +
+  labs(title = "Normalized PAR by MAFA cover (%) in May & July 2018", x = "MAFA canopy cover (%)", y = "Normalized PAR") +
+  theme_bw()
+# normPAR slope in January 
+ggplot(data = parmod %>% filter(month =="1"), aes(x = mafacover, y = normalized_par)) + 
+   ylim(0,1) +
+  stat_poly_line()+
+  stat_poly_eq(use_label(c("eq", "R2"))) + # slope = 0.000429
+  geom_point(aes(color = month)) +
+  labs(title = "Normalized PAR by MAFA cover (%) in Nov. 2018", x = "MAFA canopy cover (%)", y = "Normalized PAR") +
+  theme_bw()
+
 
 environ_mod_bycovertype <- read_csv("data/environ_mod_bycovertype.csv") 
 parscatter.8 <-  ggplot(data = environ_mod_bycovertype, aes(x = percent_cover, y = normalized_par, col = cover_type)) + 
@@ -973,19 +1022,32 @@ TukeyHSD(aov(soil_moisture ~ month, data = tdrmod_nncover))
 
 # mean, SE: tdr x treatment
 tdrmod_nncover %>% 
-  group_by(treatment) %>% 
+  group_by(year, month) %>% 
   summarise(MEAN_tdr = mean(soil_moisture, na.rm = TRUE),
             SD = sd(soil_moisture, na.rm = TRUE),
             N = length(soil_moisture), 
-            SE = ((sd(soil_moisture, na.rm = TRUE))/sqrt(length((soil_moisture))))
+            SE = ((sd(soil_moisture, na.rm = TRUE))/sqrt(length((soil_moisture)))), 
+            min = min(soil_moisture), 
+            max = max(soil_moisture)
   )
-# A tibble: 3 × 5
-#  treatment MEAN_tdr    SD     N    SE
-#  <chr>        <dbl> <dbl> <int> <dbl>
-#1 full          17.9  7.31    36 1.22 
-#2 half          17.3  7.11    36 1.19 
-#3 nonene        15.1  5.95    36 0.992
+#  TDR overall
+#  MEAN_tdr    SD     N    SE   min   max
+#     16.8  6.86   108 0.660  6.38  29.8
+
+# TDR by treatment
+# treatment     MEAN_tdr    SD     N    SE
+# full          17.9  7.31    36 1.22 
+# half          17.3  7.11    36 1.19 
+# nonene        15.1  5.95    36 0.992
             
+# by month
+#  month MEAN_tdr    SD     N    SE   min   max
+#  <chr>    <dbl> <dbl> <int> <dbl> <dbl> <dbl>
+#1 12       22.7   3.40    36 0.567 14.8   29.8
+#2 3        18.9   4.59    36 0.766 12.2   27.7
+#3 4         8.63  1.50    36 0.250  6.38  11.3
+
+
 # mean, SE: tdr x treatment in 2019
 tdrmod_nncover %>% 
   filter(year == "2019") %>% 
@@ -1122,8 +1184,12 @@ ggplotly(tdrscatter)
 #names(nnmod)
 #print(nnmod)
 #str(nnmod)
-lme.nnmod <- lmer(nncover ~ treatment + mafacover + site  + soil_moisture + normalized_par+ (1|plot_number) +(1|year), # no month column, year = month
-                   data = nnmod_environ) 
+lme.nnmod <- lmer(nncover ~ treatment + mafacover + site + soil_moisture + normalized_par + (1|date) + (1|plot_number) + (1|year), # no month column, year = month, 
+                  data = nnmod)
+
+# old code
+#lme.nnmod <- lmer(nncover ~ treatment + mafacover + site + year + soil_moisture + normalized_par + (1|plot_number) + #(1|date), # no month column, year = month
+#                   data = nnmod_environ) 
 
 MOD <- lme.nnmod
 
@@ -1217,26 +1283,39 @@ emmeans(lme.tdrmod, pairwise~year, adjust="tukey")
 
 ```{r nnmod mean SD SE, include=TRUE}
 
-nnmod %>% 
+nnmod_environ %>% 
   group_by(year) %>% 
   summarise(mean_nncover=mean(nncover, na.rm = TRUE),
             sd_nncover = sd(nncover, na.rm = TRUE), 
             N = length(nncover),
-            SE_nncover=((sd(nncover, na.rm = TRUE))/sqrt(length((nncover))))
+            SE_nncover=((sd(nncover, na.rm = TRUE))/sqrt(length((nncover)))),
+            min = min(nncover), 
+            max = max(nncover), 
+              min = min(nncover), 
+            max = max(nncover)
             )
 # A tibble: 2 × 5
-#  year  mean_nncover sd_nncover     N SE_nncover
-#  <chr>        <dbl>      <dbl> <int>      <dbl>
-#1 2018          36.0       12.9    36       2.16
-#2 2019          39.2       16.6    36       2.76
+#  year  mean_nncover sd_nncover     N SE_nncover   min   max
+#  <chr>        <dbl>      <dbl> <int>      <dbl>   <dbl> <dbl>
+#1 2018          36.0       12.9    36       2.16   9.5  64.2
+#2 2019          39.2       16.6    36       2.76   8    91  
 
-nnmod %>% 
+nnmod_environ %>% 
   group_by(treatment) %>% 
   summarise(mean_nncover=mean(nncover, na.rm = TRUE),
             sd_nncover = sd(nncover, na.rm = TRUE), 
             N = length(nncover),
-            SE_nncover=((sd(nncover, na.rm = TRUE))/sqrt(length((nncover))))
+            SE_nncover=((sd(nncover, na.rm = TRUE))/sqrt(length((nncover)))),
+            min = min(nncover), 
+            max = max(nncover)
             )
+# A tibble: 3 × 7
+#  treatment mean_nncover sd_nncover     N SE_nncover   min   max
+#  <chr>            <dbl>      <dbl> <int>      <dbl> <dbl> <dbl>
+#1 full              44.8       17.3    24       3.53  17      91
+#2 half              32.0       11.5    24       2.35   9.5    57
+#3 none              36.0       12.6    24       2.56   8      61
+
 ```
 
 ```{r nnmod - additional stats, include=TRUE}
@@ -1304,12 +1383,35 @@ nnbox.3 <- ggplot(data = nnmod, aes(x = treatment, y = nncover)) +
   theme_bw()
 ggplotly(nnbox.3) %>% layout(boxmode = "group")
 
-# scatterplot: nncover x mafacover (no correlation)
-nnscatter.1 <- ggplot(data = nnmod, aes(x = mafacover, y = nncover)) + 
+# scatterplot: nncover x mafacover 
+nnscatter.1 <- ggplot(data = nnmod_environ, aes(x = mafacover, y = nncover)) + 
+  ylim(0,100) +
+   stat_poly_line() + # R2 = 0.08, m = -0.224
+  stat_poly_eq(use_label(c("eq", "R2")))+
   geom_point() +
-  geom_smooth(method="lm")+
+  #geom_smooth(method="lm")+
+  labs(title = "Non-native cover by Shrub cover", x = "Shrub cover (%)", y = "Non-native cover (%)") +
+  scale_fill_manual(values = c(sitecolors)) +
   theme_bw()
 ggplotly(nnscatter.1)
+
+# scatterplot: nncover x soil moisture
+ggplot(data = nnmod_environ, aes(x = soil_moisture, y = nncover)) + 
+  stat_poly_line() + # m = 0.0341, R2 < 0.01
+  stat_poly_eq(use_label(c("eq", "R2")))+
+  geom_point() +
+  labs(title = "Non-native cover by Soil moisture", x = "Soil Moisture (%)", y = "Non-native cover (%)") +
+  theme_bw()
+
+# scatterplot: nncover x normPAR
+ggplot(data = nnmod_environ, aes(x = normalized_par, y = nncover)) + 
+  ylim(0,100) +
+  xlim(0,1) +
+  stat_poly_line() + # 
+  stat_poly_eq(use_label(c("eq", "R2")))+
+  geom_point() +
+  labs(title = "Non-native cover by Normalized PAR", x = "Normalized PAR", y = "Non-native cover (%)") +
+  theme_bw()
 
 nncover_mafacover.lm <- lm( nncover ~ mafacover, data = na.omit(environ_mod))
 summary(nncover_mafacover.lm)
@@ -1329,7 +1431,7 @@ MOD <- nncover_normpar.lm
 r2(MOD)
 
 # nn x soilmoisture
-nncover_soilmoisture.lm <- lm( nncover ~ soil_moisture, data = na.omit(environ_mod))
+nncover_soilmoisture.lm <- lm( nncover ~ soil_moisture, data = na.omit(environ_mod)) +
 summary(nncover_soilmoisture.lm)
 MOD <- nncover_soilmoisture.lm 
 r2(MOD)
