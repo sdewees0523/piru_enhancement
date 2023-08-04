@@ -41,6 +41,9 @@ glimpse(leaftraits)
 ### 1) SLA
 ```{r sla, include=TRUE}
 
+ggplot(data = leaftraits, aes(y = SLA_m2kg, x = species, color = individual_ID)) + 
+  geom_jitter()
+
 print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="HEAR")))) # leaf sla is similar between individuals
 print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="SAAP")))) # leaf sla is similar between individuals
 print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="CEOL")))) # leaf sla is similar between individuals
@@ -67,6 +70,9 @@ leaftraits %>%
 ```
 ### 2) LDMC 
 ```{r ldmc, include=TRUE}
+
+ggplot(data = leaftraits, aes(y = leaf_LDMC_proportion, x = species, color = individual_ID)) + 
+  geom_jitter()
 
 print(TukeyHSD(aov(leaf_LDMC_proportion ~ individual_ID, data = leaftraits %>%  filter(species =="HEAR")))) # ldmc is not similar
 #$individual_ID
@@ -97,6 +103,9 @@ leaftraits %>%
 ### 3) leaf thickness  
 ```{r leaf thickness, include=TRUE}
 
+ggplot(data = leaftraits, aes(y = leaf_thickness_cm, x = species, color = individual_ID)) + 
+  geom_jitter()
+
 print(TukeyHSD(aov(leaf_thickness_cm ~ individual_ID, data = leaftraits %>%  filter(species =="HEAR")))) # leaf thickness is similar among leaves
 print(TukeyHSD(aov(leaf_thickness_cm ~ individual_ID, data = leaftraits %>%  filter(species =="SAAP")))) # leaf thickness is not similar among the four leaves
 #$individual_ID
@@ -108,7 +117,6 @@ print(TukeyHSD(aov(leaf_thickness_cm ~ individual_ID, data = leaftraits %>%  fil
 print(TukeyHSD(aov(leaf_thickness_cm ~ individual_ID, data = leaftraits %>%  filter(species =="RHOV")))) # leaf thickness is not similar among the four leaves
 #rhov-9-rhov-2  -0.01275 -0.022624665 -0.0028753349 0.0110423 <-- 9 and 2
 #rhov-9-rhov-6  -0.01075 -0.020624665 -0.0008753349 0.0316464 <-- 9 and 6
-
 
 # highlight all and run as one command
 Lt <- aov(leaf_thickness_cm ~ species, data = leaftraits)
