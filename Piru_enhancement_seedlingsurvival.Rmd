@@ -355,6 +355,7 @@ site_cond_2018 %>%
 # site  mean   SD      N    SE
 #1	9.603704	1.157126	18	0.2727371
 #2	7.665741	1.141167	18	0.2689756
+summary(aov(soil_moisture ~ site, site_cond_2018))
 
 #norm_par
 t.test(normalized_par~site, data = site_cond_2018) 
@@ -646,8 +647,8 @@ write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 
 #Moreover, the convergence code is zero which indicates that the model has not converged, and the estimated #variance for the random effect is zero. This means that potentially there is no variation within Anim_ID. #It would be a good idea to fit a model with glm() (ie without random intercepts but with Anim_ID as a fixed #effect) and see how the model estimates compare.
 
-# mafacover
-glme.may2018.mod.mafacover <- glmer(may_alive ~ mafacover + species + volume_cm3 + site + (1|plot_number), 
+# mafacover with volume
+glme.may2018.mod.mafacover <- glmer(may_alive ~ mafacover + species + march_stem_height_cm + site + (1|plot_number), 
                          family = binomial, 
                          data = height_march_surv_may, na.action = "na.fail")
 summary(glme.may2018.mod.mafacover) # AIC = 694.6
@@ -660,6 +661,21 @@ summary(glme.may2018.mod.mafacover) # AIC = 694.6
 #speciesSAAP -0.698528   0.323254  -2.161  0.03070 * 
 #volume_cm3   0.354511   0.122637   2.891  0.00384 **
 #site2       -0.830028   0.321107  -2.585  0.00974 **
+
+# with height
+glme.may2018.mod.mafacover_height <- glmer(may_alive ~ mafacover + species + march_stem_height_cm + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may, na.action = "na.fail")
+summary(glme.may2018.mod.mafacover) # AIC =  702.2
+#                      Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)          -0.568791   0.400547  -1.420   0.1556  
+#mafacover            -0.004016   0.013159  -0.305   0.7602  
+#speciesHEAR           0.713980   0.344592   2.072   0.0383 *
+#speciesRHOV          -0.082089   0.292455  -0.281   0.7789  
+#speciesSAAP          -0.668788   0.322712  -2.072   0.0382 *
+#march_stem_height_cm  0.170082   0.145766   1.167   0.2433  
+#site2                -0.820529   0.321036  -2.556   0.0106 *
+
 MOD <- glme.may2018.mod.mafacover 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) 
@@ -746,7 +762,7 @@ dredge(glme.may2018.mod.1)
 glme.may2018.mod.2 <- glmer(may_alive ~ 
                              normalized_par * soil_moisture # times
                             + exotic_percentcover + site 
-                            + volume_cm3 + species # plus
+                            + volume_cm3 + species # plus ; march_stem_height_cm OR volume_cm3; vol has lower AIC
                             + (1|plot_number), 
                          family = binomial, 
                          data = height_march_surv_may
@@ -754,6 +770,18 @@ glme.may2018.mod.2 <- glmer(may_alive ~
                          )
 anova(glme.may2018.mod.2)
 summary(glme.may2018.mod.2)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)    
+#(Intercept)                  -0.59678    0.26206  -2.277 0.022769 *  
+#normalized_par                0.23082    0.13687   1.686 0.091724 .  
+#soil_moisture                 0.39538    0.15547   2.543 0.010986 *  
+#exotic_percentcover           0.05639    0.12384   0.455 0.648866    
+#site2                        -0.53365    0.28874  -1.848 0.064569 .  
+#volume_cm3                    0.35577    0.12244   2.906 0.003664 ** 
+#speciesHEAR                   0.47571    0.30567   1.556 0.119635    
+#speciesRHOV                  -0.12386    0.29338  -0.422 0.672899    
+#speciesSAAP                  -0.74044    0.32505  -2.278 0.022728 *  
+#normalized_par:soil_moisture  0.54188    0.13957   3.882 0.000103 ***
 emmeans(glme.may2018.mod.2, list(pairwise ~ species), adjust = "tukey")
 #$`pairwise differences of species`
 # 1           estimate    SE  df z.ratio p.value
@@ -1599,7 +1627,23 @@ summary(glme.may2018.modspp_RHOV)
 #volume_cm3                   12.67430    4.40938   2.874  0.00405 **
 #normalized_par:soil_moisture  0.20739    0.27813   0.746  0.45587  
 
+height_march %>% 
+  filter(species == "RHOV") %>% 
+  summarize(min_height = min(march_stem_height_cm),
+            max_height = max(march_stem_height_cm)
+            )
+# min_height  max_height
+#0.55	  4.48	
+
+height_march %>% 
+  filter(species == "HEAR") %>% 
+  summarize(min_height = min(march_stem_height_cm),
+            max_height = max(march_stem_height_cm)
+            )
+#min_height   max_height
+#0.25	     14.861	
 ```
+
 ```{r may 2018 glmer by species SAAP}
 #SAAP
 glme.may2018.modspp_SAAP <- glmer(may_alive ~ 
@@ -3585,11 +3629,11 @@ summary(glmm_interactionmay2019_site)
 ```
 
 
-### E5. May 2019 post hoc by species
+### E5. May 2019 by species
 
 ```{r may 2019 glmer by species CEOL, include=TRUE}
 #CEOL
-glme.may2019.mod.full_CEOL <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
+glme.may2019.mod.full_CEOL_vol <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
                              + (1|plot_number), 
                          family = binomial(link = "logit"), 
                          data = (height_jan_surv_may_2019 %>% filter(species == "CEOL")))
@@ -3617,6 +3661,8 @@ summary(glme.may2018.modspp_CEOL)
 #site2                         -1.6835     0.6806  -2.473   0.0134 * <-- site
 #volume_cm3                     8.5060     4.6305   1.837   0.0662 .
 #normalized_par:soil_moisture   0.3512     0.2823   1.244   0.2135 
+
+summary(glme.may2019.mod.full_CEOL_vol)
 
 emmeans(glme.may2018.modspp_CEOL, list(pairwise ~ site), adjust = "tukey")
 #$`pairwise differences of site`
@@ -3703,6 +3749,11 @@ glme.may2019.mod.full_SAAP <- glmer(as.factor(may2019_alive) ~ normalized_par  *
                          family = binomial(link = "logit"), 
                          data = (height_jan_surv_may_2019 %>% filter(species == "SAAP")))
 
+glme.may2019.mod.full_SAAP_height <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_stem_height_cm
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_jan_surv_may_2019 %>% filter(species == "SAAP")))
+
 MOD <- glme.may2019.mod.full_SAAP 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) # follows binomial distribution
@@ -3718,6 +3769,9 @@ summary(glme.may2019.mod.full_SAAP)
 #site2                         0.36695    0.83894   0.437    0.662
 #jan_volume_cm3                0.31944    0.37434   0.853    0.393
 #normalized_par:soil_moisture  0.33512    0.32698   1.025    0.305
+
+anova(glme.may2019.mod.full_SAAP_height)
+
 
 anova(glme.may2019.mod.full_SAAP)
 #Analysis of Variance Table
