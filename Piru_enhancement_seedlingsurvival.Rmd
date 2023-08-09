@@ -565,6 +565,42 @@ print(height_march_surv_may_notransf %>%
   summarise(height_avg_cm = mean(march_stem_height_cm), 
             height_sd_cm = sd(march_stem_height_cm)))
 
+#average seedling volume
+height_march_surv_may_notransf %>%  
+  summarise(avg_vol_cm3 = mean(volume_cm3), 
+            SD = sd(volume_cm3),
+            N = length(volume_cm3), 
+            SE = ((sd(volume_cm3))/sqrt(length((volume_cm3)))), 
+            min = min(volume_cm3),
+            max = max(volume_cm3))
+
+# avg_vol_cm3  SD  N      SE              min        max
+# 56.08124	100.9282	606	4.09993	  0.001047198	669.3631
+
+#average seedling volume by alive/dead
+height_march_surv_may_notransf %>%  
+  group_by(species, may_alive) %>% 
+  summarise(avg_vol_cm3 = mean(volume_cm3), 
+            SD = sd(volume_cm3),
+            N = length(volume_cm3), 
+            SE = ((sd(volume_cm3))/sqrt(length((volume_cm3)))), 
+            min = min(volume_cm3),
+            max = max(volume_cm3))
+# may_alive avg_vol_cm3  SD  N      SE              min        max
+# 0	39.25811	85.43163	416	4.188630	0.001047198	669.3631
+# 1	92.91502	120.80904	190	8.764409	0.232111337	663.7324
+# 
+# species may_alive avg_vol_cm3  SD  N      SE              min        max
+#CEOL	0	3.553535	4.239300	95	0.4349430	0.001773953	25.57675
+#CEOL	1	5.832308	5.808008	35	0.9817326	0.314700143	24.74139
+#HEAR	0	125.733340	124.713902	115	11.6296313	0.001308997	669.36308
+##HEAR	1	166.031652	125.928393	100	12.5928393	0.232111337	663.73245
+#RHOV	0	4.987078	4.256540	102	0.4214603	0.003543717	22.23388
+#RHOV	1	8.589176	7.011436	34	1.2024514	0.776610082	25.86159
+#SAAP	0	9.863203	24.444078	104	2.3969390	0.001047198	142.49537
+#SAAP	1	26.405982	50.512352	21	11.0226988	0.332719795	201.20173
+
+
 # may 2018 vol x spp
 print(height_march_surv_may_notransf %>%  
   group_by(species) %>% 
@@ -615,6 +651,7 @@ height_march_surv_may <- height_march_surv_may_notransf %>%
          may_alive = as.factor(may_alive),
         species = as.factor(species)) 
 glimpse(height_march_surv_may)
+
 
 write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 
@@ -2707,6 +2744,16 @@ write.csv(height_jan_surv_may_2019, "data/processed/height_jan_surv_may_2019.csv
 
 ### E1. Basic stats on seedling survival - anovas and ttests
 ```{r}
+# average seedling olume
+height_jan_surv_may_2019_notransf %>%  
+  summarize(avg_Jan_vol = mean(jan_volume_cm3), 
+            N = length(jan_volume_cm3), 
+            se = ((sd(jan_volume_cm3))/sqrt(length((jan_stem_height_cm)))), 
+            min = min(jan_volume_cm3), 
+            max = max(jan_volume_cm3))
+# avg_Jan_vol   N se         min   max
+# 62.56952	  394	4.152808	0.196337	540.5721
+
 # data exploration by species
 
 # HEIGHT 
@@ -3629,7 +3676,7 @@ summary(glmm_interactionmay2019_site)
 ```
 
 
-### E5. May 2019 by species
+### E5. May 2019 - survival by species
 
 ```{r may 2019 glmer by species CEOL, include=TRUE}
 #CEOL
@@ -3638,50 +3685,65 @@ glme.may2019.mod.full_CEOL_vol <- glmer(as.factor(may2019_alive) ~ normalized_pa
                          family = binomial(link = "logit"), 
                          data = (height_jan_surv_may_2019 %>% filter(species == "CEOL")))
 
-MOD <- glme.may2019.mod.full_CEOL 
+glme.may2019.mod.full_CEOL_height <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_stem_height_cm 
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_jan_surv_may_2019 %>% filter(species == "CEOL")))
+
+MOD <- glme.may2019.mod.full_CEOL_vol 
+MOD <- glme.may2019.mod.full_CEOL_height
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) # follows binomial distribution
 
-anova(glme.may2018.modspp_CEOL)
+anova(glme.may2019.mod.full_CEOL_vol)
 #Analysis of Variance Table
 #                             npar Sum Sq Mean Sq F value
-#normalized_par                  1 0.4337  0.4337  0.4337
-#soil_moisture                   1 2.8874  2.8874  2.8874
-#exotic_percentcover             1 0.4425  0.4425  0.4425
-#site                            1 7.1409  7.1409  7.1409
-#volume_cm3                      1 3.6865  3.6865  3.6865
-#normalized_par:soil_moisture    1 1.5720  1.5720  1.5720
-summary(glme.may2018.modspp_CEOL)
-#Fixed effects:
-#                             Estimate Std. Error z value Pr(>|z|)  
-#(Intercept)                    4.0037     2.3822   1.681   0.0928 .
-#normalized_par                 0.5641     0.3124   1.806   0.0710 .
-#soil_moisture                  0.1535     0.3249   0.472   0.6366  
-#exotic_percentcover            0.2004     0.2643   0.758   0.4482  
-#site2                         -1.6835     0.6806  -2.473   0.0134 * <-- site
-#volume_cm3                     8.5060     4.6305   1.837   0.0662 .
-#normalized_par:soil_moisture   0.3512     0.2823   1.244   0.2135 
+#normalized_par                  1 1.3742  1.3742  1.3742
+#soil_moisture                   1 4.0621  4.0621  4.0621
+#exotic_percentcover             1 0.5114  0.5114  0.5114
+#site                            1 2.7681  2.7681  2.7681
+#jan_volume_cm3                  1 0.1424  0.1424  0.1424
+#normalized_par:soil_moisture    1 0.5544  0.5544  0.5544
 
 summary(glme.may2019.mod.full_CEOL_vol)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)
+#(Intercept)                    1.0987     1.2441   0.883    0.377
+#normalized_par                -0.1178     0.3622  -0.325    0.745
+#soil_moisture                  0.2593     0.4772   0.543    0.587
+#exotic_percentcover            0.2745     0.3549   0.773    0.439
+#site2                         -1.4844     1.0574  -1.404    0.160
+#jan_volume_cm3                -0.2403     1.7961  -0.134    0.894
+#normalized_par:soil_moisture   0.3140     0.4409   0.712    0.476
 
-emmeans(glme.may2018.modspp_CEOL, list(pairwise ~ site), adjust = "tukey")
-#$`pairwise differences of site`
-# 1             estimate    SE  df z.ratio p.value
-# site1 - site2     1.68 0.681 Inf   2.473  0.0134
+#Correlation of Fixed Effects:
+#            (Intr) nrmlz_ sl_mst extc_p site2  jn_v_3
+#normalzd_pr  0.195                                   
+#soil_moistr -0.311 -0.033                            
+#extc_prcntc -0.071  0.016  0.079                     
+#site2       -0.374 -0.132  0.548 -0.254              
+#jan_vlm_cm3  0.840  0.146 -0.111 -0.205  0.099       
+#nrmlzd_pr:_  0.334  0.161 -0.032 -0.223  0.064  0.341
+
+summary(glme.may2019.mod.full_CEOL_height)
+# model run with volume vs height makes no difference - no variables are significant, no variables predict CEOL survival.
+
+emmeans(glme.may2019.mod.full_CEOL_vol, list(pairwise ~ site), adjust = "tukey")
+
 ```
 
 ```{r may 2019 glmer by species HEAR, include=TRUE}
 #HEAR
-glme.may2019.mod.full_HEAR <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
+glme.may2019.mod.full_HEAR_vol <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
                              + (1|plot_number), 
                          family = binomial(link = "logit"), 
                          data = (height_jan_surv_may_2019 %>% filter(species == "HEAR")))
 
-MOD <- glme.may2019.mod.full_HEAR 
+MOD <- glme.may2019.mod.full_HEAR_vol 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) # follows binomial distribution
 
-anova(glme.may2019.mod.full_HEAR)
+anova(glme.may2019.mod.full_HEAR_vol)
 #Analysis of Variance Table
 #                             npar Sum Sq Mean Sq F value
 #normalized_par                  1 5.8742  5.8742  5.8742
@@ -3690,7 +3752,8 @@ anova(glme.may2019.mod.full_HEAR)
 #site                            1 3.5767  3.5767  3.5767
 #jan_volume_cm3                  1 0.0137  0.0137  0.0137
 #normalized_par:soil_moisture    1 0.0001  0.0001  0.0001
-summary(glme.may2019.mod.full_HEAR)
+#
+summary(glme.may2019.mod.full_HEAR_vol)
 #Fixed effects:
 #                              Estimate Std. Error z value Pr(>|z|)   
 #(Intercept)                   2.544377   0.851639   2.988  0.00281 **
@@ -3701,36 +3764,54 @@ summary(glme.may2019.mod.full_HEAR)
 #jan_volume_cm3               -0.029132   0.255309  -0.114  0.90916   
 #normalized_par:soil_moisture  0.003847   0.417743   0.009  0.99265   
 
+glme.may2019.mod.full_HEAR_height <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_stem_height_cm 
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_jan_surv_may_2019 %>% filter(species == "HEAR")))
+
+MOD <- glme.may2019.mod.full_HEAR_height 
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+testDispersion(simulationOutput) # follows binomial distribution
+
+anova(glme.may2019.mod.full_HEAR_height)
+summary(glme.may2019.mod.full_HEAR_height)
+#Fixed effects:
+#                              Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)                   2.645862   0.909667   2.909  0.00363 **
+#normalized_par               -0.729848   0.360445  -2.025  0.04288 * <-- normPAR
+#soil_moisture                 0.055867   0.503680   0.111  0.91168   
+#exotic_percentcover          -0.137025   0.310476  -0.441  0.65897   
+#site2                        -1.900379   1.024917  -1.854  0.06371 . 
+#jan_stem_height_cm           -0.112949   0.371346  -0.304  0.76101   
+#normalized_par:soil_moisture  0.001182   0.418614   0.003  0.99775   
+
 glme.may2019.mod.full_HEAR.scatter <- ggplot(data = height_jan_surv_may_2019 %>%  filter(species == "HEAR"), 
-                       aes(x = normalized_par, y = may2019_alive, col = normalized_par)) +
+                       aes(x = may2019_alive, y = normalized_par, col = normalized_par)) +
   geom_point(aes(color = normalized_par)) +
   geom_jitter(width = 0.0, height = 0.0) +
   theme_classic()
 glme.may2019.mod.full_HEAR.scatter
+
 ```
 
 ```{r may 2019 glmer by species RHOV, include=TRUE}
 #RHOV
-glme.may2019.mod.full_RHOV <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
+glme.may2019.mod.full_RHOV_vol <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
                              + (1|plot_number), 
                          family = binomial(link = "logit"), 
                          data = (height_jan_surv_may_2019 %>% filter(species == "RHOV")))
 
-MOD <- glme.may2019.mod.full_RHOV 
+glme.may2019.mod.full_RHOV_height <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_stem_height_cm 
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_jan_surv_may_2019 %>% filter(species == "RHOV")))
+
+MOD <- glme.may2019.mod.full_RHOV_vol
+MOD <- glme.may2019.mod.full_RHOV_height
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) # follows binomial distribution
 
-summary(glme.may2019.mod.full_RHOV)
-#Fixed effects:
-#                             Estimate Std. Error z value Pr(>|z|)  
-#(Intercept)                    2.6449     1.7022   1.554   0.1202  
-#normalized_par                -0.2989     0.2627  -1.138   0.2551  
-#soil_moisture                  0.4456     0.3121   1.428   0.1534  
-#exotic_percentcover            0.2373     0.2455   0.967   0.3338  
-#site2                         -1.1758     0.6447  -1.824   0.0682 .
-#jan_volume_cm3                 4.2517     2.5625   1.659   0.0971 .
-#normalized_par:soil_moisture   0.3956     0.2809   1.408   0.1591  
-anova(glme.may2019.mod.full_RHOV)
+anova(glme.may2019.mod.full_RHOV_vol)
 #Analysis of Variance Table
 #                             npar Sum Sq Mean Sq F value
 #normalized_par                  1 0.8118  0.8118  0.8118
@@ -3740,11 +3821,33 @@ anova(glme.may2019.mod.full_RHOV)
 #jan_volume_cm3                  1 2.9589  2.9589  2.9589
 #normalized_par:soil_moisture    1 1.9824  1.9824  1.9824
 
+summary(glme.may2019.mod.full_RHOV_vol)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)                    2.6449     1.7022   1.554   0.1202  
+#normalized_par                -0.2989     0.2627  -1.138   0.2551  
+#soil_moisture                  0.4456     0.3121   1.428   0.1534  
+#exotic_percentcover            0.2373     0.2455   0.967   0.3338  
+#site2                         -1.1758     0.6447  -1.824   0.0682 .
+#jan_volume_cm3                 4.2517     2.5625   1.659   0.0971 .
+#normalized_par:soil_moisture   0.3956     0.2809   1.408   0.1591  
+
+anova(glme.may2019.mod.full_RHOV_height)
+summary(glme.may2019.mod.full_RHOV_height)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)                  -0.02472    0.67258  -0.037    0.971  
+#normalized_par               -0.31082    0.26092  -1.191    0.234  
+#soil_moisture                 0.39811    0.30753   1.295    0.195  
+#exotic_percentcover           0.27946    0.24343   1.148    0.251  
+#site2                        -1.31590    0.64386  -2.044    0.041 *
+#jan_stem_height_cm            0.07658    0.67187   0.114    0.909  
+#normalized_par:soil_moisture  0.43687    0.27747   1.574    0.115 
 ```
 
 ```{r may 2019 glmer by species SAAP, include=TRUE}
 #SAAP
-glme.may2019.mod.full_SAAP <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
+glme.may2019.mod.full_SAAP_vol <- glmer(as.factor(may2019_alive) ~ normalized_par  * soil_moisture + exotic_percentcover + site + jan_volume_cm3 
                              + (1|plot_number), 
                          family = binomial(link = "logit"), 
                          data = (height_jan_surv_may_2019 %>% filter(species == "SAAP")))
@@ -3754,12 +3857,21 @@ glme.may2019.mod.full_SAAP_height <- glmer(as.factor(may2019_alive) ~ normalized
                          family = binomial(link = "logit"), 
                          data = (height_jan_surv_may_2019 %>% filter(species == "SAAP")))
 
-MOD <- glme.may2019.mod.full_SAAP 
+MOD <- glme.may2019.mod.full_SAAP_vol
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) # follows binomial distribution
 
+anova(glme.may2019.mod.full_SAAP_vol)
+#Analysis of Variance Table
+#                             npar  Sum Sq Mean Sq F value
+#normalized_par                  1 0.11317 0.11317  0.1132
+#soil_moisture                   1 0.11398 0.11398  0.1140
+#exotic_percentcover             1 0.04935 0.04935  0.0494
+#site                            1 0.04983 0.04983  0.0498
+#jan_volume_cm3                  1 0.88477 0.88477  0.8848
+#normalized_par:soil_moisture    1 1.14394 1.14394  1.1439
 
-summary(glme.may2019.mod.full_SAAP)
+summary(glme.may2019.mod.full_SAAP_vol)
 #Fixed effects:
 #                             Estimate Std. Error z value Pr(>|z|)
 #(Intercept)                   0.55568    0.50568   1.099    0.272
@@ -3770,23 +3882,32 @@ summary(glme.may2019.mod.full_SAAP)
 #jan_volume_cm3                0.31944    0.37434   0.853    0.393
 #normalized_par:soil_moisture  0.33512    0.32698   1.025    0.305
 
-anova(glme.may2019.mod.full_SAAP_height)
-
-
-anova(glme.may2019.mod.full_SAAP)
-#Analysis of Variance Table
-#                             npar  Sum Sq Mean Sq F value
-#normalized_par                  1 0.11317 0.11317  0.1132
-#soil_moisture                   1 0.11398 0.11398  0.1140
-#exotic_percentcover             1 0.04935 0.04935  0.0494
-#site                            1 0.04983 0.04983  0.0498
-#jan_volume_cm3                  1 0.88477 0.88477  0.8848
-#normalized_par:soil_moisture    1 1.14394 1.14394  1.1439
+summary(glme.may2019.mod.full_SAAP_height)
+#Fixed effects:
+#                             Estimate Std. Error z value Pr(>|z|)
+#(Intercept)                   0.63139    0.55477   1.138    0.255
+#normalized_par               -0.07787    0.31618  -0.246    0.805
+#soil_moisture                 0.13509    0.42053   0.321    0.748
+#exotic_percentcover          -0.13772    0.30289  -0.455    0.649
+#site2                         0.29914    0.90741   0.330    0.742
+#jan_stem_height_cm           -0.01814    0.28111  -0.065    0.949
+#normalized_par:soil_moisture  0.35772    0.34129   1.048    0.295
 
 emmeans(glme.may2019.mod.full_SAAP, list(pairwise ~ site), adjust = "tukey")
 #$`pairwise differences of site`
 # 1             estimate    SE  df z.ratio p.value
 # site1 - site2     1.68 0.681 Inf   2.473  0.0134
+
+
+# RGR by species in Jan - May 2019
+ggplot(data = growth_jan_may2019, aes(x = species, y = rgr)) + #growth_march_may for 2018
+  geom_point() +
+  geom_boxplot() +
+  theme_bw()
+
+summary(aov(rgr ~ species, data = growth_jan_may2019))
+TukeyHSD(aov(rgr ~ species, data = growth_jan_may2019))
+
 ```
 
 ### E6. May 2019 Predictions
@@ -4182,7 +4303,18 @@ height_may_2019 <- height_raw %>%
          may_volume_cm3 = volume_cm3)
 list(unique(height_may_2019$plot_number)) # check captured all 36 plots with dates
 
-# height Nov 2019
+# height nov 2019
+height_nov_2019 <- height_raw %>% 
+  filter(date >= "2019-11-01" & date <= "2019-12-01") %>% # filtering to only have rows of data taken in nov 2019 
+   dplyr::select(plot_number, MAFA_removal, location, species, stem_height_cm, volume_cm3) %>% 
+  rename(nov_stem_height_cm = stem_height_cm, 
+         nov_volume_cm3 = volume_cm3) %>% 
+  na.omit()
+height_nov_2019 %>% 
+  group_by(species) %>% 
+  summarize(N = length(nov_stem_height_cm))
+
+# survival Nov 2019
 survival_nov_2019 <- height_raw %>% 
   filter(date == "2019-11-23") %>% 
   dplyr::select(plot_number, MAFA_removal, location, species, alive) %>% 
@@ -4190,6 +4322,26 @@ survival_nov_2019 <- height_raw %>%
   mutate(nov_alive = replace_na(nov_alive, 0))  # 0= dead 1 = alive
 glimpse(survival_nov_2019)
 list(unique(survival_nov_2019$plot_number)) # check captured all 36 plots with dates
+
+# growth rate from May to Nov 2019 - GROWTH RATE
+growth_may_nov2019 <- right_join(height_may_2019, height_nov_2019, by = c("plot_number", "MAFA_removal", "location", "species")) %>% 
+  #mutate(may_stem_height_cm = as.numeric(_stem_height_cm)) %>% 
+  drop_na() %>% 
+  mutate(rgr = (log(nov_stem_height_cm) - log(may_stem_height_cm))/(6*30)) # relative growth rate per day equation; 30 days per month
+
+# RGR by species in May - Nov 2019
+ggplot(data = growth_may_nov2019, aes(x = species, y = rgr)) + #growth_march_may for 2018
+  geom_point() +
+  geom_boxplot() +
+  theme_bw()
+
+summary(aov(rgr ~ species, data = growth_may_nov2019))
+#            Df    Sum Sq  Mean Sq F value Pr(>F)
+#species      3 0.0000363 1.21e-05   1.716   0.17
+#Residuals   87 0.0006133 7.05e-06      
+TukeyHSD(aov(rgr ~ species, data = growth_may_nov2019))
+       
+       
 ```
 
 #### Join environmental and survival df and scale
@@ -4315,6 +4467,8 @@ TukeyHSD(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
 #half-full  0.19642857  0.02082773  0.372029414 0.0240464 <--
 #none-full  0.01309524 -0.15771247  0.183902950 0.9821339
 #none-half -0.18333333 -0.36094878 -0.005717884 0.0412930 <-- 
+
+
 
 ```
 
@@ -4492,6 +4646,19 @@ summary(glme.nov2019.mod1)
 #speciesRHOV          -0.1315     0.6460  -0.204  0.83865   
 #speciesSAAP           1.6117     0.5754   2.801  0.00509 ** <-- species
 emmeans(glme.nov2019.mod1, list(pairwise ~ species), adjust = "tukey")
+#Results are averaged over the levels of: site 
+#Results are given on the logit (not the response) scale. 
+#Confidence level used: 0.95 
+
+#$`pairwise differences of species`
+# 1           estimate    SE  df z.ratio p.value
+# CEOL - HEAR   -1.186 0.564 Inf  -2.101  0.1527
+# CEOL - RHOV    0.132 0.646 Inf   0.204  0.9970
+# CEOL - SAAP   -1.612 0.575 Inf  -2.801  0.0262 <-- saap
+# HEAR - RHOV    1.317 0.568 Inf   2.318  0.0939
+# HEAR - SAAP   -0.426 0.376 Inf  -1.134  0.6687
+# RHOV - SAAP   -1.743 0.575 Inf  -3.032  0.0130 <-- saap
+
 plot(emmeans(glme.nov2019.mod1, list(pairwise ~ species), adjust = "tukey"))
 #$`pairwise differences of species`
 # 1           estimate    SE  df z.ratio p.value
@@ -4835,12 +5002,21 @@ summary(glme.nov2019.mod1_ceol_cover)
 ```
 
 ```{r nov 2019 glmer by species HEAR, include=TRUE}
-glme.nov2019.mod1_HEAR <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3  
-                             + (1|plot_number), 
-                         family = binomial(link = "logit"), 
-                         data = (height_may_surv_nov_2019 %>% filter(species == "HEAR")), na.action = "na.fail")
+
 
 view(height_may_surv_nov_2019 %>% filter(species == "HEAR"))
+glimpse(height_may_surv_nov_2019)
+
+height_may_surv_nov_2019_HEAR <- height_may_surv_nov_2019 %>% filter(species == "HEAR")
+
+glme.nov2019.mod1_HEAR <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial, 
+                         data = height_may_surv_nov_2019_HEAR, na.action = "na.fail")
+
+
+dredge(glme.nov2019.mod1_HEAR)
+
 
 MOD <- glme.nov2019.mod1_HEAR 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
@@ -4891,7 +5067,45 @@ glme.nov2019.mod1_HEAR_treat_site1 <- glmer(as.factor(nov_alive) ~ treatment  +n
                          family = binomial(link = "logit"), 
                          data = (height_may_surv_nov_2019 %>% filter(species == "HEAR") %>%  filter(site == "1")), na.action = "na.fail")
 summary(glme.nov2019.mod1_HEAR_treat_site1)
+
+
+# survival in May-Nov 2019 - for HEAR 
+HEAR_survivalNov2019 <- height_may_surv_nov_2019_notransf %>%  
+        filter(year == "2019" & species == "HEAR") %>%  
+  group_by(site, treatment) %>% 
+  summarise(N = length(nov_alive), 
+            mean_survival = mean(nov_alive),
+            total_survived = sum(nov_alive == "1"), 
+            total_died = sum(nov_alive == "0"),
+            percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive)))
+
+summary(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf %>% 
+              filter(year == "2019" & species == "HEAR")))
+TukeyHSD(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf %>% 
+              filter(year == "2019" & species == "HEAR")))
+#$treatment
+#                 diff         lwr         upr     p adj
+#half-full  0.36813187  0.06230787  0.67395587 0.0142108 <--
+#none-full  0.01058201 -0.29229117  0.31345519 0.9961657
+#none-half -0.35754986 -0.66608863 -0.04901108 0.0190451 <--
+
+summary(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf %>% 
+              filter(year == "2019" & species == "HEAR" &  site == "1")))
+TukeyHSD(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf %>% 
+              filter(year == "2019" & species == "HEAR" &  site == "1")))
+#$treatment
+#                diff         lwr        upr     p adj
+#half-full  0.3529412 -0.02731465  0.7331970 0.0738002
+#none-full -0.2039216 -0.59664810  0.1888050 0.4261472
+#none-half -0.5568627 -0.94958927 -0.1641362 0.0035684 <-- 
+
+summary(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
+TukeyHSD(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
+
+
 ```
+
+
 
 ```{r nov 2019 glmer by species RHOV, include=TRUE}
 glme.nov2019.mod1_rhov <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3  
@@ -5005,6 +5219,28 @@ glme.nov2019.mod1_SAAP_treat_site1 <- glmer(as.factor(nov_alive) ~ treatment  +n
                          family = binomial(link = "logit"), 
                          data = (height_may_surv_nov_2019 %>% filter(species == "SAAP") %>%  filter(site == "1")), na.action = "na.fail")
 summary(glme.nov2019.mod1_SAAP_treat_site1)
+
+
+# survival in May-Nov 2019 - for SAAP 
+height_may_surv_nov_2019_notransf %>%  
+        filter(year == "2019" & species == "SAAP") %>%  
+  group_by(site) %>% 
+  summarise(N = length(nov_alive), 
+            mean_survival = mean(nov_alive),
+            total_survived = sum(nov_alive == "1"), 
+            total_died = sum(nov_alive == "0"),
+            percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive)))
+
+summary(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf %>% 
+              filter(year == "2019" & species == "SAAP")))
+summary(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf %>% 
+              filter(year == "2019" & species == "SAAP" &  site == "2")))
+TukeyHSD(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf %>% 
+              filter(year == "2019" & species == "SAAP")))
+
+
+summary(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
+TukeyHSD(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
 ```
 
 
