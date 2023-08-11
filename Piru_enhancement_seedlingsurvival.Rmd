@@ -987,6 +987,8 @@ summary(glme_rgr_may2018.1)
 # no AIC
 # Site 2 is significant
 
+
+
 ```
 
 ```{r }
@@ -2683,6 +2685,8 @@ growth_jan_may2019 <- right_join(height_jan_2019, height_may_2019, by = c("plot_
   mutate(jan_stem_height_cm = as.numeric(jan_stem_height_cm)) %>% 
   drop_na() %>% 
   mutate(rgr = (log(may_stem_height_cm) - log(jan_stem_height_cm))/(4*30)) # relative growth rate per day equation; 30 days per month
+
+
 ```
 
 
@@ -3209,6 +3213,42 @@ summary(glme_rgr_may2018.1)
 # no AIC
 # Site 2 is significant
 
+#rgr march to may 2018
+ggplot(data = growth_march_may, 
+       aes(x = species, y = rgr)) +
+  geom_point() +
+  geom_boxplot() +
+  theme_bw()
+
+summary(aov(rgr ~ species, data = growth_march_may))
+#            Df    Sum Sq  Mean Sq F value Pr(>F)
+#species      3 0.000404 1.348e-04   1.719  0.163
+#Residuals    305 0.023919 7.842e-05        
+TukeyHSD(aov(rgr ~ species, data = growth_may_nov2019))
+ 
+#rgr jan-may 2019
+ggplot(data = growth_jan_may2019, aes(x = species, y = rgr)) + #growth_march_may for 2018
+  geom_point() +
+  geom_boxplot() +
+  theme_bw()
+
+summary(aov(rgr ~ species, data = growth_jan_may2019))
+#            Df    Sum Sq  Mean Sq F value Pr(>F)
+#species      3 0.001083 0.0003609   18.95 4.96e-11 ***
+#Residuals   233 0.004438 0.0000190      
+TukeyHSD(aov(rgr ~ species, data = growth_may_nov2019))
+
+#rgr may-nov 2019
+ggplot(data = growth_may_nov2019, aes(x = species, y = rgr)) + #growth_march_may for 2018
+  geom_point() +
+  geom_boxplot() +
+  theme_bw()
+
+summary(aov(rgr ~ species, data = growth_may_nov2019))
+#            Df    Sum Sq  Mean Sq F value Pr(>F)
+#species      3 0.0000363 1.21e-05   1.716   0.17
+#Residuals   87 0.0006133 7.05e-06      
+TukeyHSD(aov(rgr ~ species, data = growth_may_nov2019))
 ```
 
 ```{r may 2019 glmer MODELS, include=TRUE}
