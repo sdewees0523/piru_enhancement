@@ -536,7 +536,7 @@ parmod %>%
 
 # mean, SE: normpar x month
 parmod_means <- parmod %>% 
- group_by(month) %>% 
+ group_by(month,treatment) %>% 
   summarise(MEAN_normPAR=mean(normalized_par, na.rm = TRUE),
             SD = sd(normalized_par, na.rm = TRUE),
             N = length(normalized_par), 
@@ -726,8 +726,13 @@ summary(m)
 
 ```{r parmod figures, include=TRUE}
 
-# parmod: normPAR x month
-ggplot(data = parmod, aes(x = month, y = normalized_par)) +
+# parmod: normPAR x month - boxplot
+ggplot(
+  data = parmod, 
+  aes(x = month, 
+      y = normalized_par, 
+      linetype = treatment, 
+      fill = treatment)) +
   geom_boxplot(size = .75) +
   geom_jitter(alpha = .5) +
   labs(title = "Normalized PAR by month", x = "Month", y = "Normalized PAR") +
@@ -735,8 +740,18 @@ ggplot(data = parmod, aes(x = month, y = normalized_par)) +
  # theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
   theme_bw()
 
-ggplot(parmod_means, aes(x = month, y = MEAN_normPAR, group = 1)) +
-  geom_line() +
+# parmod: normPAR x month - line plot
+ggplot(data = parmod_means, 
+       aes(x = month, 
+           y = MEAN_normPAR, 
+           linetype = treatment, 
+           #color = treatment
+           fill = treatment
+          )) +
+  geom_line(aes(linetype = treatment), # color = treatment
+            size = 2)  + 
+   geom_point(aes(shape = treatment, color = treatment), 
+              size=4) +
   geom_errorbar(aes(ymin = MEAN_normPAR - SE, ymax = MEAN_normPAR + SE), width = 0.2) +
   labs(x = "Month", y = "Mean Normalized PAR", title = "Mean NormPAR by Month") +
 #  scale_x_continuous(limits = c(1:12)) +
@@ -1180,6 +1195,12 @@ TukeyHSD(aov(soil_moisture ~ site, tdr %>% filter(year =="2020" & month =="5")))
 #           Df Sum Sq Mean Sq F value   Pr(>F)    
 #site         1 220.52  220.52   156.8 2.74e-14 ***
 #Residuals   34  47.81    1.41 
+
+summary(aov(soil_moisture ~ site, tdr)) # overall
+TukeyHSD(aov(soil_moisture ~ site, tdr))
+# Df Sum Sq Mean Sq F value   Pr(>F)    
+#site          1    920   920.0    15.8 9.64e-05 ***
+#Residuals   214  12462    58.2 
 
 # mean, SE: tdr x treatment in 2019
 tdrmod_nncover %>% 
@@ -1811,6 +1832,7 @@ ggplot(data = mafa_cover, aes(x = MAFA_removal, y = mafacover))+
   geom_boxplot() +
   geom_point()
 
+
 summary(aov(mafacover~ MAFA_removal, data = mafa_cover))
 TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover))
 #$MAFA_removal
@@ -1818,6 +1840,43 @@ TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover))
 #half-full 13.395833  1.796821 24.99485 0.0196476
 #none-full 20.968750  9.369737 32.56776 0.0001449
 #none-half  7.572917 -4.026096 19.17193 0.2681303
+
+summary(aov(mafacover~ MAFA_removal, data = mafa_cover %>%  filter(year == "2019")))
+TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover %>%  filter(year == "2019")))
+#$MAFA_removal
+#              diff        lwr      upr     p adj
+#half-full 17.58333  -1.993441 37.16011 0.0853238
+#none-full 24.33333   4.756559 43.91011 0.0121587
+#none-half  6.75000 -12.826774 26.32677 0.6774589
+
+mafa_cover %>% 
+  filter(year == "2019" & site == "2") %>% 
+ group_by(MAFA_removal) %>% 
+  summarize(mean_mafacover = mean(mafacover), 
+            sd = sd(mafacover),
+            n = length(mafacover), 
+            se = ((sd(mafacover))/sqrt(length((mafacover)))),
+            min = min(mafacover), 
+            max = max(mafacover)
+            )
+# MAFA_removal mean_mafacover    sd     n    se   min   max
+#  <chr>                 <dbl> <dbl> <int> <dbl> <dbl> <dbl>
+#1 full                   4.33  5.57     6  2.28     0    15
+#2 half                  25.2  22.5      6  9.18     0    65
+#3 none                  25.3  20.8      6  8.49     0    55
+
+summary(aov(mafacover ~ MAFA_removal, mafa_cover %>% 
+  filter(year == "2019" & site == "2")))
+TukeyHSD(aov(mafacover ~ MAFA_removal, mafa_cover %>% 
+  filter(year == "2019" & site == "2")))
+#             Df Sum Sq Mean Sq F value Pr(>F)  
+#MAFA_removal  2   1750   875.1   2.707 0.0992 .
+#Residuals    15   4850   323.3  
+#$MAFA_removal
+#                diff        lwr      upr     p adj
+#half-full 20.8333333  -6.131193 47.79786 0.1447384
+#none-full 21.0000000  -5.964527 47.96453 0.1408579
+#none-half  0.1666667 -26.797860 27.13119 0.9998579
 
 mafa_cover_all %>% 
   group_by(year) %>% 
@@ -1880,8 +1939,12 @@ mafa_cover_all %>%
 #1 1               41    17.4    18  4.10     1    73
 #2 2               18.3  19.7    18  4.64     0    65
 
-summary(aov(mafacover ~ site, data = mafa_cover %>%  
-               filter(year == "2019")))
+summary(aov(mafacover ~ site, data = mafa_cover %>% filter(year == "2018")))
+#            Df Sum Sq Mean Sq F value   Pr(>F)    
+#site         1   1463    1463   13.07 0.000962 ***
+#Residuals   34   3807     112    
+
+summary(aov(mafacover ~ site, data = mafa_cover %>% filter(year == "2019")))
 #            Df Sum Sq Mean Sq F value   Pr(>F)    
 #site         1   4647    4647   13.45 0.000829 ***
 #Residuals   34  11744     345 
@@ -1889,6 +1952,10 @@ summary(aov(mafacover ~ site, data = mafa_cover %>%
 TukeyHSD(aov(mafacover ~ site, data = mafa_cover %>%  
                filter(year == "2019")))
 
+summary(aov(mafacover ~ site, data = mafa_cover))
+#            Df Sum Sq Mean Sq F value   Pr(>F)    
+#site         1   5662    5662   20.68 2.22e-05 ***
+#Residuals   70  19165     274  
 
 ```
  
