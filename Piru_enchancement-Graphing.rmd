@@ -222,7 +222,7 @@ view(surv_2019_proportion_long)
 
 surv_2019_proportion_long_meanse <- surv_2019_proportion_long %>% 
    mutate(month_proportion = case_when(month_proportion == "november_proportion"~ "11",
-                                        month_proportion == "june_proportion"~ "6",
+                                        month_proportion == "june_proportion"~ "5",
                                         month_proportion == "jan_proportion"~ "1",
                                          month_proportion == "may_proportion"~ "5",
                                          month_proportion == "march_proportion"~ "3",
@@ -370,7 +370,7 @@ ggplot(
   geom_errorbar(aes(ymin=meanalive_2019-SE, ymax=meanalive_2019+SE), width = 0.2) +
   scale_y_continuous(limits = c(0, 1), 
                     breaks = seq(0, 1, by = 0.1)) +
-   scale_x_discrete(limits = 1:12,
+   scale_x_discrete(limits = 1:11,
                     labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
   theme(legend.position="top") +
   theme_bw() +
