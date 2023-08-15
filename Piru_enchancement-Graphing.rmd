@@ -128,8 +128,119 @@ summary(surv_19_all_aov)
 
 ```
 
+```{r initial seedlings, include = TRUE}
+glimpse(surv_all)
 
-```{r figures}
+#initial seedlings transplanted in January-February 2018 and January 2019
+initial <- surv_all %>% 
+  filter(year == "2018" & month == "1" | year == "2019" & month == "1") %>% 
+  select("year", "plot_number", "species", "alive") %>% 
+  rename(initial = alive)
+  
+view(initial)  
+glimpse(initial)
+
+# 2018
+surv_all_prep <- surv_all %>%
+  filter(year == "2018") %>% 
+  dplyr::select("year", "month", "site", "plot_number", "treatment", "species", "alive")
+unique(surv_all_prep$month)
+surv_all_wider <- pivot_wider(surv_all_prep, 
+                              names_from = month, 
+                              values_from = alive) %>% 
+  dplyr::select(!"4" & !"9") %>% 
+  na.omit()
+
+view(surv_all_wider)
+
+surv_all_initial_2018 <- surv_all_wider %>% 
+  left_join(initial, by = c("year", "plot_number", "species")) 
+  
+# convert months back to integers
+surv_all_initial_2018 <- unnest(surv_all_initial_2018, cols = c("1", "2", "5", "12"))
+write.csv(surv_all_initial_2018, "data/processed/surv_all_initial_2018.csv")
+
+surv_2018_proportion <- read.csv("data/processed/surv_all_initial_2018_proportionalive.csv")
+glimpse(surv_2018_proportion)
+
+surv_2018_proportion_long <- surv_2018_proportion %>% 
+  pivot_longer(cols = c('January_proportion', 'February_proportion', 'May_proportion', 'December_proportion'),
+                    names_to='month_proportion',
+                    values_to='proportion_alive')
+view(surv_2018_proportion_long)
+
+surv_2018_proportion_long_meanse <- surv_2018_proportion_long %>% 
+   mutate(month_proportion = case_when(month_proportion == "December_proportion"~ "12",
+                                        month_proportion == "February_proportion"~ "3", # March survival
+                                        month_proportion == "January_proportion"~ "2", # initial survival in Jan-Feb
+                                         month_proportion == "May_proportion"~ "5",
+                               TRUE ~ month_proportion)) %>% 
+  mutate(month_proportion = as.integer(month_proportion)) %>% 
+  group_by(species, month_proportion) %>% 
+  summarise(meanalive_2018 = mean(proportion_alive),
+            SE = ((sd(proportion_alive))/sqrt(length((proportion_alive)))), 
+             N = length(proportion_alive), 
+             max = max(proportion_alive), # should be 1
+              min = min(proportion_alive)) %>%  # should be 0 
+    print(surv_2018_proportion_long_meanse)
+
+# 2019
+surv_all_prep_2019 <- surv_all %>%
+  filter(year == "2019") %>% 
+  dplyr::select("year", "month", "site", "plot_number", "treatment", "species", "alive") %>%
+  mutate(month = case_when(month == 4 ~ 5,
+                               TRUE ~ month))
+
+unique(surv_all_prep_2019$month)
+#[1]  1  3  5  6  7  9 11
+
+surv_all_wider_2019 <- pivot_wider(surv_all_prep_2019, 
+                              names_from = month, 
+                              values_from = alive) %>% 
+  dplyr::select(!"7") %>% 
+  drop_na()
+
+view(surv_all_wider_2019)
+surv_all_wider_2019 %>% 
+  group_by(plot_number) %>% 
+  summarize(N = length(plot_number)) # all plots contain 4 species
+
+surv_all_initial_2019 <- surv_all_wider_2019 %>% 
+  left_join(initial, by = c("year", "plot_number", "species")) 
+  
+write.csv(surv_all_initial_2019, "data/processed/surv_all_initial_2019.csv")
+
+surv_2019_proportion <- read.csv("data/processed/surv_all_initial_2019_proportionalive.csv")
+glimpse(surv_2019_proportion)
+
+surv_2019_proportion_long <- surv_2019_proportion %>% 
+  pivot_longer(cols = c('jan_proportion', 'march_proportion', 'may_proportion', 'june_proportion',  'september_proportion', 'november_proportion'),
+                    names_to='month_proportion',
+                    values_to='proportion_alive') 
+
+view(surv_2019_proportion_long)
+
+surv_2019_proportion_long_meanse <- surv_2019_proportion_long %>% 
+   mutate(month_proportion = case_when(month_proportion == "november_proportion"~ "11",
+                                        month_proportion == "june_proportion"~ "6",
+                                        month_proportion == "jan_proportion"~ "1",
+                                         month_proportion == "may_proportion"~ "5",
+                                         month_proportion == "march_proportion"~ "3",
+                                        month_proportion == "september_proportion"~ "9",
+                               TRUE ~ month_proportion)) %>% 
+  mutate(month_proportion = as.integer(month_proportion)) %>% 
+  group_by(species, month_proportion) %>% 
+  summarise(meanalive_2019 = mean(proportion_alive),
+            SE = ((sd(proportion_alive))/sqrt(length((proportion_alive)))), 
+             N = length(proportion_alive), 
+            max = max(proportion_alive), 
+                  min = min(proportion_alive)) %>% 
+  print(surv_2019_proportion_long_meanse)
+```
+
+
+```{r figures all seedlings by month and year}
+
 
 # line: average survival by month 2018
 line1_surv_18_all <- ggplot(
@@ -159,9 +270,9 @@ ggplotly(line1_surv_19_all)
 
 ```
 
-```{r additional figures, include=FALSE}
+```{r additional figures 2018 seedling survival, include=FALSE}
 
-# survival by species 2018
+# survival by species 2018 - old code
 survival_species_2018 <- ggplot(
   data = survival_species_2018,
   aes(x = month_count, y = mean, color = species)) +
@@ -174,7 +285,36 @@ survival_species_2018 <- ggplot(
   #geom_smooth()
 ggplot(survival_species_2018)
 
-# 2019 by treatment
+# 2018 survival by species - use this code
+ggplot(data = surv_2018_proportion_long_meanse,
+  aes(x = month_proportion, 
+      y = meanalive_2018, 
+      linetype = species, 
+      fill = species)) +
+  geom_line(aes(linetype = species), size = 1) + # color = species
+   geom_point(size=4, shape=21) +
+  geom_errorbar(aes(ymin=meanalive_2018-SE, ymax=meanalive_2018+SE), width = 0.2) +
+  scale_y_continuous(limits = c(0, 1), 
+                    breaks = seq(0, 1, by = 0.1)) +
+  scale_x_continuous(limits = c(1, 12),
+                     breaks = seq(1,12, by = 1), 
+                      labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
+  # scale_x_discrete(limits = (1:12),
+  #                  labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
+  theme(legend.position ="top") +
+  theme_bw() +
+ # scale_linetype_manual(values=species,
+#                        name = "Species", 
+#                        labels = c("Ceanothus oliganthus", "Heteromeles arbutifolia", "Rhus ovata", "Salvia apiana")) +
+  labs(title="Proportion of alive seedlings in 2018", 
+       x = "Month", 
+       y = "Proportion Alive") 
+  
+```
+
+```{r additional figures 2019 seedling survival, include=FALSE}
+  
+# survival by treatment 2019
 survival_treatment_G <- ggplot(
   data = survival_treatment,
   aes(x = month_count, y = mean, color = treatment)) +
@@ -196,6 +336,8 @@ survival_species_2018 <- surv_all %>%
   group_by(species, month_count) %>%
   summarise_at(vars(alive), funs(mean,sd))
 
+
+# survival by species 2019
 survival_species <- surv_all %>%
    filter(year == "2019"
   #        ,month == "M"
@@ -204,10 +346,9 @@ survival_species <- surv_all %>%
   group_by(species, month_count) %>%
   summarise_at(vars(alive), funs(mean,sd))
 
-# survival by species
 survival_species_G <- ggplot(
   data = survival_species,
-  aes(x = month_count, y = mean, color = species)) +
+  aes(x = month_count, y = mean)) +
   geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd)) +
   geom_line(aes(color = species, linetype = species)) + 
   geom_point(size=2, shape=16) +
@@ -216,6 +357,27 @@ survival_species_G <- ggplot(
   labs(title="survival_species in 2019",x="Months Since Planting", y = "Amount Alive") 
   #geom_smooth()
 ggplotly(survival_species_G)
+
+# 2019 survival by species - use this code 
+ggplot(
+  data = surv_2019_proportion_long_meanse,
+  aes(x = month_proportion, 
+      y = meanalive_2019, 
+       linetype = species, 
+      fill = species)) +
+    geom_line(aes(linetype = species), size = 1) + # color = species
+   geom_point(size=4, shape=21) +
+  geom_errorbar(aes(ymin=meanalive_2019-SE, ymax=meanalive_2019+SE), width = 0.2) +
+  scale_y_continuous(limits = c(0, 1), 
+                    breaks = seq(0, 1, by = 0.1)) +
+   scale_x_discrete(limits = 1:12,
+                    labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
+  theme(legend.position="top") +
+  theme_bw() +
+  labs(title="Proportion of alive seedlings in 2019", 
+       x = "Month", 
+       y = "Proportion Alive") 
+
 ```
 
 
