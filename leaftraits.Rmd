@@ -61,12 +61,27 @@ print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(speci
 SLA <- aov(SLA_m2kg ~ species, data = leaftraits)
 print(summary(SLA))
 print(TukeyHSD(SLA))
+#Fit: aov(formula = SLA_m2kg ~ species, data = leaftraits)
+#
+#$species
+#                 diff        lwr       upr     p adj
+#HEAR-CEOL -11.5090543 -14.957473 -8.060635 0.0000000
+#RHOV-CEOL -12.4806143 -15.929033 -9.032195 0.0000000
+#SAAP-CEOL   0.2182394  -3.230180  3.666659 0.9983177
+#RHOV-HEAR  -0.9715599  -4.419979  2.476859 0.8786382
+#SAAP-HEAR  11.7272937   8.278875 15.175713 0.0000000
+#SAAP-RHOV  12.6988537   9.250435 16.147273 0.0000000
 leaftraits %>%  
   group_by(species) %>% 
   summarize(avg_SLA_m2kg = mean(SLA_m2kg), 
             SD = sd(SLA_m2kg),
             N = length(SLA_m2kg), 
             SE = ((sd(SLA_m2kg))/sqrt(length((SLA_m2kg)))))
+#species   avg_SLA_m2kg   SD   SE
+#CEOL	18.091779	4.349259	16	1.0873148
+#HEAR	6.582725	1.168144	16	0.2920359
+#RHOV	5.611165	1.578581	16	0.3946452
+#SAAP	18.310019	5.632231	16	1.4080577
 ```
 ### 2) LDMC 
 ```{r ldmc, include=TRUE}
@@ -93,12 +108,26 @@ print(TukeyHSD(aov(leaf_LDMC_proportion ~ individual_ID, data = leaftraits %>%  
 LDMC <- aov(leaf_LDMC_proportion ~ species, data = leaftraits)
 print(summary(LDMC))
 print(TukeyHSD(LDMC))
+#$species
+#                 diff         lwr         upr     p adj
+#HEAR-CEOL  0.09737519  0.05330571  0.14144467 0.0000013
+#RHOV-CEOL  0.01199786 -0.03207162  0.05606734 0.8889855
+#SAAP-CEOL -0.15750868 -0.20157817 -0.11343920 0.0000000
+#RHOV-HEAR -0.08537733 -0.12944681 -0.04130785 0.0000200
+#SAAP-HEAR -0.25488387 -0.29895335 -0.21081439 0.0000000
+#SAAP-RHOV -0.16950654 -0.21357602 -0.12543706 0.0000000
+
 leaftraits %>%  
   group_by(species) %>% 
   summarize(avg_LDMC_proportion = mean(leaf_LDMC_proportion), 
             SD = sd(leaf_LDMC_proportion),
             N = length(leaf_LDMC_proportion), 
             SE = ((sd(leaf_LDMC_proportion))/sqrt(length((leaf_LDMC_proportion)))))
+#species   avg_SLA_m2kg   SD   SE
+#CEOL	0.3679030	0.05064632	16	0.012661580
+#HEAR	0.4652782	0.02712806	16	0.006782015
+#RHOV	0.3799009	0.05837196	16	0.014592990
+#SAAP	0.2103944	0.04681571	16	0.011703927
 ```
 ### 3) leaf thickness  
 ```{r leaf thickness, include=TRUE}
@@ -122,12 +151,25 @@ print(TukeyHSD(aov(leaf_thickness_cm ~ individual_ID, data = leaftraits %>%  fil
 Lt <- aov(leaf_thickness_cm ~ species, data = leaftraits)
 print(summary(Lt))
 print(TukeyHSD(Lt))
+#$species
+#                diff          lwr           upr     p adj
+#HEAR-CEOL  0.0171875  0.011825429  0.0225495706 0.0000000
+#RHOV-CEOL  0.0356250  0.030262929  0.0409870706 0.0000000
+#SAAP-CEOL  0.0119375  0.006575429  0.0172995706 0.0000011
+#RHOV-HEAR  0.0184375  0.013075429  0.0237995706 0.0000000
+#SAAP-HEAR -0.0052500 -0.010612071  0.0001120706 0.0571111
+#SAAP-RHOV -0.0236875 -0.029049571 -0.0183254294 0.0000000
 leaftraits %>%  
   group_by(species) %>% 
   summarize(avg_Leafthickness_cm = mean(leaf_thickness_cm), 
             SD = sd(leaf_thickness_cm),
             N = length(leaf_thickness_cm), 
             SE = ((sd(leaf_thickness_cm))/sqrt(length((leaf_thickness_cm)))))
+#species   avg_SLA_m2kg   SD   SE
+#CEOL	0.0161875	0.004593020	16	0.0011482550
+#HEAR	0.0333750	0.003947573	16	0.0009868933
+#RHOV	0.0518125	0.008416007	16	0.0021040016
+#SAAP	0.0281250	0.004924429	16	0.0012311072
 ```
 
 # LIGHT CURVES
