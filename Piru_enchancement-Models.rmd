@@ -1833,14 +1833,193 @@ ggplot(data = mafa_cover, aes(x = MAFA_removal, y = mafacover))+
   geom_point()
 
 
+# BY YEAR
+mafa_cover_all %>% 
+  group_by(year) %>% 
+  summarize(mean_mafacover = mean(mafacover), 
+            sd = sd(mafacover),
+            n = length(mafacover), 
+            se = ((sd(mafacover))/sqrt(length((mafacover)))),
+            min = min(mafacover), 
+            max = max(mafacover)
+            )
+# A tibble: 2 × 7
+#   year mean_mafacover    sd     n    se   min   max
+#  <int>          <dbl> <dbl> <int> <dbl> <dbl> <dbl>
+#1  2018           16.4  12.3    36  2.05     0    42
+#2  2019           29.6  21.6    36  3.61     0    73
+
+
+# BY TREATMENT 
+mafa_cover_all %>% 
+ mutate(year = as.character(year)) %>% 
+  left_join(exotic_cover_all, by = c("plot_number", "site", "year")) %>% 
+  group_by(MAFA_removal) %>% 
+  summarize(mean_mafacover = mean(mafacover), 
+            sd = sd(mafacover),
+            n = length(mafacover), 
+            se = ((sd(mafacover))/sqrt(length((mafacover)))),
+            min = min(mafacover), 
+            max = max(mafacover)
+            ) 
+# A tibble: 3 × 7
+#  MAFA_removal mean_mafacover    sd     n    se   min   max
+#  <chr>                 <dbl> <dbl> <int> <dbl> <dbl> <dbl>
+#1 full                   11.6  13.0    24  2.65     0    40
+#2 half                   24.9  17.0    24  3.48     0    65
+#3 none                   32.5  19.6    24  4.01     0    73
+
 summary(aov(mafacover~ MAFA_removal, data = mafa_cover))
 TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover))
 #$MAFA_removal
 #               diff       lwr      upr     p adj
-#half-full 13.395833  1.796821 24.99485 0.0196476
-#none-full 20.968750  9.369737 32.56776 0.0001449
-#none-half  7.572917 -4.026096 19.17193 0.2681303
+#half-full 13.395833  1.796821 24.99485 0.0196476 <-- 
+#none-full 20.968750  9.369737 32.56776 0.0001449 <-- 
+#none-half  7.572917 -4.026096 19.17193 0.2681303 
 
+# BY TREATMENT in 2018
+mafa_cover_all %>% 
+ mutate(year = as.character(year)) %>% 
+  left_join(exotic_cover_all, by = c("plot_number", "site", "year")) %>% 
+  filter(year == "2018") %>% 
+  group_by(MAFA_removal) %>% 
+  summarize(mean_mafacover = mean(mafacover), 
+            sd = sd(mafacover),
+            n = length(mafacover), 
+            se = ((sd(mafacover))/sqrt(length((mafacover)))),
+            min = min(mafacover), 
+            max = max(mafacover)
+            ) 
+summary(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2018")))
+TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2018")))
+#$MAFA_removal
+#               diff       lwr      upr     p adj
+#half-full  9.208333 -0.974163 19.39083 0.0827032
+#none-full 17.604167  7.421670 27.78666 0.0004826 <-- 
+#none-half  8.395833 -1.786663 18.57833 0.1224482
+
+# BY TREATMENT in 2019
+mafa_cover_all %>% 
+ mutate(year = as.character(year)) %>% 
+  left_join(exotic_cover_all, by = c("plot_number", "site", "year")) %>% 
+  filter(year == "2019") %>% 
+  group_by(MAFA_removal) %>% 
+  summarize(mean_mafacover = mean(mafacover), 
+            sd = sd(mafacover),
+            n = length(mafacover), 
+            se = ((sd(mafacover))/sqrt(length((mafacover)))),
+            min = min(mafacover), 
+            max = max(mafacover)
+            ) 
+summary(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2019")))
+TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2019")))
+#$MAFA_removal
+#               diff       lwr      upr     p adj
+#half-full 17.58333  -1.993441 37.16011 0.0853238
+#none-full 24.33333   4.756559 43.91011 0.0121587 <-- 
+#none-half  6.75000 -12.826774 26.32677 0.6774589
+
+# BY TREATMENT X SITE in 2018
+mafa_cover_all %>% 
+ mutate(year = as.character(year)) %>% 
+  left_join(exotic_cover_all, by = c("plot_number", "site", "year")) %>% 
+  filter(year == "2018" & site == "1") %>% 
+  group_by(MAFA_removal) %>% 
+  summarize(mean_mafacover = mean(mafacover), 
+            sd = sd(mafacover),
+            n = length(mafacover), 
+            se = ((sd(mafacover))/sqrt(length((mafacover)))),
+            min = min(mafacover), 
+            max = max(mafacover)
+            ) 
+summary(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2018" & site == "1")))
+TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2018" & site == "1")))
+#$MAFA_removal
+#              diff         lwr      upr     p adj
+#half-full 10.41667 -1.26098781 22.09432 0.0840521
+#none-full 22.08333 10.40567885 33.76099 0.0005190 <-- 
+#none-half 11.66667 -0.01098781 23.34432 0.0502314
+
+summary(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2018" & site == "2")))
+TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2018" & site == "2")))
+#$MAFA_removal
+#            diff       lwr      upr     p adj
+#half-full  8.000 -3.668155 19.66816 0.2094298
+#none-full 13.125  1.456845 24.79316 0.0267951 <-- 
+#none-half  5.125 -6.543155 16.79316 0.5048450
+
+# BY TREATMENT X SITE in 2019
+mafa_cover_all %>% 
+ mutate(year = as.character(year)) %>% 
+  left_join(exotic_cover_all, by = c("plot_number", "site", "year")) %>% 
+  filter(year == "2019" & site == "1") %>% 
+  group_by(MAFA_removal) %>% 
+  summarize(mean_mafacover = mean(mafacover), 
+            sd = sd(mafacover),
+            n = length(mafacover), 
+            se = ((sd(mafacover))/sqrt(length((mafacover)))),
+            min = min(mafacover), 
+            max = max(mafacover)
+            ) 
+summary(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2019" & site == "1")))
+TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2019" & site == "1")))
+#$MAFA_removal
+#              diff       lwr      upr     p adj
+#half-full 14.33333 -6.325825 34.99249 0.2025075
+#none-full 27.66667  7.007508 48.32583 0.0088867 <-- 
+#none-half 13.33333 -7.325825 33.99249 0.2462128
+
+summary(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2019" & site == "2")))
+TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2019" & site == "2")))
+#$MAFA_removal
+#                diff        lwr      upr     p adj
+#half-full 20.8333333  -6.131193 47.79786 0.1447384
+#none-full 21.0000000  -5.964527 47.96453 0.1408579
+#none-half  0.1666667 -26.797860 27.13119 0.9998579
+
+# BY TREATMENT in 2019
+mafa_cover_all %>% 
+ mutate(year = as.character(year)) %>% 
+  left_join(exotic_cover_all, by = c("plot_number", "site", "year")) %>% 
+  filter(year == "2019") %>% 
+  group_by(MAFA_removal) %>% 
+  summarize(mean_mafacover = mean(mafacover), 
+            sd = sd(mafacover),
+            n = length(mafacover), 
+            se = ((sd(mafacover))/sqrt(length((mafacover)))),
+            min = min(mafacover), 
+            max = max(mafacover)
+            ) 
+summary(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2019")))
+TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover %>% filter(year=="2019")))
+#$MAFA_removal
+#               diff       lwr      upr     p adj
+#half-full 17.58333  -1.993441 37.16011 0.0853238
+#none-full 24.33333   4.756559 43.91011 0.0121587 <-- 
+#none-half  6.75000 -12.826774 26.32677 0.6774589
+
+# BY SITE
+mafa_cover %>% 
+  group_by(site) %>% 
+  summarise(mean_mafacover = mean(mafacover), 
+            sd = sd(mafacover),
+            n = length(mafacover), 
+            se = ((sd(mafacover))/sqrt(length((mafacover)))),
+            min = min(mafacover), 
+            max = max(mafacover)
+            )
+#Site  mean_mafacover    sd     n    se   min   max
+#  <chr>          <dbl> <dbl> <int> <dbl> <dbl> <dbl>
+#1 1               31.9  17.3    36  2.89     1    73
+#2 2               14.1  15.7    36  2.62     0    65
+
+summary(aov(mafacover~ site, data = mafa_cover))
+#           Df Sum Sq Mean Sq F value   Pr(>F)    
+#site         1   5662    5662   20.68 2.22e-05 ***
+#Residuals   70  19165     274                     
+
+
+# BY TREATMENT x 2019
 summary(aov(mafacover~ MAFA_removal, data = mafa_cover %>%  filter(year == "2019")))
 TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover %>%  filter(year == "2019")))
 #$MAFA_removal
@@ -1849,6 +2028,7 @@ TukeyHSD(aov(mafacover~ MAFA_removal, data = mafa_cover %>%  filter(year == "201
 #none-full 24.33333   4.756559 43.91011 0.0121587
 #none-half  6.75000 -12.826774 26.32677 0.6774589
 
+# BY TREATMENT x SITE 2 x 2019
 mafa_cover %>% 
   filter(year == "2019" & site == "2") %>% 
  group_by(MAFA_removal) %>% 
@@ -1878,25 +2058,12 @@ TukeyHSD(aov(mafacover ~ MAFA_removal, mafa_cover %>%
 #none-full 21.0000000  -5.964527 47.96453 0.1408579
 #none-half  0.1666667 -26.797860 27.13119 0.9998579
 
-mafa_cover_all %>% 
-  group_by(year) %>% 
-  summarize(mean_mafacover = mean(mafacover), 
-            sd = sd(mafacover),
-            n = length(mafacover), 
-            se = ((sd(mafacover))/sqrt(length((mafacover)))),
-            min = min(mafacover), 
-            max = max(mafacover)
-            )
-# A tibble: 2 × 7
-#   year mean_mafacover    sd     n    se   min   max
-#  <int>          <dbl> <dbl> <int> <dbl> <dbl> <dbl>
-#1  2018           16.4  12.3    36  2.05     0    42
-#2  2019           29.6  21.6    36  3.61     0    73
-
+# BY SITE X 2018
 mafa_cover_all %>% 
  mutate(year = as.character(year)) %>% 
   left_join(exotic_cover_all, by = c("plot_number", "site", "year")) %>% 
-  group_by(MAFA_removal) %>% 
+  filter(year == "2018") %>% 
+  group_by(site) %>% 
   summarize(mean_mafacover = mean(mafacover), 
             sd = sd(mafacover),
             n = length(mafacover), 
@@ -1904,18 +2071,45 @@ mafa_cover_all %>%
             min = min(mafacover), 
             max = max(mafacover)
             ) 
-# A tibble: 3 × 7
-#  MAFA_removal mean_mafacover    sd     n    se   min   max
-#  <chr>                 <dbl> <dbl> <int> <dbl> <dbl> <dbl>
-#1 full                   11.6  13.0    24  2.65     0    40
-#2 half                   24.9  17.0    24  3.48     0    65
-#3 none                   32.5  19.6    24  4.01     0    73
+# A tibble: 2 × 7
+#  site  mean_mafacover    sd     n    se   min   max
+#  <chr>          <dbl> <dbl> <int> <dbl> <dbl> <dbl>
+#1 1              22.8  11.8      18  2.79   3.5    42
+#2 2              10    9.18      18  2.16   0      28
+summary(aov(mafacover ~ site, mafa_cover %>% filter(year == "2018")))
+#            Df Sum Sq Mean Sq F value   Pr(>F)    
+#site         1   1463    1463   13.07 0.000962 ***
+#Residuals   34   3807     112       
 
+# BY SITE X 2019
 mafa_cover_all %>% 
  mutate(year = as.character(year)) %>% 
   left_join(exotic_cover_all, by = c("plot_number", "site", "year")) %>% 
   filter(year == "2019") %>% 
   group_by(site) %>% 
+  summarize(mean_mafacover = mean(mafacover), 
+            sd = sd(mafacover),
+            n = length(mafacover), 
+            se = ((sd(mafacover))/sqrt(length((mafacover)))),
+            min = min(mafacover), 
+            max = max(mafacover)
+            ) 
+# A tibble: 2 × 7
+#  site  mean_mafacover    sd     n    se   min   max
+#  <chr>          <dbl> <dbl> <int> <dbl> <dbl> <dbl>
+#1 1               41    17.4    18  4.10     1    73
+#2 2               18.3  19.7    18  4.64     0    65
+summary(aov(mafacover ~ site, mafa_cover %>% filter(year == "2019")))
+# Df Sum Sq Mean Sq F value   Pr(>F)    
+#site         1   4647    4647   13.45 0.000829 ***
+#Residuals   34  11744     345       
+
+
+# BY YEAR x TREATMENT
+mafa_cover_all %>% 
+ mutate(year = as.character(year)) %>% 
+  left_join(exotic_cover_all, by = c("plot_number", "site", "year")) %>% 
+  group_by(year, MAFA_removal) %>% 
   summarize(mean_mafacover = mean(mafacover), 
             sd = sd(mafacover),
             n = length(mafacover), 
@@ -1939,6 +2133,10 @@ mafa_cover_all %>%
 #1 1               41    17.4    18  4.10     1    73
 #2 2               18.3  19.7    18  4.64     0    65
 
+
+
+
+
 summary(aov(mafacover ~ site, data = mafa_cover %>% filter(year == "2018")))
 #            Df Sum Sq Mean Sq F value   Pr(>F)    
 #site         1   1463    1463   13.07 0.000962 ***
@@ -1949,13 +2147,6 @@ summary(aov(mafacover ~ site, data = mafa_cover %>% filter(year == "2019")))
 #site         1   4647    4647   13.45 0.000829 ***
 #Residuals   34  11744     345 
 
-TukeyHSD(aov(mafacover ~ site, data = mafa_cover %>%  
-               filter(year == "2019")))
-
-summary(aov(mafacover ~ site, data = mafa_cover))
-#            Df Sum Sq Mean Sq F value   Pr(>F)    
-#site         1   5662    5662   20.68 2.22e-05 ***
-#Residuals   70  19165     274  
 
 ```
  
