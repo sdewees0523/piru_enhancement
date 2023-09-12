@@ -684,8 +684,8 @@ write.csv(height_march_surv_may, "data/processed/height_march_surv_may.csv")
 
 #Moreover, the convergence code is zero which indicates that the model has not converged, and the estimated #variance for the random effect is zero. This means that potentially there is no variation within Anim_ID. #It would be a good idea to fit a model with glm() (ie without random intercepts but with Anim_ID as a fixed #effect) and see how the model estimates compare.
 
-# mafacover with volume
-glme.may2018.mod.mafacover <- glmer(may_alive ~ mafacover + species + march_stem_height_cm + site + (1|plot_number), 
+# ALL - mafacover with volume
+glme.may2018.mod.mafacover <- glmer(may_alive ~ mafacover + species + volume_cm3 + site + (1|plot_number), 
                          family = binomial, 
                          data = height_march_surv_may, na.action = "na.fail")
 summary(glme.may2018.mod.mafacover) # AIC = 694.6
@@ -698,6 +698,94 @@ summary(glme.may2018.mod.mafacover) # AIC = 694.6
 #speciesSAAP -0.698528   0.323254  -2.161  0.03070 * 
 #volume_cm3   0.354511   0.122637   2.891  0.00384 **
 #site2       -0.830028   0.321107  -2.585  0.00974 **
+
+#CEOL x mafacover - volume
+height_march_surv_may_CEOL <- height_march_surv_may %>% 
+  filter(species=="CEOL")
+glme.may2018.mod.mafacover_CEOL <- glmer(may_alive ~ mafacover + volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may_CEOL, na.action = "na.fail")
+summary(glme.may2018.mod.mafacover_CEOL)
+#Fixed effects:
+#             Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)  4.152385   2.427597   1.710  0.08717 . 
+#mafacover   -0.005242   0.023159  -0.226  0.82094   
+#volume_cm3   8.793670   4.595334   1.914  0.05567 . <-- vol
+#site2       -1.632152   0.616645  -2.647  0.00813 ** <-- site
+#---
+#Signif. codes:  
+#0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+#Correlation of Fixed Effects:
+#           (Intr) mafcvr vlm_c3
+#mafacover  -0.189              
+#volume_cm3  0.971  0.020      
+#site2      -0.146  0.498  0.010
+
+#HEAR x mafacover - volume
+height_march_surv_may_HEAR <- height_march_surv_may %>% 
+  filter(species=="HEAR")
+glme.may2018.mod.mafacover_HEAR <- glmer(may_alive ~ mafacover + volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may_HEAR, na.action = "na.fail")
+summary(glme.may2018.mod.mafacover_HEAR)
+#Fixed effects:
+#            Estimate Std. Error z value Pr(>|z|)   
+#(Intercept) -0.19936    0.78291  -0.255  0.79901   
+#mafacover   -0.01060    0.02865  -0.370  0.71149   
+#volume_cm3   0.42894    0.14406   2.978  0.00291 ** <-- vol
+#site2       -0.40895    0.69120  -0.592  0.55408 
+
+#Correlation of Fixed Effects:
+#           (Intr) mafcvr vlm_c3
+#mafacover  -0.829              
+#volume_cm3 -0.181  0.024       
+#site2      -0.751  0.520 -0.019
+
+#RHOV x mafacover - volume
+height_march_surv_may_RHOV <- height_march_surv_may %>% 
+  filter(species=="RHOV")
+glme.may2018.mod.mafacover_RHOV <- glmer(may_alive ~ mafacover + volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may_RHOV, na.action = "na.fail")
+summary(glme.may2018.mod.mafacover_RHOV)
+
+#Fixed effects:
+#            Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)  4.83643    2.17392   2.225  0.02610 * 
+#mafacover    0.01786    0.02192   0.815  0.41508   
+#volume_cm3  12.44942    4.28343   2.906  0.00366 ** <-- vol
+#site2       -0.42575    0.54653  -0.779  0.43598   
+
+#Correlation of Fixed Effects:
+#           (Intr) mafcvr vlm_c3
+#mafacover  -0.245              
+#volume_cm3  0.960 -0.004       
+#site2      -0.260  0.513 -0.064
+
+#SAAP x mafacover - volume
+height_march_surv_may_SAAP <- height_march_surv_may %>% 
+  filter(species=="SAAP")
+glme.may2018.mod.mafacover_SAAP <- glmer(may_alive ~ mafacover + volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may_SAAP, na.action = "na.fail")
+summary(glme.may2018.mod.mafacover_SAAP)
+#Fixed effects:
+#            Estimate Std. Error z value Pr(>|z|)   
+#(Intercept) -0.25845    0.60541  -0.427  0.66945   
+#mafacover   -0.01991    0.02320  -0.858  0.39075   
+#volume_cm3   0.76646    0.63176   1.213  0.22505   
+#site2       -2.47834    0.84015  -2.950  0.00318 ** <-- site
+#
+#Correlation of Fixed Effects:
+#           (Intr) mafcvr vlm_c3
+#mafacover  -0.821              
+#volume_cm3  0.332  0.020       
+#site2      -0.415  0.378  0.130
+#optimizer (Nelder_Mead) convergence code: 0 (OK)
+#boundary (singular) fit: see help('isSingular')  <-- ???
+
+
 
 # with height
 glme.may2018.mod.mafacover_height <- glmer(may_alive ~ mafacover + species + march_stem_height_cm + site + (1|plot_number), 
@@ -753,6 +841,19 @@ summary(glme.may2018.mod.mafatreat) # AIC = 692.3
 #speciesSAAP            -0.6953     0.3233  -2.150  0.03154 * 
 #volume_cm3              0.3435     0.1228   2.798  0.00515 **
 #site2                  -0.7993     0.2592  -3.084  0.00204 **
+
+glme.may2018.mod.mafatreat_HEAR <- glmer(may_alive ~ treatment + volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_march_surv_may_HEAR, na.action = "na.fail")
+summary(glme.may2018.mod.mafatreat_HEAR)
+#Fixed effects:
+#                      Estimate Std. Error z value Pr(>|z|)
+#(Intercept)             0.1372     0.5919   0.232  0.81666
+#treatmenthalf removal  -0.6629     0.7078  -0.937  0.34897
+#treatmentnone          -1.0442     0.7130  -1.465  0.14303
+#volume_cm3              0.4243     0.1438   2.950  0.00318 **
+#site2                  -0.2726     0.5766  -0.473  0.63639
+
 MOD <- glme.may2018.mod.mafatreat 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
 testDispersion(simulationOutput) 
@@ -3203,7 +3304,9 @@ summary(glme.may2018.mod.8)
 #speciesSAAP                   -0.6973     0.3245  -2.149 0.031647 *  <-- species
 #normalized_par:soil_moisture   0.5329     0.1466   3.636 0.000277 ***<-- tdr x par
 
+```
  
+```{r relative growth rates, include = true}
 # RELATIVE GROWTH RATE
 
 # relative growth rate as dependent variable - Shane's code
@@ -3213,7 +3316,8 @@ summary(glme_rgr_may2018.1)
 # no AIC
 # Site 2 is significant
 
-#rgr march to may 2018
+
+#rgr MARCH to may 2018
 ggplot(data = growth_march_may, 
        aes(x = species, y = rgr)) +
   geom_point() +
@@ -3224,10 +3328,19 @@ summary(aov(rgr ~ species, data = growth_march_may))
 #            Df    Sum Sq  Mean Sq F value Pr(>F)
 #species      3 0.000404 1.348e-04   1.719  0.163
 #Residuals    305 0.023919 7.842e-05        
-TukeyHSD(aov(rgr ~ species, data = growth_may_nov2019))
- 
-#rgr jan-may 2019
-ggplot(data = growth_jan_may2019, aes(x = species, y = rgr)) + #growth_march_may for 2018
+TukeyHSD(aov(rgr ~ species, data = growth_march_may))
+# $species
+#                   diff          lwr         upr     p adj
+#HEAR-CEOL -0.0019091829 -0.005687969 0.001869603 0.5603385
+#RHOV-CEOL -0.0024371688 -0.006867196 0.001992858 0.4870778
+#SAAP-CEOL  0.0007239310 -0.003996212 0.005444074 0.9788918
+#RHOV-HEAR -0.0005279859 -0.004006298 0.002950326 0.9795116
+#SAAP-HEAR  0.0026331138 -0.001207883 0.006474111 0.2894024
+#SAAP-RHOV  0.0031610998 -0.001322111 0.007644310 0.2652069
+
+
+#rgr JANUARY-may 2019
+ggplot(data = growth_jan_may2019, aes(x = species, y = rgr)) + 
   geom_point() +
   geom_boxplot() +
   theme_bw()
@@ -3236,10 +3349,27 @@ summary(aov(rgr ~ species, data = growth_jan_may2019))
 #            Df    Sum Sq  Mean Sq F value Pr(>F)
 #species      3 0.001083 0.0003609   18.95 4.96e-11 ***
 #Residuals   233 0.004438 0.0000190      
-TukeyHSD(aov(rgr ~ species, data = growth_may_nov2019))
+TukeyHSD(aov(rgr ~ species, data = growth_jan_may2019))
+#Fit: aov(formula = rgr ~ species, data = growth_jan_may2019)
+
+#$species
+#                  diff           lwr           upr     p adj
+#HEAR-CEOL -0.002234366 -0.0044168545 -5.187693e-05 0.0425417
+#RHOV-CEOL -0.003680727 -0.0061348997 -1.226555e-03 0.0007771
+#SAAP-CEOL  0.001903785 -0.0003289341  4.136505e-03 0.1244882
+#RHOV-HEAR -0.001446362 -0.0035461154  6.533920e-04 0.2843751
+#SAAP-HEAR  0.004138151  0.0023021119  5.974190e-03 0.0000001
+#SAAP-RHOV  0.005584513  0.0034325964  7.736429e-03 0.0000000
+
+#rgr JANUARY-may 2019 - SAAP by treatment
+summary(aov(rgr ~ MAFA_removal, data = growth_jan_may2019 %>%  filter(species == "SAAP")))
+TukeyHSD(aov(rgr ~ MAFA_removal, data = growth_jan_may2019 %>%  filter(species == "SAAP")))
+#             Df    Sum Sq   Mean Sq F value Pr(>F)
+#MAFA_removal  2 0.0000048 2.409e-06    0.09  0.914
+#Residuals    68 0.0018232 2.681e-05   
 
 #rgr may-nov 2019
-ggplot(data = growth_may_nov2019, aes(x = species, y = rgr)) + #growth_march_may for 2018
+ggplot(data = growth_may_nov2019, aes(x = species, y = rgr)) + 
   geom_point() +
   geom_boxplot() +
   theme_bw()
@@ -3249,6 +3379,15 @@ summary(aov(rgr ~ species, data = growth_may_nov2019))
 #species      3 0.0000363 1.21e-05   1.716   0.17
 #Residuals   87 0.0006133 7.05e-06      
 TukeyHSD(aov(rgr ~ species, data = growth_may_nov2019))
+#$species
+#                   diff          lwr          upr     p adj
+#HEAR-CEOL -0.0019100313 -0.004470106 0.0006500430 0.2134559
+#RHOV-CEOL -0.0008807997 -0.004759967 0.0029983676 0.9334077
+#SAAP-CEOL -0.0020803120 -0.004672190 0.0005115657 0.1604708
+#RHOV-HEAR  0.0010292316 -0.002265217 0.0043236802 0.8456542
+#SAAP-HEAR -0.0001702807 -0.001758765 0.0014182036 0.9922208
+#SAAP-RHOV -0.0011995123 -0.004518735 0.0021197106 0.7798010
+
 ```
 
 ```{r may 2019 glmer MODELS, include=TRUE}
@@ -3549,6 +3688,7 @@ glme.may2019.modcover <- glmer(as.factor(may2019_alive) ~ mafacover + species + 
                          family = binomial, 
                          data = height_jan_surv_may_2019, na.action = "na.fail")
 
+
 ```
 
 
@@ -3832,6 +3972,48 @@ glme.may2019.mod.full_HEAR.scatter <- ggplot(data = height_jan_surv_may_2019 %>%
   theme_classic()
 glme.may2019.mod.full_HEAR.scatter
 
+height_jan_surv_may_2019 %>%  
+  filter(species == "HEAR") %>%  
+  group_by(may2019_alive) %>% 
+  summarize(mean_normPAR_HEAR = mean(normalized_par), 
+            SE = ((sd(normalized_par))/sqrt(length((normalized_par)))), 
+                  N = length(normalized_par))
+
+ggplot(data = height_jan_surv_may_2019 %>%  filter(species == "HEAR"), 
+       aes(x = as.factor(may2019_alive), y = normalized_par)) +
+  geom_point() +
+  geom_boxplot() +
+  theme_bw()
+
+# HEAR x mafacover
+height_jan_surv_may_2019_HEAR <- height_jan_surv_may_2019 %>%  filter (species == "HEAR")
+
+glme.may2019.modcover_HEAR <- glmer(as.factor(may2019_alive) ~ mafacover + jan_volume_cm3 + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019_HEAR, na.action = "na.fail")
+
+anova(glme.may2019.modcover_HEAR)
+summary(glme.may2019.modcover_HEAR)
+#Fixed effects:
+#               Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)     2.57416    0.83089   3.098  0.00195 **
+#mafacover       0.32503    0.39168   0.830  0.40664   
+#jan_volume_cm3  0.02282    0.25249   0.090  0.92800   
+#site2          -2.03783    0.89076  -2.288  0.02215 * <-- site
+
+glme.may2019.modtreat_HEAR <- glmer(as.factor(may2019_alive) ~ jan_volume_cm3 + treatment + site + (1|plot_number), 
+                         family = binomial, 
+                         data = height_jan_surv_may_2019_HEAR, na.action = "na.fail")
+
+anova(glme.may2019.modtreat_HEAR)
+summary(glme.may2019.modtreat_HEAR)
+#Fixed effects:
+#               Estimate Std. Error z value Pr(>|z|)   
+#(Intercept)      3.0202     0.9485   3.184  0.00145 **
+#jan_volume_cm3   0.0194     0.2561   0.076  0.93963   
+#treatmenthalf   -0.3873     0.8085  -0.479  0.63192   
+#treatmentnone   -0.4236     0.8038  -0.527  0.59819   
+#site2           -2.3947     0.8201  -2.920  0.00350 ** <-- site
 ```
 
 ```{r may 2019 glmer by species RHOV, include=TRUE}
@@ -3871,6 +4053,16 @@ summary(glme.may2019.mod.full_RHOV_vol)
 #site2                         -1.1758     0.6447  -1.824   0.0682 .
 #jan_volume_cm3                 4.2517     2.5625   1.659   0.0971 .
 #normalized_par:soil_moisture   0.3956     0.2809   1.408   0.1591  
+#Correlation of Fixed Effects:
+#            (Intr) nrmlz_ sl_mst extc_p site2  jn_v_3
+#normalzd_pr  0.072                                   
+#soil_moistr -0.051 -0.188                            
+#extc_prcntc -0.051  0.143  0.015                     
+#site2       -0.103 -0.201  0.611 -0.249              
+#jan_vlm_cm3  0.975  0.003  0.085 -0.086  0.066       
+#nrmlzd_pr:_ -0.075 -0.320  0.105 -0.172  0.109 -0.042
+#optimizer (Nelder_Mead) convergence code: 0 (OK)
+#boundary (singular) fit: see help('isSingular')
 
 anova(glme.may2019.mod.full_RHOV_height)
 summary(glme.may2019.mod.full_RHOV_height)
@@ -4449,7 +4641,7 @@ summary(aov(may_volume_cm3 ~ species, data = height_may_surv_nov_2019_notransf))
 TukeyHSD(aov(may_volume_cm3 ~ species, data = height_may_surv_nov_2019_notransf))
 #$species
 #                 diff        lwr       upr     p adj
-#HEAR-CEOL   97.554673   46.24790 148.86145 0.0000097
+#HEAR-CEOL   97.554673   46.24790 148.86145 0.0000097 
 #RHOV-CEOL  -13.839957  -71.53357  43.85366 0.9253608
 #SAAP-CEOL   90.949297   38.32675 143.57184 0.0000712
 #RHOV-HEAR -111.394630 -160.75644 -62.03282 0.0000001
@@ -4587,6 +4779,8 @@ summary(glme.nov2019.modcover)
 #may_volume_cm3   0.3512     0.1891   1.857  0.06334 . 
 #site2           -0.8247     0.3939  -2.094  0.03628 * <-- site
 
+
+
 # glme.nov2019.modcover x species
 emmeans(glme.nov2019.modcover, list(pairwise ~ species), adjust = "tukey")
 #$`pairwise differences of species`
@@ -4655,6 +4849,69 @@ emmeans(glme.nov2019.modcover, list(pairwise ~ site), adjust = "tukey")
 #$`pairwise differences of site`
 # 1             estimate    SE  df z.ratio p.value
 # site1 - site2    0.825 0.394 Inf   2.094  0.0363
+
+#Treatment x HEAR
+glme.nov2019.modtreat_HEAR <- glmer(as.factor(nov_alive) ~ treatment + site + may_volume_cm3  + (1|plot_number), 
+                         family = binomial, 
+                         data = nov2019.modcover_HEAR, na.action = "na.fail")
+anova(glme.nov2019.modtreat_HEAR)
+summary(glme.nov2019.modtreat_HEAR)
+#Fixed effects:
+#               Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)     -0.7446     0.6100  -1.221   0.2222  
+#treatmenthalf    1.8256     0.8236   2.217   0.0266 * <-- treatment
+#treatmentnone    0.2604     0.7930   0.328   0.7427  
+#site2           -1.6645     0.7508  -2.217   0.0266 * <-- site
+#may_volume_cm3   0.4736     0.3639   1.302   0.1930  
+#---
+#Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+#Correlation of Fixed Effects:
+#            (Intr) trtmnth trtmntn site2 
+#treatmnthlf -0.636                       
+#treatmentnn -0.645  0.547                
+#site2       -0.149 -0.283  -0.184        
+#may_vlm_cm3 -0.250 -0.004  -0.002   0.040
+
+#Treatment x SAAP <-- boundary (singular) fit: see help('isSingular')
+glme.nov2019.modtreat_SAAP <- glmer(as.factor(nov_alive) ~ treatment + site + may_volume_cm3  + (1|plot_number), 
+                         family = binomial, 
+                         data = nov2019.modcover_SAAP, na.action = "na.fail")
+anova(glme.nov2019.modtreat_SAAP)
+summary(glme.nov2019.modtreat_SAAP)
+#Generalized linear mixed model fit by maximum likelihood (Laplace Approximation) ['glmerMod']
+# Family: binomial  ( logit )
+#Formula: as.factor(nov_alive) ~ treatment + site + may_volume_cm3 + (1 |      plot_number)
+#   Data: nov2019.modcover_SAAP
+
+#     AIC      BIC   logLik deviance df.resid 
+#   101.6    115.1    -44.8     89.6       64 
+
+#Scaled residuals: 
+#    Min      1Q  Median      3Q     Max 
+#-2.0347 -0.7751 -0.6033  0.9678  1.6719 
+
+#Random effects:
+# Groups      Name        Variance Std.Dev.
+# plot_number (Intercept) 0        0       
+#Number of obs: 70, groups:  plot_number, 32
+
+#Fixed effects:
+#               Estimate Std. Error z value Pr(>|z|)
+#(Intercept)     0.09015    0.46248   0.195    0.845
+#treatmenthalf   0.12587    0.63342   0.199    0.842
+#treatmentnone  -0.21709    0.61614  -0.352    0.725
+#site2          -0.67000    0.53671  -1.248    0.212
+#may_volume_cm3  0.34627    0.22815   1.518    0.129
+
+#Correlation of Fixed Effects:
+#            (Intr) trtmnth trtmntn site2  
+#            treatmnthlf -0.563                       
+#treatmentnn -0.532  0.481                
+#site2       -0.411 -0.102  -0.217        
+#may_vlm_cm3 -0.139 -0.066  -0.154   0.283
+#optimizer (Nelder_Mead) convergence code: 0 (OK)
+#boundary (singular) fit: see help('isSingular') <-- NOT A GREAT MODEL
 
 MOD <- glme.nov2019.modtreat 
 simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
@@ -5027,6 +5284,13 @@ summary(glme.nov2019.mod1_ceol_site1)
 #exotic_percentcover  -0.3674     0.7910  -0.464    0.642
 #may_volume_cm3        0.7887     1.4961   0.527    0.598
 
+
+# CEOL x mafacover <-- Warning: unable to evaluate scaled gradientWarning:  Hessian is numerically singular: parameters are not uniquely determined
+nov2019.modcover_CEOL<- height_may_surv_nov_2019 %>% filter(species == "CEOL")
+glme.nov2019.modcover_CEOL <- glmer(as.factor(nov_alive) ~ mafacover + site + may_volume_cm3  + (1|plot_number), # and with treatment
+                         family = binomial, 
+                         data = nov2019.modcover_CEOL, na.action = "na.fail")
+
 glme.nov2019.mod1_ceol_cover <- glmer(as.factor(nov_alive) ~ mafacover    + may_volume_cm3  
                              + (1|plot_number), 
                          family = binomial(link = "logit"), 
@@ -5078,6 +5342,30 @@ summary(glme.nov2019.mod1_HEAR)
 #exotic_percentcover  -0.2429     0.3827  -0.635   0.5256  
 #site2                -0.7217     0.9611  -0.751   0.4527  
 #may_volume_cm3        0.6435     0.3852   1.671   0.0948 .
+
+
+# MAFA cover x HEAR
+nov2019.modcover_HEAR <- height_may_surv_nov_2019 %>% filter(species == "HEAR")
+glme.nov2019.modcover_HEAR <- glmer(as.factor(nov_alive) ~ mafacover + site + may_volume_cm3  + (1|plot_number), 
+                         family = binomial, 
+                         data = nov2019.modcover_HEAR, na.action = "na.fail")
+anova(glme.nov2019.modcover_HEAR)
+summary(glme.nov2019.modcover_HEAR)
+# 
+#Fixed effects:
+#               Estimate Std. Error z value Pr(>|z|)  
+#(Intercept)     -0.4151     0.4889  -0.849   0.3959  
+#mafacover        0.8711     0.4317   2.018   0.0436 * <--mafacover predicts HEAR survival
+#site2           -1.0359     0.8123  -1.275   0.2022  
+#may_volume_cm3   0.4880     0.3741   1.305   0.1920  
+#---
+#Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+#Correlation of Fixed Effects:
+#            (Intr) mafcvr site2 
+#mafacover   -0.357              
+#site2       -0.563  0.212       
+#may_vlm_cm3 -0.339  0.004  0.062
+
 
 # scatter
 glme.nov2019.mod1_HEAR.scatter <- ggplot(data = height_may_surv_nov_2019 %>%  filter(species == "HEAR"), 
@@ -5176,6 +5464,12 @@ summary(glme.nov2019.mod1_rhov)
 #site2                -20.0969  2048.0003  -0.010    0.992
 #may_volume_cm3         0.7887     1.4961   0.527    0.598
 
+# RHOV x mafacover <-- boundary (singular) fit: see help('isSingular')
+nov2019.modcover_RHOV<- height_may_surv_nov_2019 %>% filter(species == "RHOV")
+glme.nov2019.modcover_RHOV <- glmer(as.factor(nov_alive) ~ mafacover + site + may_volume_cm3  + (1|plot_number), # and with treatment
+                         family = binomial, 
+                         data = nov2019.modcover_RHOV, na.action = "na.fail")
+
 glme.nov2019.mod1_rhov.scatter <- ggplot(data = height_may_surv_nov_2019 %>%  filter(species == "RHOV"), 
                        aes(x = normalized_par, y = nov_alive, col = normalized_par)) +
   geom_point(aes(color = normalized_par)) +
@@ -5197,6 +5491,11 @@ glme.nov2019.mod1_SAAP <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_p
                          family = binomial(link = "logit"), 
                          data = (height_may_surv_nov_2019 %>% filter(species == "SAAP")), na.action = "na.fail")
 # boundary (singular) fit: see help('isSingular')
+
+lm(as.factor(nov_alive) ~ may_volume_cm3,   nov2019.modcover_SAAP, na.action = "na.fail")
+#Coefficients:
+#   (Intercept)  may_volume_cm3  
+#       1.43068         0.09043  
 
 view(height_may_surv_nov_2019 %>% filter(species == "SAAP"))
 
@@ -5221,6 +5520,35 @@ summary(glme.nov2019.mod1_SAAP)
 #site2               -0.79546    0.68135  -1.167    0.243
 #may_volume_cm3       0.34217    0.22266   1.537    0.124
 
+
+
+# MAFA cover x SAAP <-- boundary (singular) fit: see help('isSingular')
+nov2019.modcover_SAAP <- height_may_surv_nov_2019 %>% filter(species == "SAAP")
+glme.nov2019.modcover_SAAP <- glmer(as.factor(nov_alive) ~ mafacover + site + may_volume_cm3  + (1|plot_number), 
+                         family = binomial, 
+                         data = nov2019.modcover_SAAP, na.action = "na.fail") 
+
+summary(glme.nov2019.modcover_SAAP)
+#Fixed effects:
+#               Estimate Std. Error z value Pr(>|z|)
+#(Intercept)     0.04697    0.35986   0.131    0.896
+#mafacover       0.14254    0.27422   0.520    0.603
+#site2          -0.61560    0.55740  -1.104    0.269
+#may_volume_cm3  0.31331    0.22240   1.409    0.159
+
+#Correlation of Fixed Effects:
+#            (Intr) mafcvr site2 
+#mafacover   -0.131              
+#site2       -0.696  0.333       
+#may_vlm_cm3 -0.267 -0.170  0.191
+#optimizer (Nelder_Mead) convergence code: 0 (OK)
+#boundary (singular) fit: see help('isSingular')
+
+# treatment x SAAP <-- boundary (singular) fit: see help('isSingular')
+glme.nov2019.modtreat_SAAP <- glmer(as.factor(nov_alive) ~ treatment + site + may_volume_cm3  + (1|plot_number), 
+                         family = binomial, 
+                         data = nov2019.modcover_SAAP, na.action = "na.fail") 
+summary(glme.nov2019.modtreat_SAAP)
 
 glme.nov2019.mod1_SAAP.scatter <- ggplot(data = height_may_surv_nov_2019 %>%  filter(species == "SAAP"), 
                        aes(x = normalized_par, y = nov_alive, col = normalized_par)) +
