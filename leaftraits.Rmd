@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(here) # similar to set working directory
 library(dplyr) # includes functions:
 library(tidyverse) # data wrangling, includes packages: ggplot2, tibble, tidyr, rear, purrr, stringr, forcats
-
+library(vegan)
 ```
 
 ```{r load data, include=FALSE}
@@ -215,7 +215,9 @@ ggplotly(par.scatter)
 
 
 # NMDS
-```{r nmds data prep, include=TRUE}
+```{r data prep nmds, include=TRUE}
+
+#non-metric multidimensional scaling
 
 leaftraits_nmdsprep_num <- leaftraits %>% 
   # use the ungroup() function to take out grouping
@@ -226,5 +228,62 @@ view(leaftraits_nmdsprep_num) # only numbers
 str(leaftraits_nmdsprep_num) #tibble [64 × 3]
 
 write.csv(leaftraits_nmdsprep_num, "~/Dropbox/GRADSCHOOL/Dissertation/R_dissertation/Ch3_piru_enhancement_Git/data/leaftraits_nmds.csv")
+```
+
+```{r nmds by leaf traits}
+
+# OPTION 1: AUTOTRANSFORM
+# the AUTOTRANSFORM = F skips the automatic data transformations and uses the input data as is
+# - when the raw data contains the information you need (e.g., abundance)
+# - when you have a small number of samples or small number of variables
+# - when you want to preserve the original scale of the data (e.g., interested in the absolute differences between two sets of measurements)
+leaftraits_NMDS <- metaMDS(leaftraits_nmdsprep_num, autotransform = F) # this is more appropriate for my data
+
+# OPTION 2: RAUP-CRICK
+# uses the RAUP-CRICK dissimilarity index to calculate pairwise dissimilarities
+# - adjusts for spp richness
+# - downweights importance of rare spp 
+# - more useful when interested in community STRUCTURE rather than individual species
+# - takes into account differences in species evenness
+# abcover_byspecies_NMDS <- metaMDS(abcover_byspecies_nmdsprep_num, distance = "raup") 
+
+
+#plot(leaftraits_NMDS)
+```
+
+```{r scores nmds}
+scores(leaftraits_NMDS)
+```
+
+```{r stress plot nmds}
+stressplot(leaftraits_NMDS)
+# if stress tests are really low, there may be insufficient data.
+
+#plot_df <- scores(seedbank_bysitecore_nmds, display = "sites") %>% # from An's code
+#  as.data.frame() %>% 
+#  rownames_to_column("stand_core") %>% 
+#  full_join(seedbank_bysitecore, by = "stand_core")
+
+nmds_leaftraits_df <- data.frame(leaftraits_NMDS$points, leaftraits) # code from chatgpt
+view(nmds_leaftraits_df)
+```
+
+```{r ggplot leaf traits nmds}
+nmds_leaftraits_df_plotcolor <- ggplot(nmds_leaftraits_df, aes(x = MDS1, y = MDS2, color = species)) + #, shape = individual_ID
+  geom_point(size = 3, alpha = 0.8) +
+  scale_color_manual(values = c("darkgreen", "darkmagenta", "darkgoldenrod1", "darkblue")) + # in color
+ #scale_color_manual(values = c("gray0", "gray30", "gray60", "gray80")) + # in bw
+  theme_bw() +
+  theme(legend.position = c(0.08, 0.81)) + # x, y bottom left corner: 0,0
+  stat_ellipse(level = .95, linetype = 1, linewidth = 1) + # linetype: 1 = solid, 2 = dashed
+  labs(title = "NMDS: by leaf traits", color = "Species", shape = "Plant ID")
+
+nmds_leaftraits_df_plotcolor
+
+```
+```{r fortify nmds}
+#this makes a dataframe that gives a lot of control graphically 
+leaftraits_NMDS_fort <- fortify(nmds_leaftraits_df)
+
 ```
 
