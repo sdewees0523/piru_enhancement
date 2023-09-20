@@ -217,24 +217,14 @@ ggplotly(par.scatter)
 # NMDS
 ```{r nmds data prep, include=TRUE}
 
-abcover_byspecies_nmdsprep <- abcover_byspecies %>% 
-  tidyr::spread(species, percentcover) %>% # transpose data so columns are species
-  replace(is.na(.), 0) # replace NA with zeros
-
-view(abcover_byspecies_nmdsprep)
-# 15 sites (rows) by 48 columns
-str(abcover_byspecies_nmdsprep)
-
-
-abcover_byspecies_nmdsprep_num <- abcover_byspecies_nmdsprep %>% 
+leaftraits_nmdsprep_num <- leaftraits %>% 
   # use the ungroup() function to take out grouping
-  ungroup() %>% 
-  select(!c(standtype, site, site_rep))
-# 15 sites (rows) by 33 species (columns)
-# DEG 1-6, ENH 1-6, INT 1-3 = 15 transects
-         
-view(abcover_byspecies_nmdsprep_num) # only numbers
-write.csv(abcover_byspecies_nmdsprep_num, "~/Dropbox/GRADSCHOOL/Dissertation/R_dissertation/chaparraldegradation_2022b/processed/nmds_aboveground.csv")
+  #ungroup() %>% 
+  select(!c(species, individual_ID, leaf_number, area_m2, leaf_LDMC_proportion))
 
+view(leaftraits_nmdsprep_num) # only numbers
+str(leaftraits_nmdsprep_num) #tibble [64 × 3]
+
+write.csv(leaftraits_nmdsprep_num, "~/Dropbox/GRADSCHOOL/Dissertation/R_dissertation/Ch3_piru_enhancement_Git/data/leaftraits_nmds.csv")
 ```
 
