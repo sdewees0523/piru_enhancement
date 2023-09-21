@@ -30,6 +30,7 @@ library(multcomp) # functions: multcompLetters2, multcompLetters3, multcompLette
 library(rgl)
 library(ggrepel)
 library(ggpmisc)
+library(DHARMa) # https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html
 
 #mafa_cover_all = MAFA % cover 2018 and 2019
 #exotic_cover_all = exotic % cover 2018 and 2019
@@ -975,7 +976,36 @@ abline(h = 0)
 # Plot each random effect in the model, look for dots along 1:1 line
 qqnorm(ranef(MOD)$plot_number[,1], main = "Plot Residuals")
 qqline(ranef(MOD)$plot_number[,1])
+
+MOD <- lme.tdrmod
+simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+
 ```
+
+```{r tdrmod by treatment, include=FALSE}
+#lme.tdrmod_treat <- lmer(soil_moisture ~ treatment + site  + month + nncover  +(1|plot_number) , 
+#                   data = tdrmod_nncover)
+
+#MOD <- lme.tdrmod_treat
+
+#simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+
+#simulationOutput <- simulateResiduals(fittedModel = MOD)
+
+```
+
+```{r tdrmod by mafacover, include=FALSE}
+#lme.tdrmod_mafacover <- lmer(soil_moisture ~ mafacover + site  + month + nncover  +(1|plot_number) , 
+#                   data = tdrmod_nncover)
+
+#MOD <- lme.tdrmod_mafacover
+
+#simulationOutput <- simulateResiduals(fittedModel = MOD, plot = T)
+
+#simulationOutput <- simulateResiduals(fittedModel = MOD)
+
+```
+
 
 3.  statistics
 
