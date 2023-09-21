@@ -233,6 +233,7 @@ write.csv(leaftraits_nmdsprep_num, "~/Dropbox/GRADSCHOOL/Dissertation/R_disserta
 ```{r nmds by leaf traits}
 
 # OPTION 1: AUTOTRANSFORM
+# caption: Uses Bray-Curtis distance to calculate NMDS. Using data ‘as is’. (autotransform = F)
 # the AUTOTRANSFORM = F skips the automatic data transformations and uses the input data as is
 # - when the raw data contains the information you need (e.g., abundance)
 # - when you have a small number of samples or small number of variables
@@ -269,7 +270,7 @@ view(nmds_leaftraits_df)
 ```
 
 ```{r ggplot leaf traits nmds}
-nmds_leaftraits_df_plotcolor <- ggplot(nmds_leaftraits_df, aes(x = MDS1, y = MDS2, color = species)) + #, shape = individual_ID
+nmds_leaftraits_df_plotcolor <- ggplot(nmds_leaftraits_df, aes(x = MDS1, y = MDS2, color = species, shape = individual_ID)) + #, shape = individual_ID
   geom_point(size = 3, alpha = 0.8) +
   scale_color_manual(values = c("darkgreen", "darkmagenta", "darkgoldenrod1", "darkblue")) + # in color
  #scale_color_manual(values = c("gray0", "gray30", "gray60", "gray80")) + # in bw
