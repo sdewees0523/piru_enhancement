@@ -15,6 +15,7 @@ library(here) # similar to set working directory
 library(dplyr) # includes functions:
 library(tidyverse) # data wrangling, includes packages: ggplot2, tibble, tidyr, rear, purrr, stringr, forcats
 library(vegan)
+library(plotly)
 ```
 
 ```{r load data, include=FALSE}
@@ -182,12 +183,12 @@ par <- read_csv("data/par_data.csv")
 par %>%  
   group_by(weeding) %>% 
   summarize(below_min = min(below_PAR_1), 
-            below_mean = mean(below_PAR_1), 
+            below_mean = mean(below_PAR_1),
             below_median = median(below_PAR_1),
-             below_max = max(below_PAR_1))#,
+            below_max = max(below_PAR_1),
             amb_min = min(ambient_PAR_1), 
-             amb_mean = mean(ambient_PAR_1),
-              amb_max = max(ambient_PAR_1)
+            amb_mean = mean(ambient_PAR_1),
+            amb_max = max(ambient_PAR_1)
        )
 # below_min    below_mean    below_max
 # 25	          495.5538	    1384	
@@ -257,8 +258,7 @@ leaftraits_nmdsprep_num <- leaftraits_nmdsprep %>% # numeric only data needed fo
 view(leaftraits_nmdsprep_num) # only numbers
 str(leaftraits_nmdsprep_num) #tibble 192x1]
 
-write.csv(leaftraits_nmdsprep_num, "~/Dropbox/GRADSCHOOL/Dissertation/R_dissertation/Ch3_piru_enhancement_Git/data/leaftraits_nmds.csv")
-
+#write.csv(leaftraits_nmdsprep_num, "~/Dropbox/GRADSCHOOL/Dissertation/R_dissertation/Ch3_piru_enhancement_Git/data/leaftraits_nmds.csv")
 
 ```
 
@@ -299,6 +299,9 @@ stressplot(leaftraits_NMDS)
 
 nmds_leaftraits_df <- data.frame(leaftraits_NMDS$points, leaftraits) # code from chatgpt
 view(nmds_leaftraits_df)
+nmds_leaftraits_df <- nmds_leaftraits_df %>%
+  rename("NMDS1" = "MDS1",
+         "NMDS2" = "MDS2")
 ```
 
 ```{r ggplot leaf traits nmds}
@@ -346,25 +349,26 @@ view(fit_leaftraits_pvals)
 fit_leaftraits_nmdsscores <- fit_leaftraits %>% 
   scores(., display = "vectors") %>% 
   as.data.frame() %>% 
-  rownames_to_column("leaftraits") %>% 
+  rownames_to_column("species") %>% 
   full_join(., fit_leaftraits_pvals, by = "species") %>% 
   filter(pvals <= 0.05) %>% # limited number for visual clarity
   filter(!species == 'standtype_ID')
   
 view(fit_leaftraits_nmdsscores)
 # new plot
-nmds_leaftraits_df_plotcolor_new <- ggplot(nmds_leaftraits_df, aes(x = MDS1, y = MDS2, color = species)) + 
+nmds_leaftraits_df_plotcolor_new <- ggplot(nmds_leaftraits_df, aes(x = NMDS1, y = NMDS2)) + 
   coord_equal() +
-  geom_point(size = 3, alpha = 0.8, aes(shape = plant_rep)) +
+  geom_point(size = 3, alpha = 0.8, aes(color = species, shape = plant_rep)) +
   scale_color_manual(values = c("darkgreen", "darkmagenta", "darkgoldenrod1", "darkblue")) + # in color
  #scale_color_manual(values = c("gray0", "gray30", "gray60", "gray80")) + # in bw
- # theme(legend.position = c(0.08, 0.81)) + # x, y bottom left corner: 0,0 - IF want to set key within plot, otherwise sits outside figure
-  stat_ellipse(level = .95, linetype = 1, linewidth = 1) + # linetype: 1 = solid, 2 = dashed
-  geom_segment(data = fit_leaftraits_pvals, aes(x = 0, xend = NMDS1, y = 0, yend = NMDS2),
+ #theme(legend.position = c(0.08, 0.81)) + # x, y bottom left corner: 0,0 - IF want to set key within plot, otherwise sits outside figure
+  stat_ellipse(level = .95, linetype = 1, linewidth = 1, aes(color = species)) + # linetype: 1 = solid, 2 = dashed
+  geom_segment(data = fit_leaftraits_nmdsscores, aes(x = 0, xend = NMDS1, y = 0, yend = NMDS2),
                arrow = arrow(length = unit(0.25, "cm")),
                col = "black") +
-   geom_text(data = fit_leaftraits_pvals, aes(label = species),  
-            position = position_jitter(width = 0.1, height = 0.2)) +
+    geom_text(data = fit_leaftraits_nmdsscores, aes(label = species),
+              position = position_jitter(width = 0.1, height = 0.2)
+             )+
   labs(title = "NMDS: by leaf traits", color = "Species", shape = "Plant ID")
 
 nmds_leaftraits_df_plotcolor_new +  theme_bw()
