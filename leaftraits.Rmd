@@ -218,10 +218,15 @@ ggplotly(par.scatter)
 
 # NMDS
 ```{r data prep nmds, include=TRUE}
-
 #non-metric multidimensional scaling
 
-leaftraits_nmdsprep_num <- leaftraits %>% 
+# species in columns down
+# observations or sites in rows across
+
+leaftraits_nmdsprep <- leaftraits %>% # data needed for NMDS. columns: species, plant_rep, sla, dlmc, leaf thickness
+  select(!c(individual_ID, leaf_number, leaf_rep, area_m2, leaf_LDMC_proportion))
+
+leaftraits_nmdsprep_num <- leaftraits %>% # numeric only data needed for NMDS
   # use the ungroup() function to take out grouping
   #ungroup() %>% 
   select(!c(species, individual_ID, leaf_number, plant_rep, leaf_rep, area_m2, leaf_LDMC_proportion))
@@ -286,9 +291,80 @@ nmds_leaftraits_df_plotcolor <- ggplot(nmds_leaftraits_df, aes(x = MDS1, y = MDS
 nmds_leaftraits_df_plotcolor
 
 ```
+
+```{r nmds color and vectors with envfit function}
+# code from An Bui: https://rpubs.com/an-bui/vegan-cheat-sheet 
+
+nmds_leaftraits_vectors <- data.frame(leaftraits_NMDS$points, leaftraits_nmdsprep) # code from chatgpt. 
+# Adds NMDS1 and NMDS2 to columns species, plant_rep, LSA, LDMC, and Leaf thickness
+
+leaftraits_nmdsprep <- leaftraits_nmdsprep %>% 
+  mutate(standtype_ID = 1)
+
+# add NMDS scores to pvalues
+plot_leaftraits_df <- scores(leaftraits_NMDS, display = "sites") %>% 
+  as.data.frame() %>% 
+  rownames_to_column("standtype_ID") %>% 
+  mutate_at(c('standtype_ID'), as.numeric) %>% 
+  full_join(leaftraits_nmdsprep, by = "standtype_ID") %>%  
+  select(!c(standtype_ID))
+
+# envfit() takes the output of metaMDS() and the species matrix you created
+fit_leaftraits <- envfit(leaftraits_NMDS, leaftraits_nmdsprep_num, perm = 999) # pvalues for spp and stand, site, stand_core
+
+# extract p-values for each species
+fit_leaftraits_pvals <- fit_leaftraits$vectors$pvals %>% 
+  as.data.frame() %>% 
+  rownames_to_column("species") %>% 
+  dplyr::rename("pvals" = ".")
+view(fit_leaftraits_pvals)
+
+# extract coordinates for species, only keep species with p-val = 0.05
+fit_leaftraits_nmdsscores <- fit_leaftraits %>% 
+  scores(., display = "vectors") %>% 
+  as.data.frame() %>% 
+  rownames_to_column("leaftraits") %>% 
+  full_join(., fit_leaftraits_pvals, by = "species") %>% 
+  filter(pvals <= 0.05) %>% # limited number for visual clarity
+  filter(!species == 'standtype_ID')
+  
+view(fit_leaftraits_nmdsscores)
+# new plot
+nmds_leaftraits_df_plotcolor_new <- ggplot(nmds_leaftraits_df, aes(x = MDS1, y = MDS2, color = species)) + 
+  coord_equal() +
+  geom_point(size = 3, alpha = 0.8, aes(shape = plant_rep)) +
+  scale_color_manual(values = c("darkgreen", "darkmagenta", "darkgoldenrod1", "darkblue")) + # in color
+ #scale_color_manual(values = c("gray0", "gray30", "gray60", "gray80")) + # in bw
+ # theme(legend.position = c(0.08, 0.81)) + # x, y bottom left corner: 0,0 - IF want to set key within plot, otherwise sits outside figure
+  stat_ellipse(level = .95, linetype = 1, linewidth = 1) + # linetype: 1 = solid, 2 = dashed
+  geom_segment(data = fit_leaftraits_pvals, aes(x = 0, xend = NMDS1, y = 0, yend = NMDS2),
+               arrow = arrow(length = unit(0.25, "cm")),
+               col = "black") +
+   geom_text(data = fit_leaftraits_pvals, aes(label = species),  
+            position = position_jitter(width = 0.1, height = 0.2)) +
+  labs(title = "NMDS: by leaf traits", color = "Species", shape = "Plant ID")
+
+nmds_leaftraits_df_plotcolor_new +  theme_bw()
+
+```
+
 ```{r fortify nmds}
+#basic normal plot
+ordiplot(leaftraits_NMDS) # without point labels
+ordiplot(leaftraits_NMDS, type = "t") # with point labels
+
+#ggvegan to make a quick nice plot
+autoplot(seedbank_bysitecore_nmds) # NMDS1 x NMDS2, Key = "Score": sites, species
+# sites == each leaf 
+# species == leaf traits (leaf thickness, sla, dlmc)
+
+
+#this makes a dataframe that gives a lot of control graphically 
+seedbank_bysitecore_nmds_fort <- fortify(seedbank_bysitecore_nmds)
+
 #this makes a dataframe that gives a lot of control graphically 
 leaftraits_NMDS_fort <- fortify(nmds_leaftraits_df)
+
 
 ```
 
