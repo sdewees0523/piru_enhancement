@@ -24,6 +24,8 @@ leaftraits_load <- read_csv("data/leaftraits_2023.csv",
                               species = col_character(), 
                               individual_ID = col_character(),
                                 leaf_number = col_character(),
+                              plant_rep = col_character(),
+                              leaf_rep = col_character(),
                                 area_m2 = col_number(),
                                 SLA_m2kg = col_number(),
                                 leaf_LDMC_proportion = col_number(),
@@ -32,7 +34,7 @@ leaftraits_load <- read_csv("data/leaftraits_2023.csv",
                             ))
 
 leaftraits <- leaftraits_load %>% 
-  dplyr::select(species, individual_ID, leaf_number, area_m2, SLA_m2kg, leaf_LDMC_proportion, leaf_LDMC_percent, leaf_thickness_check_cm) %>% 
+  dplyr::select(species, individual_ID, leaf_number, plant_rep, leaf_rep, area_m2, SLA_m2kg, leaf_LDMC_proportion, leaf_LDMC_percent, leaf_thickness_check_cm) %>% 
   rename(leaf_thickness_cm = leaf_thickness_check_cm)
 
 glimpse(leaftraits)
@@ -222,12 +224,14 @@ ggplotly(par.scatter)
 leaftraits_nmdsprep_num <- leaftraits %>% 
   # use the ungroup() function to take out grouping
   #ungroup() %>% 
-  select(!c(species, individual_ID, leaf_number, area_m2, leaf_LDMC_proportion))
+  select(!c(species, individual_ID, leaf_number, plant_rep, leaf_rep, area_m2, leaf_LDMC_proportion))
 
 view(leaftraits_nmdsprep_num) # only numbers
 str(leaftraits_nmdsprep_num) #tibble [64 × 3]
 
 write.csv(leaftraits_nmdsprep_num, "~/Dropbox/GRADSCHOOL/Dissertation/R_dissertation/Ch3_piru_enhancement_Git/data/leaftraits_nmds.csv")
+
+
 ```
 
 ```{r nmds by leaf traits}
@@ -270,8 +274,8 @@ view(nmds_leaftraits_df)
 ```
 
 ```{r ggplot leaf traits nmds}
-nmds_leaftraits_df_plotcolor <- ggplot(nmds_leaftraits_df, aes(x = MDS1, y = MDS2, color = species, shape = individual_ID)) + #, shape = individual_ID
-  geom_point(size = 3, alpha = 0.8) +
+nmds_leaftraits_df_plotcolor <- ggplot(nmds_leaftraits_df, aes(x = MDS1, y = MDS2, color = species)) + 
+  geom_point(size = 3, alpha = 0.8, aes(shape = plant_rep)) +
   scale_color_manual(values = c("darkgreen", "darkmagenta", "darkgoldenrod1", "darkblue")) + # in color
  #scale_color_manual(values = c("gray0", "gray30", "gray60", "gray80")) + # in bw
   theme_bw() +
