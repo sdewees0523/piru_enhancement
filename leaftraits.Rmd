@@ -220,19 +220,42 @@ ggplotly(par.scatter)
 ```{r data prep nmds, include=TRUE}
 #non-metric multidimensional scaling
 
-# species in columns down
-# observations or sites in rows across
+## I DID THIS BECUASE I THOUGHT I NEEDD TO TRANSFORM THE DATAFRAME BUT I DIDN'T 
+# species or plant_reps in columns down
+# observations or leaftrait data in rows across
+
+#leaftraits_nmdsprep_wide <- leaftraits %>% # data needed for NMDS. columns: species, plant_rep, sla, dlmc, leaf thickness
+#    mutate(species_rep = paste(species, plant_rep, sep = "_")) %>% 
+#    mutate(species_rep_leaf = paste(species_rep, leaf_rep, sep = "_")) %>% 
+#  select(c(species_rep_leaf, SLA_m2kg, leaf_LDMC_proportion, leaf_thickness_cm)) 
+#view(leaftraits_nmdsprep_wide)
+
+#transforming data from wide to long - columns species_rep_leaf, LeafTrait, and values
+#leaftraits_nmdsprep_long <- leaftraits_nmdsprep_wide %>% 
+#  pivot_longer(cols = c(SLA_m2kg, leaf_LDMC_proportion, leaf_thickness_cm),
+#               names_to = "LeafTrait",
+#               values_to = "value") 
+
+#spreading data for nmds
+#leaftraits_nmdsprep <- leaftraits_nmdsprep_long %>% 
+#  tidyr::spread(species_rep_leaf, value) 
+#view(leaftraits_nmdsprep)
+
+## END UNNEEDED CODE
 
 leaftraits_nmdsprep <- leaftraits %>% # data needed for NMDS. columns: species, plant_rep, sla, dlmc, leaf thickness
-  select(!c(individual_ID, leaf_number, leaf_rep, area_m2, leaf_LDMC_proportion))
-
-leaftraits_nmdsprep_num <- leaftraits %>% # numeric only data needed for NMDS
-  # use the ungroup() function to take out grouping
-  #ungroup() %>% 
-  select(!c(species, individual_ID, leaf_number, plant_rep, leaf_rep, area_m2, leaf_LDMC_proportion))
+    mutate(species_rep = paste(species, plant_rep, sep = "_")) %>% 
+    mutate(species_rep_leaf = paste(species_rep, leaf_rep, sep = "_")) %>% 
+  select(c(species_rep_leaf, SLA_m2kg, leaf_LDMC_proportion, leaf_thickness_cm)) 
+view(leaftraits_nmdsprep)
+  
+  
+# numbers only
+leaftraits_nmdsprep_num <- leaftraits_nmdsprep %>% # numeric only data needed for NMDS
+ select(!c(species_rep_leaf))
 
 view(leaftraits_nmdsprep_num) # only numbers
-str(leaftraits_nmdsprep_num) #tibble [64 × 3]
+str(leaftraits_nmdsprep_num) #tibble 192x1]
 
 write.csv(leaftraits_nmdsprep_num, "~/Dropbox/GRADSCHOOL/Dissertation/R_dissertation/Ch3_piru_enhancement_Git/data/leaftraits_nmds.csv")
 
