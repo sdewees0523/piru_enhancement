@@ -440,13 +440,19 @@ hull.data <- rbind(grp.a, grp.b, grp.c, grp.d)  #combine grp.a and grp.b
   fortplot
 ggplotly(fortplot)
 
-nmdsC <- metaMDS(leaftraits_nmdsprep_num, autotransform = FALSE, trymax = 20, k = 3)
+
+
+
+nmdsC <- metaMDS(leaftraits_nmdsprep_num, autotransform = F, trymax = 20, k = 3)
 nmdsD <- as.data.frame(fortify(nmdsC)) %>%
   rename("standtype_ID" = "label") %>%
   mutate_at(c('standtype_ID'), as.numeric) %>%
   full_join(leaftraits_nmdsprep, by = "standtype_ID") %>%
   full_join(leaftraits_plotprep, by = c("SLA_m2kg", "leaf_LDMC_proportion", "leaf_thickness_cm"))
+leaf <- leaftraits
 nmdsD
 plot_ly(x=nmdsD$NMDS1, y=nmdsD$NMDS2, z=nmdsD$NMDS3, type="scatter3d", mode="markers", color = nmdsD$species)
+plot_ly(x=leaf$SLA_m2kg, y=leaf$leaf_LDMC_proportion, z=leaf$leaf_thickness_cm, type="scatter3d", mode="markers", color = leaf$species)
+
 ```
 
