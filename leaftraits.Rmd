@@ -221,26 +221,29 @@ ggplotly(par.scatter)
 ```{r data prep nmds, include=TRUE}
 #non-metric multidimensional scaling
 
-## I DID THIS BECUASE I THOUGHT I NEEDD TO TRANSFORM THE DATAFRAME BUT I DIDN'T 
+# # I DID THIS BECUASE I THOUGHT I NEEDD TO TRANSFORM THE DATAFRAME BUT I DIDN'T
 # species or plant_reps in columns down
 # observations or leaftrait data in rows across
-
-#leaftraits_nmdsprep_wide <- leaftraits %>% # data needed for NMDS. columns: species, plant_rep, sla, dlmc, leaf thickness
-#    mutate(species_rep = paste(species, plant_rep, sep = "_")) %>% 
-#    mutate(species_rep_leaf = paste(species_rep, leaf_rep, sep = "_")) %>% 
-#  select(c(species_rep_leaf, SLA_m2kg, leaf_LDMC_proportion, leaf_thickness_cm)) 
-#view(leaftraits_nmdsprep_wide)
-
-#transforming data from wide to long - columns species_rep_leaf, LeafTrait, and values
-#leaftraits_nmdsprep_long <- leaftraits_nmdsprep_wide %>% 
+# 
+# leaftraits_nmdsprep_wide <- leaftraits %>% # data needed for NMDS. columns: species, plant_rep, sla, dlmc, leaf thickness
+#    mutate(species_rep = paste(species, plant_rep, sep = "_")) %>%
+#    mutate(species_rep_leaf = paste(species_rep, leaf_rep, sep = "_")) %>%
+#  select(c(species_rep_leaf, SLA_m2kg, leaf_LDMC_proportion, leaf_thickness_cm))
+# view(leaftraits_nmdsprep_wide)
+# 
+# # transforming data from wide to long - columns species_rep_leaf, LeafTrait, and values
+# leaftraits_nmdsprep_long <- leaftraits_nmdsprep_wide %>%
 #  pivot_longer(cols = c(SLA_m2kg, leaf_LDMC_proportion, leaf_thickness_cm),
 #               names_to = "LeafTrait",
-#               values_to = "value") 
-
-#spreading data for nmds
-#leaftraits_nmdsprep <- leaftraits_nmdsprep_long %>% 
-#  tidyr::spread(species_rep_leaf, value) 
-#view(leaftraits_nmdsprep)
+#               values_to = "value")
+# 
+# # spreading data for nmds
+# leaftraits_nmdsprep <- leaftraits_nmdsprep_long %>%
+#  tidyr::spread(species_rep_leaf, value)
+# view(leaftraits_nmdsprep)
+# 
+# leaftraits_nmdsprep_num <- leaftraits_nmdsprep %>% # numeric only data needed for NMDS
+#  select(!c(LeafTrait))
 
 ## END UNNEEDED CODE
 
@@ -281,7 +284,7 @@ leaftraits_NMDS <- metaMDS(leaftraits_nmdsprep_num, autotransform = F) # this is
 # abcover_byspecies_NMDS <- metaMDS(abcover_byspecies_nmdsprep_num, distance = "raup") 
 
 
-#plot(leaftraits_NMDS)
+plot(leaftraits_NMDS)
 ```
 
 ```{r scores nmds}
@@ -305,7 +308,7 @@ nmds_leaftraits_df <- nmds_leaftraits_df %>%
 ```
 
 ```{r ggplot leaf traits nmds}
-nmds_leaftraits_df_plotcolor <- ggplot(nmds_leaftraits_df, aes(x = MDS1, y = MDS2, color = species)) + 
+nmds_leaftraits_df_plotcolor <- ggplot(nmds_leaftraits_df, aes(x = NMDS1, y = NMDS2, color = species)) + 
   geom_point(size = 3, alpha = 0.8, aes(shape = plant_rep)) +
   scale_color_manual(values = c("darkgreen", "darkmagenta", "darkgoldenrod1", "darkblue")) + # in color
  #scale_color_manual(values = c("gray0", "gray30", "gray60", "gray80")) + # in bw
@@ -325,15 +328,20 @@ nmds_leaftraits_vectors <- data.frame(leaftraits_NMDS$points, leaftraits_nmdspre
 # Adds NMDS1 and NMDS2 to columns species, plant_rep, LSA, LDMC, and Leaf thickness
 
 leaftraits_nmdsprep <- leaftraits_nmdsprep %>% 
-  mutate(standtype_ID = 1)
+  mutate(standtype_ID = seq(1,64, by = 1))
+
+leaftraits_plotprep <- nmds_leaftraits_df %>%
+  select(species, plant_rep, SLA_m2kg, leaf_LDMC_proportion, leaf_thickness_cm)
 
 # add NMDS scores to pvalues
-plot_leaftraits_df <- scores(leaftraits_NMDS, display = "sites") %>% 
-  as.data.frame() %>% 
-  rownames_to_column("standtype_ID") %>% 
-  mutate_at(c('standtype_ID'), as.numeric) %>% 
-  full_join(leaftraits_nmdsprep, by = "standtype_ID") %>%  
-  select(!c(standtype_ID))
+plot_leaftraits_df <- scores(leaftraits_NMDS, display = "sites") %>%
+   as.data.frame()  %>%
+   mutate(standtype_ID = seq(1,64, by = 1)) %>%
+   # rownames_to_column("standtype_ID") %>%
+   # mutate_at(c('standtype_ID'), as.numeric) %>%
+   full_join(leaftraits_nmdsprep, by = "standtype_ID") %>%
+   full_join(leaftraits_plotprep, by = c("SLA_m2kg", "leaf_LDMC_proportion", "leaf_thickness_cm")) %>%
+   select(!c(standtype_ID))
 
 # envfit() takes the output of metaMDS() and the species matrix you created
 fit_leaftraits <- envfit(leaftraits_NMDS, leaftraits_nmdsprep_num, perm = 999) # pvalues for spp and stand, site, stand_core
@@ -343,20 +351,20 @@ fit_leaftraits_pvals <- fit_leaftraits$vectors$pvals %>%
   as.data.frame() %>% 
   rownames_to_column("species") %>% 
   dplyr::rename("pvals" = ".")
-view(fit_leaftraits_pvals)
+# view(fit_leaftraits_pvals)
 
 # extract coordinates for species, only keep species with p-val = 0.05
 fit_leaftraits_nmdsscores <- fit_leaftraits %>% 
   scores(., display = "vectors") %>% 
   as.data.frame() %>% 
   rownames_to_column("species") %>% 
-  full_join(., fit_leaftraits_pvals, by = "species") %>% 
-  filter(pvals <= 0.05) %>% # limited number for visual clarity
+  # full_join(., fit_leaftraits_pvals, by = "species") %>% 
+  # filter(pvals <= 0.05) %>% # limited number for visual clarity
   filter(!species == 'standtype_ID')
   
-view(fit_leaftraits_nmdsscores)
+# view(fit_leaftraits_nmdsscores)
 # new plot
-nmds_leaftraits_df_plotcolor_new <- ggplot(nmds_leaftraits_df, aes(x = NMDS1, y = NMDS2)) + 
+nmds_leaftraits_df_plotcolor_new <- ggplot(plot_leaftraits_df, aes(x = NMDS1, y = NMDS2)) + 
   coord_equal() +
   geom_point(size = 3, alpha = 0.8, aes(color = species, shape = plant_rep)) +
   scale_color_manual(values = c("darkgreen", "darkmagenta", "darkgoldenrod1", "darkblue")) + # in color
@@ -390,8 +398,55 @@ autoplot(seedbank_bysitecore_nmds) # NMDS1 x NMDS2, Key = "Score": sites, specie
 seedbank_bysitecore_nmds_fort <- fortify(seedbank_bysitecore_nmds)
 
 #this makes a dataframe that gives a lot of control graphically 
-leaftraits_NMDS_fort <- fortify(nmds_leaftraits_df)
+leaftraits_NMDS_fort <- fortify(leaftraits_NMDS)
+```
 
+```{r}
+#this makes a dataframe that gives a lot of control graphically 
+leaftraits_NMDS_fort <- fortify(leaftraits_NMDS) %>%
+  left_join(nmds_leaftraits_df, by = c("NMDS1", "NMDS2"))
 
+leaftraits_NMDS_fort[c(65,66,67), 5] = "value"
+
+#dont mind me
+grp.a <- leaftraits_NMDS_fort[leaftraits_NMDS_fort$species == "CEOL", ][chull(leaftraits_NMDS_fort[leaftraits_NMDS_fort$species == "CEOL", c("NMDS1", "NMDS2")]), ] 
+grp.b <- leaftraits_NMDS_fort[leaftraits_NMDS_fort$species == "HEAR", ][chull(leaftraits_NMDS_fort[leaftraits_NMDS_fort$species == "HEAR", c("NMDS1", "NMDS2")]), ] 
+grp.c <- leaftraits_NMDS_fort[leaftraits_NMDS_fort$species == "RHOV", ][chull(leaftraits_NMDS_fort[leaftraits_NMDS_fort$species == "RHOV", c("NMDS1", "NMDS2")]), ]  
+grp.d <- leaftraits_NMDS_fort[leaftraits_NMDS_fort$species == "SAAP", ][chull(leaftraits_NMDS_fort[leaftraits_NMDS_fort$species == "SAAP", c("NMDS1", "NMDS2")]), ]  
+hull.data <- rbind(grp.a, grp.b, grp.c, grp.d)  #combine grp.a and grp.b
+
+#plot
+ fortplot <-  ggplot() + 
+  geom_point(data = subset(leaftraits_NMDS_fort, score == 'sites'),
+             mapping = aes(x = NMDS1, y = NMDS2, color = species, shape = plant_rep),
+             alpha = 0.5,  #transparency (to hide/show)
+             show.legend = F) +
+  geom_segment(data = fit_leaftraits_nmdsscores, aes(x = 0, xend = NMDS1, y = 0, yend = NMDS2),
+               arrow = arrow(length = unit(0.25, "cm")),
+               col = "black") +
+  scale_color_manual(values = c("darkgreen", "darkmagenta", "darkgoldenrod1", "darkblue")) + 
+  geom_polygon(data=hull.data,
+               aes(x=NMDS1,y=NMDS2,fill=species,group=species),
+               alpha=0.30,
+               show.legend = F) +
+  geom_text(data = fit_leaftraits_nmdsscores,
+            mapping = aes(label = species, x = NMDS1*1.1, y = NMDS2*1.1),
+            alpha = 0.5) + 
+  geom_abline(intercept = 0,slope = 0,linetype = "dashed", size = 0.8,colour = "gray")+
+  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.8, colour = "gray")+
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(colour = "black"))
+  fortplot
+ggplotly(fortplot)
+
+nmdsC <- metaMDS(leaftraits_nmdsprep_num, autotransform = FALSE, trymax = 20, k = 3)
+nmdsD <- as.data.frame(fortify(nmdsC)) %>%
+  rename("standtype_ID" = "label") %>%
+  mutate_at(c('standtype_ID'), as.numeric) %>%
+  full_join(leaftraits_nmdsprep, by = "standtype_ID") %>%
+  full_join(leaftraits_plotprep, by = c("SLA_m2kg", "leaf_LDMC_proportion", "leaf_thickness_cm"))
+nmdsD
+plot_ly(x=nmdsD$NMDS1, y=nmdsD$NMDS2, z=nmdsD$NMDS3, type="scatter3d", mode="markers", color = nmdsD$species)
 ```
 
