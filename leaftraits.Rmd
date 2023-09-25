@@ -184,7 +184,7 @@ par %>%
   summarize(below_min = min(below_PAR_1), 
             below_mean = mean(below_PAR_1), 
             below_median = median(below_PAR_1),
-             below_max = max(below_PAR_1))#,
+             below_max = max(below_PAR_1),
             amb_min = min(ambient_PAR_1), 
              amb_mean = mean(ambient_PAR_1),
               amb_max = max(ambient_PAR_1)
@@ -196,6 +196,9 @@ par %>%
 # 361	          1267.144	    1764
 
 # Light curve levels: 0, 25, 50, 100, 250, 500,  1000, 2000
+```
+
+```{r par scatterplot, include=TRUE}
 par.scatter <- ggplot(data = par, 
                        aes(x = below_PAR_1, y = ambient_PAR_1)) +
   geom_point(aes(color = (weeding))) 
