@@ -18,6 +18,19 @@ library(vegan)
 library(plotly)
 ```
 
+```{r}
+remotes::install_github("gavinsimpson/ggvegan")
+remotes::install_github("jfq3/ggordiplots")
+
+#loading libraries
+library(ggvegan)
+library(tidyverse)
+library(vegan)
+library(ggpubr)
+library(plotly)
+library(ggordiplots)
+```
+
 ```{r load data, include=FALSE}
 
 leaftraits_load <- read_csv("data/leaftraits_2023.csv", 
@@ -432,8 +445,8 @@ hull.data <- rbind(grp.a, grp.b, grp.c, grp.d)  #combine grp.a and grp.b
   geom_text(data = fit_leaftraits_nmdsscores,
             mapping = aes(label = species, x = NMDS1*1.1, y = NMDS2*1.1),
             alpha = 0.5) + 
-  geom_abline(intercept = 0,slope = 0,linetype = "dashed", size = 0.8,colour = "gray")+
-  geom_vline(aes(xintercept = 0), linetype = "dashed", size = 0.8, colour = "gray")+
+  geom_abline(intercept = 0,slope = 0,linetype = "dashed", linewidth = 0.8,colour = "gray")+
+  geom_vline(aes(xintercept = 0), linetype = "dashed", linewidth = 0.8, colour = "gray")+
   theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
         axis.line = element_line(colour = "black"))
@@ -442,8 +455,8 @@ ggplotly(fortplot)
 
 
 
-
-nmdsC <- metaMDS(leaftraits_nmdsprep_num, autotransform = F, trymax = 20, k = 3)
+leaf.hel <- decostand(leaftraits_nmdsprep_num, method = "hellinger")
+nmdsC <- metaMDS(leaf.hel, autotransform = F, trymax = 20, k = 3)
 nmdsD <- as.data.frame(fortify(nmdsC)) %>%
   rename("standtype_ID" = "label") %>%
   mutate_at(c('standtype_ID'), as.numeric) %>%
@@ -452,7 +465,15 @@ nmdsD <- as.data.frame(fortify(nmdsC)) %>%
 leaf <- leaftraits
 nmdsD
 plot_ly(x=nmdsD$NMDS1, y=nmdsD$NMDS2, z=nmdsD$NMDS3, type="scatter3d", mode="markers", color = nmdsD$species)
-plot_ly(x=leaf$SLA_m2kg, y=leaf$leaf_LDMC_proportion, z=leaf$leaf_thickness_cm, type="scatter3d", mode="markers", color = leaf$species)
+plot_ly(x=nmdsD$NMDS1, y=nmdsD$NMDS2, mode="markers", color = nmdsD$species)
+ggg <- plot_ly(x=leaf$SLA_m2kg, y=leaf$leaf_LDMC_proportion, z=leaf$leaf_thickness_cm, type="scatter3d", mode="markers", color = leaf$species) 
 
+ggg %>%
+  layout(
+    xaxis = list(
+      range=c(1,20), tick0=0.25, dtick=0.5),
+    yaxis = list(
+      range=c(1,20), tick0=0.25, dtick=0.5)
+  )
 ```
 
