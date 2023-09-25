@@ -272,7 +272,7 @@ leaftraits_nmdsprep_num <- leaftraits_nmdsprep %>% # numeric only data needed fo
  select(!c(species_rep_leaf))
 
 view(leaftraits_nmdsprep_num) # only numbers
-str(leaftraits_nmdsprep_num) #tibble 192x1]
+str(leaftraits_nmdsprep_num)
 
 #write.csv(leaftraits_nmdsprep_num, "~/Dropbox/GRADSCHOOL/Dissertation/R_dissertation/Ch3_piru_enhancement_Git/data/leaftraits_nmds.csv")
 
@@ -307,6 +307,9 @@ scores(leaftraits_NMDS)
 ```{r stress plot nmds}
 stressplot(leaftraits_NMDS)
 # if stress tests are really low, there may be insufficient data.
+# As a rule of thumb, an NMDS ordination with a stress value around or above 0.2 is deemed suspect and a stress value approaching 0.3 indicates that the ordination is arbitrary. 
+#Stress values equal to or below 0.1 are considered fair, while 
+#values equal to or below 0.05 indicate good fit.
 
 #plot_df <- scores(seedbank_bysitecore_nmds, display = "sites") %>% # from An's code
 #  as.data.frame() %>% 

@@ -15,6 +15,13 @@ library(lubridate) # dates and times
 library(plotly)
 library(survival)
 library(lme4)
+
+# for pretty output tables
+install.packages("kableExtra")
+# For dev version
+# install.packages("devtools")
+devtools::install_github("haozhu233/kableExtra")
+library(kableExtra)
 ```
 
 # Data Prep
@@ -477,6 +484,64 @@ par <- par_load %>%
 print(par)
 write.csv(par, "data/processed/par.csv")
 
+```
+
+```{r par means not normalized, include=TRUE}
+par_means <- par_load %>% 
+  dplyr::select(date, plot, weeding, readingno, ambient_PAR_1, below_PAR_1) %>% 
+  rename(plot_number = plot) %>% 
+  rename(treatment = weeding) %>% 
+  mutate(date = case_when(date == "11-Sep-18" ~ "9/11/2018",
+                          date == "30-Jan-19"~"1/30/2019",
+                          date == "25-Jan-19"~"1/25/2019",
+                          date == "24-Mar-19"~"3/24/2019",
+                          date == "24-May-19" ~ "5/24/2019",
+                          date == "19-Jul-19"~ "7/19/2019",
+                          date == "9-Sep-19" ~ "9/09/2019",
+                          date == "16-Nov-19" ~ "11/16/2019",
+                          TRUE ~ date),
+         plot_number = str_remove(plot_number, "ENH0"),
+         plot_number = str_remove(plot_number, "ENH"),
+         plot_number = as.integer(plot_number),
+         treatment = str_remove(treatment, "removal"),
+         date = mdy(date),
+         site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) %>% 
+  group_by(date, plot_number, site, treatment) %>% 
+  summarize(ambient_par = mean(ambient_PAR_1),
+            below_par = mean(below_PAR_1)) %>% 
+  ungroup() %>% 
+  mutate(month = month(date),
+         year = year(date),
+         year = as.integer(year),
+         month = as.integer(month))
+
+glimpse(par_means)
+
+par_minmax <- par_means %>%  
+  summarize(min = min(below_par), 
+            mean = mean(below_par),
+            max = max(below_par))
+
+# pretty table
+par_minmax %>%
+  kbl(caption = "PAR values", digits = 0) %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
+# not very pretty table
+#par_minmax_table <- kable(par_minmax, format = "html", escape = FALSE, digits = 0) %>%
+#  kable_styling(bootstrap_options = c("striped", "hover"))
+#print(par_minmax_table)
+  
+par_monthmeans <- par_means %>%  
+  group_by(month) %>% 
+  summarize(mean_par = mean(below_par), 
+            SD = sd(below_par),
+            N = length(below_par), 
+            SE = ((sd(below_par))/sqrt(length((below_par)))))
+
+par_monthmeans %>%
+  kbl(caption = "PAR values by month", digits = 0) %>%
+  kable_classic(full_width = F, html_font = "Cambria")
 ```
 
 ## TDR - soil moisture
