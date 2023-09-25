@@ -38,6 +38,13 @@ library(DHARMa) # https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARM
 R.Version()
 citation() 
 
+# for pretty output tables
+install.packages("kableExtra")
+# For dev version
+# install.packages("devtools")
+devtools::install_github("haozhu233/kableExtra")
+library(kableExtra)
+
 ```
 
 # Load colors for graphs
@@ -193,7 +200,7 @@ Create dfs for PAR, TDR, and NNcover models: parmod, tdrmod, nnmod
 # PAR
 parmod <- par %>%
   left_join(mafa_cover_all, by = c("year", "site", "plot_number")) %>% 
-  rename(cover_percent = mafacover)
+  rename(mafacover = cover_percent)
 print(parmod)
 parmod %>% 
   group_by(year, month, 
@@ -323,13 +330,20 @@ ggplot(data = environ_mod, aes(x = treatment, y = mafacover))+
 ```{r parmod normality, include = TRUE}
 
 
-# lmer model
-#lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|date) + (1|plot_number) + (1|year),
+# lmer model without nncover using data = parmod
+#lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + (1|plot_number) + (1|year),
 #                   data = parmod)
-lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + nncover+ year + (1|plot_number) ,
-                   data = environ_mod)
-lme.parmod <- lmer(normalized_par ~  mafacover  + month + nncover+ (1|plot_number) ,
-                   data = environ_mod)
+
+# lmer model with nncover using data = environ_mod
+lme.parmod <- lmer(normalized_par ~ treatment + mafacover + site + month + nncover + (1|plot_number),
+                   data = environ_mod) # is singluar if I include year as a random effect. NOT if I omit or include as a variable.
+
+#look at the data to see why I'm getting singular fit... what can I drop from the model? I can't figure it out... I dropped "date and year" from random effects.
+ggplot(environ_mod,aes(x=mafacover,y=normalized_par,col=treatment)) + geom_jitter() + geom_boxplot(alpha=0.2) + facet_wrap(~site)
+
+# lmer model with 
+#lme.parmod <- lmer(normalized_par ~  mafacover  + month + nncover+ (1|plot_number) ,
+#                   data = environ_mod)
 
 MOD <- lme.parmod
 
@@ -359,7 +373,7 @@ plot(cooks.distance(MOD))
 # Random effects need the qqline just like normality. 
 # So, only site and treatment get box plots. 
 # MAFA cover is a covariate (continuous variable).
-boxplot(E1 ~ treatment, data = parmod)
+boxplot(E1 ~ treatment, data = environ_mod)
 abline(h = 0)
 
 boxplot(E1 ~ month, data = parmod)
@@ -412,6 +426,11 @@ summary(lme.parmod) # p-values
 #nncover       -3.489e-03  8.145e-04  1.158e+02  -4.284 3.81e-05 ***
 #year2019       7.509e-03  3.329e-02  2.725e+02   0.226  0.82171 
 
+parmod_summarytable <- summary(lme.parmod)
+
+parmod_summarytable %>% 
+  kbl(caption = "PAR values", digits = 0) %>%
+  kable_classic(full_width = F, html_font = "Cambria")
 
 ```
 
@@ -545,7 +564,6 @@ parmod_means <- parmod %>%
             min = min(normalized_par), 
             max = max(normalized_par)
             )
-min(parmod)
 
 # A tibble: 7 × 5
 #  month MEAN_par    SD     N     SE
@@ -605,6 +623,20 @@ parmod %>%
 #  <chr>    <dbl> <dbl> <int>  <dbl>
 #1 1        0.328 0.179   144 0.0149
 #2 2        0.427 0.185   144 0.0154
+
+
+#PAR not normalized
+# mean, SE: par x month
+par_means <- par %>% 
+ group_by(month,treatment) %>% 
+  summarise(MEAN_normPAR=mean(normalized_par, na.rm = TRUE),
+            SD = sd(normalized_par, na.rm = TRUE),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par, na.rm = TRUE))/sqrt(length((normalized_par)))), 
+            min = min(normalized_par), 
+            max = max(normalized_par)
+            )
+
 ```
 
 ```{r parmod extra stats code, include=FALSE}

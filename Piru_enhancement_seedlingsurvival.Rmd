@@ -25,6 +25,13 @@ library(effects)
 library(lattice)
 library(MuMIn)
 # library(Hmisc)
+
+# for pretty output tables
+install.packages("kableExtra")
+# For dev version
+# install.packages("devtools")
+devtools::install_github("haozhu233/kableExtra")
+library(kableExtra)
 ```
 
 ```{r colors for figures, include=FALSE}
@@ -88,8 +95,6 @@ survmort_load <- read_csv("data/processed/survmort.csv",
 survmort <- survmort_load %>% 
   dplyr::select(year, month, plot_number, treatment, species, alive, dead, site, month_count, transplanted) # %>%  
 #  mutate(treatment = recode(treatment, no = "none"))
-
-tdr_april2018$site <- factor(tdr_april2018$site, levels = c("1", "2"))
 
 
 # total alive 2018
@@ -355,7 +360,22 @@ site_cond_2018 %>%
 # site  mean   SD      N    SE
 #1	9.603704	1.157126	18	0.2727371
 #2	7.665741	1.141167	18	0.2689756
+
+# pretty table
+march2018_tdrbysite_table <- site_cond_2018 %>%  
+  group_by(site) %>% 
+  summarize(avg_tdr = mean(soil_moisture), 
+            SD = sd(soil_moisture),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture))/sqrt(length((soil_moisture)))))
+march2018_tdrbysite_table %>%
+  kbl(caption = "March to May 2018: TDR by site", digits = 3) %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
 summary(aov(soil_moisture ~ site, site_cond_2018))
+#            Df Sum Sq Mean Sq F value   Pr(>F)    
+#site         1   33.8   33.80    25.6 1.44e-05 ***
+#Residuals   34   44.9    1.32                 
 
 #norm_par
 t.test(normalized_par~site, data = site_cond_2018) 
@@ -721,6 +741,10 @@ summary(glme.may2018.mod.mafacover_CEOL)
 #mafacover  -0.189              
 #volume_cm3  0.971  0.020      
 #site2      -0.146  0.498  0.010
+
+glme.may2018.mod.mafacover_CEOL_summarytable %>%
+  kbl(caption = "PAR values", digits = 0) %>%
+  kable_classic(full_width = F, html_font = "Cambria")
 
 #HEAR x mafacover - volume
 height_march_surv_may_HEAR <- height_march_surv_may %>% 
@@ -1710,6 +1734,13 @@ summary(glme.may2018.modspp_CEOL)
 #site2                         -1.6835     0.6806  -2.473   0.0134 *
 #volume_cm3                     8.5060     4.6305   1.837   0.0662 .
 #normalized_par:soil_moisture   0.3512     0.2823   1.244   0.2135 
+
+glme.may2018.modspp_CEOL_summarytable <- summary(glme.may2018.modspp_CEOL)
+## pretty table
+par_minmax %>%
+  kbl(caption = "PAR values", digits = 0) %>%
+  kable_classic(full_width = F, html_font = "Cambria")
+
 
 emmeans(glme.may2018.modspp_CEOL, list(pairwise ~ site), adjust = "tukey")
 #$`pairwise differences of site`
