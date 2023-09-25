@@ -1280,7 +1280,7 @@ summary(glme.may2018.modspp)
 # The model including interactions between species * par * tdr didn't run so species remained a non-interacting factor.
 
 print(glme.may2018.modspp_CEOL)
-summary(glme.may2018.modspp_CEOL)
+summary(glme.may2018.modspp_CEOL) # not this one. go to Chunk D3. survival by species
 
 
 # when normalized_par + soil_moisture and WITH rgr
