@@ -15,7 +15,7 @@ library(here) # similar to set working directory
 library(dplyr) # includes functions:
 library(tidyverse) # data wrangling, includes packages: ggplot2, tibble, tidyr, rear, purrr, stringr, forcats
 library(lme4)
-library(lmerTest)
+library(lmerTest) # load again or update if you're not getting p-values from environmental models
 library(DHARMa) #model diagnostics
 library(performance)
 library(emmeans) 
@@ -746,7 +746,7 @@ glme.may2018.mod.mafacover_CEOL_summarytable %>%
   kbl(caption = "PAR values", digits = 0) %>%
   kable_classic(full_width = F, html_font = "Cambria")
 
-#HEAR x mafacover - volume
+#HEAR x mafacover - volume 
 height_march_surv_may_HEAR <- height_march_surv_may %>% 
   filter(species=="HEAR")
 glme.may2018.mod.mafacover_HEAR <- glmer(may_alive ~ mafacover + volume_cm3 + site + (1|plot_number), 
