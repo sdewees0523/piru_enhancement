@@ -4212,9 +4212,22 @@ ggplot(data = growth_jan_may2019, aes(x = species, y = rgr)) + #growth_march_may
   geom_boxplot() +
   theme_bw()
 
+# rgr by species in Jan - May 2019
 summary(aov(rgr ~ species, data = growth_jan_may2019))
 TukeyHSD(aov(rgr ~ species, data = growth_jan_may2019))
 
+
+# rgr of SAAP by species in Jan - May 2019
+summary(aov(rgr ~ MAFA_removal, data = growth_jan_may2019 %>%  filter (species == "SAAP")))
+#  Df    Sum Sq   Mean Sq F value Pr(>F)
+# MAFA_removal  2 0.0000048 2.409e-06    0.09  0.914
+# Residuals    68 0.0018232 2.681e-05
+TukeyHSD(aov(rgr ~ MAFA_removal, data = growth_jan_may2019 %>%  filter (species == "SAAP")))
+# $MAFA_removal
+#                                    diff          lwr         upr     p adj
+# half removal-full removal  2.669098e-05 -0.003663431 0.003716813 0.9998344
+# none-full removal         -5.333383e-04 -0.004008635 0.002941958 0.9282587
+# none-half removal         -5.600293e-04 -0.004282101 0.003162042 0.9309377
 ```
 
 ### E6. May 2019 Predictions
@@ -4678,10 +4691,10 @@ growth_may_nov2019 %>%
             SD = sd(rgr),
             N = length(rgr), 
             SE = ((sd(rgr))/sqrt(length((rgr)))))
-# MAFA_removal.  avg_rgr.      SD.       N.    SE
-# full removal	0.0007383069	0.002997334	26	0.0005878255
-# half removal	-0.0002565784	0.002316716	36	0.0003861193
-# none	-0.0011933336	0.002577264	29	0.0004785858
+# MAFA_removal.   avg_rgr.      SD.       N.    SE
+# full removal	   0.0007383069	0.002997334	26	0.0005878255
+# half removal	  -0.0002565784	0.002316716	36	0.0003861193
+# none        	  -0.0011933336	0.002577264	29	0.0004785858
 
 ```
 
@@ -5634,6 +5647,27 @@ glme.nov2019.mod1_SAAP <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_p
                          data = (height_may_surv_nov_2019 %>% filter(species == "SAAP")), na.action = "na.fail")
 # boundary (singular) fit: see help('isSingular')
 
+glme.nov2019.mod1_SAAP_2 <- glmer(as.factor(nov_alive) ~ normalized_par  + site + may_volume_cm3  
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "SAAP")), na.action = "na.fail")
+# boundary (singular) fit: see help('isSingular')
+
+glme.nov2019.mod1_SAAP_3 <- glmer(as.factor(nov_alive) ~ normalized_par  + site   
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "SAAP")), na.action = "na.fail")
+# boundary (singular) fit: see help('isSingular')
+
+glme.nov2019.mod1_SAAP_4 <- glmer(as.factor(nov_alive) ~ may_volume_cm3  + site   
+                             + (1|plot_number), 
+                         family = binomial(link = "logit"), 
+                         data = (height_may_surv_nov_2019 %>% filter(species == "SAAP")), na.action = "na.fail")
+# boundary (singular) fit: see help('isSingular')
+
+
+
+dredge(glme.nov2019.mod1_SAAP)
 lm(as.factor(nov_alive) ~ may_volume_cm3,   nov2019.modcover_SAAP, na.action = "na.fail")
 #Coefficients:
 #   (Intercept)  may_volume_cm3  
