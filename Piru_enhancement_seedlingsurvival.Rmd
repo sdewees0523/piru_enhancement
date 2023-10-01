@@ -2601,6 +2601,62 @@ saap_model <- glmer(as.factor(may_alive) ~ site + (1|plot_number),
 summary(saap_model)
 ```
 
+### RGR 2018 
+```{r  rgr 2018, include=TRUE}
+# RELATIVE GROWTH RATE
+
+# relative growth rate as dependent variable - Shane's code
+glme_rgr_may2018.1 <- lmer(rgr ~ normalized_par*soil_moisture + exotic_percentcover + site + (1|plot_number),
+                         data = growth_march_may)
+summary(glme_rgr_may2018.1)
+# no AIC
+# Site 2 is significant
+
+
+#rgr MARCH to may 2018
+ggplot(data = growth_march_may, 
+       aes(x = species, y = rgr)) +
+  geom_point() +
+  geom_boxplot() +
+  theme_bw()
+
+summary(aov(rgr ~ species, data = growth_march_may))
+#            Df    Sum Sq  Mean Sq F value Pr(>F)
+#species      3 0.000404 1.348e-04   1.719  0.163
+#Residuals    305 0.023919 7.842e-05        
+TukeyHSD(aov(rgr ~ species, data = growth_march_may))
+# $species
+#                   diff          lwr         upr     p adj
+#HEAR-CEOL -0.0019091829 -0.005687969 0.001869603 0.5603385
+#RHOV-CEOL -0.0024371688 -0.006867196 0.001992858 0.4870778
+#SAAP-CEOL  0.0007239310 -0.003996212 0.005444074 0.9788918
+#RHOV-HEAR -0.0005279859 -0.004006298 0.002950326 0.9795116
+#SAAP-HEAR  0.0026331138 -0.001207883 0.006474111 0.2894024
+#SAAP-RHOV  0.0031610998 -0.001322111 0.007644310 0.2652069
+
+summary(aov(rgr ~ treatment, data = growth_march_may))
+#              Df   Sum Sq   Mean Sq F value Pr(>F)  
+# treatment     2 0.000475 2.377e-04    3.05 0.0488 *
+# Residuals   306 0.023848 7.794e-05  
+TukeyHSD(aov(rgr ~ treatment, data = growth_march_may))
+# $treatment
+#                                    diff          lwr          upr     p adj
+# half removal-full removal -0.0003549849 -0.003118235 0.0024082651 0.9507993
+# none-full removal         -0.0029568062 -0.005940885 0.0000272722 0.0527460
+# none-half removal         -0.0026018213 -0.005647265 0.0004436226 0.1109977
+
+growth_march_may %>%  
+  group_by(treatment) %>% 
+  summarize(avg_vol = mean(), 
+            avg_rgr = mean(rgr), 
+            N = length(rgr), 
+            se = ((sd(rgr))/sqrt(length((rgr)))), 
+            min = min(rgr), 
+            max = max(rgr))
+
+```
+
+
 ## Individual species for RGR 
 
 ### CEOL 
@@ -2929,6 +2985,9 @@ height_jan_surv_may_2019_notransf %>%
             SE = ((sd(jan_volume_cm3))/sqrt(length((jan_volume_cm3)))))
 summary(aov(jan_volume_cm3 ~ species, data = height_jan_surv_may_2019_notransf))
 TukeyHSD(aov(jan_volume_cm3 ~ species, data = height_jan_surv_may_2019_notransf))
+#              Df  Sum Sq Mean Sq F value Pr(>F)    
+# species       3 1172091  390697   101.7 <2e-16 ***
+# Residuals   390 1498285    3842  
 #$species
 #                 diff        lwr        upr     p adj
 #HEAR-CEOL  127.772724  103.23368  152.31176 0.0000000
@@ -3004,9 +3063,18 @@ print(height_jan_surv_may_2019_notransf %>%
             total_survived = sum(may2019_alive == "1"), 
             total_died = sum(may2019_alive == "0"),
             percent_survived = 100*(sum(may2019_alive == "1")/length(may2019_alive))))
-summary(aov(may2019_alive ~ treatment, data = height_jan_surv_may_2019_notransf))
-# TukeyHSD(aov(may2019_alive ~ treatment, data = height_jan_surv_may_2019_notransf))
+# treatment. N. total_survived. total_died. percent_survived
+# full	130	82	48	63.07692
+# half	132	69	63	52.27273
+# none	132	78	54	59.09091
 
+summary(aov(may2019_alive ~ treatment, data = height_jan_surv_may_2019_notransf))
+# Df Sum Sq Mean Sq F value               Pr(>F)
+# treatment     2   0.78  0.3916    1.61  0.201
+# Residuals   391  95.12  0.2433
+
+# TukeyHSD(aov(may2019_alive ~ treatment, data = height_jan_surv_may_2019_notransf))
+ 
 ```
 
 
@@ -3049,7 +3117,7 @@ site_cond_may2019 %>%
 t.test(cover_percent~site, data = site_cond_may2019)
 # Not sig
 # data:  cover_percent by site
-# t = 0.2511, df = 33.554, p-value = 0.8033
+# t = -1.2375, df = 29.093, p-value = 0.2258
 site_cond_may2019 %>%  
   group_by(site) %>% 
   summarize(avg_tdr = mean(cover_percent), 
@@ -3057,8 +3125,8 @@ site_cond_may2019 %>%
             N = length(cover_percent), 
             SE = ((sd(cover_percent))/sqrt(length((cover_percent)))))
 # site  mean   SD      N    SE
-#1	36.58889	12.34307	18	2.909289
-#2	35.49056	13.85799	18	3.266359
+#1	35.83333	12.61302	18	2.972917
+#2	42.61111	19.51512	18	4.599758
 
 
 ```
@@ -3337,38 +3405,8 @@ summary(glme.may2018.mod.8)
 
 ```
  
+### RGR 2019 
 ```{r relative growth rates, include = true}
-# RELATIVE GROWTH RATE
-
-# relative growth rate as dependent variable - Shane's code
-glme_rgr_may2018.1 <- lmer(rgr ~ normalized_par*soil_moisture + exotic_percentcover + site + (1|plot_number),
-                         data = growth_march_may)
-summary(glme_rgr_may2018.1)
-# no AIC
-# Site 2 is significant
-
-
-#rgr MARCH to may 2018
-ggplot(data = growth_march_may, 
-       aes(x = species, y = rgr)) +
-  geom_point() +
-  geom_boxplot() +
-  theme_bw()
-
-summary(aov(rgr ~ species, data = growth_march_may))
-#            Df    Sum Sq  Mean Sq F value Pr(>F)
-#species      3 0.000404 1.348e-04   1.719  0.163
-#Residuals    305 0.023919 7.842e-05        
-TukeyHSD(aov(rgr ~ species, data = growth_march_may))
-# $species
-#                   diff          lwr         upr     p adj
-#HEAR-CEOL -0.0019091829 -0.005687969 0.001869603 0.5603385
-#RHOV-CEOL -0.0024371688 -0.006867196 0.001992858 0.4870778
-#SAAP-CEOL  0.0007239310 -0.003996212 0.005444074 0.9788918
-#RHOV-HEAR -0.0005279859 -0.004006298 0.002950326 0.9795116
-#SAAP-HEAR  0.0026331138 -0.001207883 0.006474111 0.2894024
-#SAAP-RHOV  0.0031610998 -0.001322111 0.007644310 0.2652069
-
 
 #rgr JANUARY-may 2019
 ggplot(data = growth_jan_may2019, aes(x = species, y = rgr)) + 
@@ -3391,6 +3429,12 @@ TukeyHSD(aov(rgr ~ species, data = growth_jan_may2019))
 #RHOV-HEAR -0.001446362 -0.0035461154  6.533920e-04 0.2843751
 #SAAP-HEAR  0.004138151  0.0023021119  5.974190e-03 0.0000001
 #SAAP-RHOV  0.005584513  0.0034325964  7.736429e-03 0.0000000
+
+summary(aov(rgr ~ MAFA_removal, data = growth_jan_may2019))
+#  Df   Sum Sq   Mean Sq F value Pr(>F)
+# MAFA_removal   2 0.000013 6.378e-06   0.271  0.763
+# Residuals    234 0.005508 2.354e-05   
+TukeyHSD(aov(rgr ~ MAFA_removal, data = growth_jan_may2019))
 
 #rgr JANUARY-may 2019 - SAAP by treatment
 summary(aov(rgr ~ MAFA_removal, data = growth_jan_may2019 %>%  filter(species == "SAAP")))
@@ -4576,6 +4620,10 @@ height_nov_2019 <- height_raw %>%
 height_nov_2019 %>% 
   group_by(species) %>% 
   summarize(N = length(nov_stem_height_cm))
+# CEOL	9			
+# HEAR	41			
+# RHOV	5			
+# SAAP	40	
 
 # survival Nov 2019
 survival_nov_2019 <- height_raw %>% 
@@ -4603,8 +4651,38 @@ summary(aov(rgr ~ species, data = growth_may_nov2019))
 #species      3 0.0000363 1.21e-05   1.716   0.17
 #Residuals   87 0.0006133 7.05e-06      
 TukeyHSD(aov(rgr ~ species, data = growth_may_nov2019))
-       
-       
+#        Fit: aov(formula = rgr ~ species, data = growth_may_nov2019)
+# 
+# $species
+#                    diff          lwr          upr     p adj
+# HEAR-CEOL -0.0019100313 -0.004470106 0.0006500430 0.2134559
+# RHOV-CEOL -0.0008807997 -0.004759967 0.0029983676 0.9334077
+# SAAP-CEOL -0.0020803120 -0.004672190 0.0005115657 0.1604708
+# RHOV-HEAR  0.0010292316 -0.002265217 0.0043236802 0.8456542
+# SAAP-HEAR -0.0001702807 -0.001758765 0.0014182036 0.9922208
+# SAAP-RHOV -0.0011995123 -0.004518735 0.0021197106 0.7798010
+    
+summary(aov(rgr ~ MAFA_removal, data = growth_may_nov2019))   
+#              Df    Sum Sq   Mean Sq F value Pr(>F)  
+# MAFA_removal  2 0.0000512 2.558e-05   3.762 0.0271 *
+# Residuals    88 0.0005984 6.800e-06    
+TukeyHSD(aov(rgr ~ MAFA_removal, data = growth_may_nov2019))    
+#                                    diff          lwr           upr     p adj
+# half removal-full removal -0.0009948853 -0.002594934  0.0006051633 0.3042888
+# none-full removal         -0.0019316405 -0.003610719 -0.0002525623 0.0200030
+# none-half removal         -0.0009367552 -0.002488005  0.0006144944 0.3251929
+
+growth_may_nov2019 %>%  
+  group_by(MAFA_removal) %>% 
+  summarize(avg_rgr = mean(rgr), 
+            SD = sd(rgr),
+            N = length(rgr), 
+            SE = ((sd(rgr))/sqrt(length((rgr)))))
+# MAFA_removal.  avg_rgr.      SD.       N.    SE
+# full removal	0.0007383069	0.002997334	26	0.0005878255
+# half removal	-0.0002565784	0.002316716	36	0.0003861193
+# none	-0.0011933336	0.002577264	29	0.0004785858
+
 ```
 
 #### Join environmental and survival df and scale
@@ -4651,6 +4729,9 @@ height_may_surv_nov_2019_notransf %>%
             N = length(may_stem_height_cm), 
             SE = ((sd(may_stem_height_cm))/sqrt(length((may_stem_height_cm)))))
 summary(aov(may_stem_height_cm ~ species, data = height_may_surv_nov_2019_notransf))
+# Df Sum Sq Mean Sq F value Pr(>F)    
+# species       3  809.8  269.95    48.1 <2e-16 ***
+# Residuals   232 1302.1    5.61   
 TukeyHSD(aov(may_stem_height_cm ~ species, data = height_may_surv_nov_2019_notransf))
 #$species
 #                diff        lwr       upr     p adj
@@ -4669,6 +4750,10 @@ height_may_surv_nov_2019_notransf %>%
             N = length(may_volume_cm3), 
             SE = ((sd(may_volume_cm3))/sqrt(length((may_volume_cm3)))))
 summary(aov(may_volume_cm3 ~ species, data = height_may_surv_nov_2019_notransf))
+# Df  Sum Sq Mean Sq F value   Pr(>F)    
+# species       3  569523  189841   18.04 1.48e-10 ***
+# Residuals   232 2442042   10526 
+
 TukeyHSD(aov(may_volume_cm3 ~ species, data = height_may_surv_nov_2019_notransf))
 #$species
 #                 diff        lwr       upr     p adj
@@ -4681,13 +4766,30 @@ TukeyHSD(aov(may_volume_cm3 ~ species, data = height_may_surv_nov_2019_notransf)
 
 
 # SURVIVAL
-print(height_may_surv_nov_2019_notransf %>%  
-  group_by(species) %>% 
+view(height_may_surv_nov_2019_notransf %>%  
+  group_by(species, treatment) %>% 
   summarise(N = length(nov_alive), 
             total_survived = sum(nov_alive == "1"), 
             total_died = sum(nov_alive == "0"),
             percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
+# species.  N.  total_survived.  total_died.  percent_survived
+# CEOL	40	6	34	15.00000
+# HEAR	81	33	48	40.74074
+# RHOV	45	6	39	13.33333
+# SAAP	70	32	38	45.71429
+view(height_may_surv_nov_2019_notransf %>%  
+  group_by(species, treatment) %>% 
+  summarise(N = length(nov_alive), 
+            total_survived = sum(nov_alive == "1"), 
+            total_died = sum(nov_alive == "0"),
+            percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
+
+
+
 summary(aov(nov_alive ~ species, data = height_may_surv_nov_2019_notransf))
+# Df Sum Sq Mean Sq F value   Pr(>F)    
+# species       3   4.65  1.5500   7.615 7.06e-05 ***
+# Residuals   232  47.23  0.2036  
 TukeyHSD(aov(nov_alive ~ species, data = height_may_surv_nov_2019_notransf))
 #$species
 #                 diff         lwr         upr     p adj
@@ -4709,13 +4811,15 @@ print(height_may_surv_nov_2019_notransf %>%
             total_survived = sum(nov_alive == "1"), 
             total_died = sum(nov_alive == "0"),
             percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
+# species.  N.  total_survived.  total_died.  percent_survived
+# 1	148	0.3986486	59	89	39.86486
+# 2	88	0.2045455	18	70	20.45455
 t.test(nov_alive~site, data = height_may_surv_nov_2019_notransf) 
 # data:  nov_alive by site
 # t = 3.2805, df = 210.26, p-value = 0.001213
 
 
 #  TREATMENT
-
 print(height_may_surv_nov_2019_notransf %>%  
   group_by(treatment) %>% 
   summarise(N = length(nov_alive), 
@@ -4723,7 +4827,14 @@ print(height_may_surv_nov_2019_notransf %>%
             total_survived = sum(nov_alive == "1"), 
             total_died = sum(nov_alive == "0"),
             percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
+# species.  N.  total_survived.  total_died.  percent_survived
+# full	84	0.2619048	22	62	26.19048
+# half	72	0.4583333	33	39	45.83333
+# none	80	0.2750000	22	58	27.50000
 summary(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
+#              Df Sum Sq Mean Sq F value Pr(>F)  
+# treatment     2   1.81  0.9070   4.221 0.0158 *
+# Residuals   233  50.06  0.2149  
 TukeyHSD(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
 #treatment
 #                 diff         lwr          upr     p adj
