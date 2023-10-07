@@ -576,7 +576,6 @@ print(tdr)
 write.csv(tdr, "data/processed/tdr.csv")
 ```
 
-
 # Single Doc Join
 ```{r main_join, include=FALSE}
 

@@ -399,22 +399,22 @@ nmds_leaftraits_df_plotcolor_new +  theme_bw()
 
 ```
 
-```{r fortify nmds}
+```{r fortify nmds, include=FALSE}
 #basic normal plot
-ordiplot(leaftraits_NMDS) # without point labels
-ordiplot(leaftraits_NMDS, type = "t") # with point labels
+#odiplot(leaftraits_NMDS) # without point labels
+#ordiplot(leaftraits_NMDS, type = "t") # with point labels
 
 #ggvegan to make a quick nice plot
-autoplot(seedbank_bysitecore_nmds) # NMDS1 x NMDS2, Key = "Score": sites, species
+#autoplot(seedbank_bysitecore_nmds) # NMDS1 x NMDS2, Key = "Score": sites, species
 # sites == each leaf 
 # species == leaf traits (leaf thickness, sla, dlmc)
 
 
 #this makes a dataframe that gives a lot of control graphically 
-seedbank_bysitecore_nmds_fort <- fortify(seedbank_bysitecore_nmds)
+#seedbank_bysitecore_nmds_fort <- fortify(seedbank_bysitecore_nmds)
 
 #this makes a dataframe that gives a lot of control graphically 
-leaftraits_NMDS_fort <- fortify(leaftraits_NMDS)
+#leaftraits_NMDS_fort <- fortify(leaftraits_NMDS)
 ```
 
 ```{r}
