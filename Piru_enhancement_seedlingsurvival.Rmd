@@ -4824,9 +4824,9 @@ print(height_may_surv_nov_2019_notransf %>%
             total_survived = sum(nov_alive == "1"), 
             total_died = sum(nov_alive == "0"),
             percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
-# species.  N.  total_survived.  total_died.  percent_survived
-# 1	148	0.3986486	59	89	39.86486
-# 2	88	0.2045455	18	70	20.45455
+# site       N.   mean_survival   total_survived.  total_died.  percent_survived
+# 1	        148	  0.3986486	      59	              89	        39.86486
+# 2	        88	  0.2045455	      18	              70	        20.45455
 t.test(nov_alive~site, data = height_may_surv_nov_2019_notransf) 
 # data:  nov_alive by site
 # t = 3.2805, df = 210.26, p-value = 0.001213
