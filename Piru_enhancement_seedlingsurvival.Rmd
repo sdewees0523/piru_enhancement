@@ -9,7 +9,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
+# library
 ```{r load libraries, message=FALSE}
 library(here) # similar to set working directory
 library(dplyr) # includes functions:
@@ -25,6 +25,7 @@ library(effects)
 library(lattice)
 library(MuMIn)
 # library(Hmisc)
+library(ggpubr)
 
 # for pretty output tables
 install.packages("kableExtra")
@@ -270,8 +271,45 @@ mafa_cover_all_load <- read_csv("data/processed/mafa_cover_all.csv",
 mafa_cover_all <- mafa_cover_all_load %>% 
 #  select(plot_number, year, cover_percent, site) %>% 
   rename(mafacover = cover_percent) %>% 
-  mutate(site = as.character(site))
+  mutate(site = as.character(site)) %>% 
+  dplyr::select(plot_number, year, mafacover, site)
 print(mafa_cover_all)
+```
+### A2. site differences - overall
+```{r mafa_cover_all differences - normality, include=TRUE}
+# mafacover by site
+hist(mafa_cover_all$mafacover)
+ggqqplot(mafa_cover_all$mafacover)
+shapiro.test(mafa_cover_all$mafacover)
+# Shapiro-Wilk normality test
+# 
+# data:  mafa_cover_all$mafacover
+# W = 0.929, p-value = 0.0005531 <-- not normally distributed
+```
+
+```{r mafa_cover_all differences - stats, include=TRUE}
+wilcox.test(mafacover ~ site, data=mafa_cover_all) 
+# Wilcoxon rank sum test with continuity correction
+# 
+# data:  mafacover by site
+# W = 1036.5, p-value = 1.217e-05
+# alternative hypothesis: true location shift is not equal to 0
+
+mafa_cover_all_table <- mafa_cover_all %>%  
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_mafacover = mean(mafacover), 
+            SD = sd(mafacover),
+            N = length(mafacover), 
+            SE = ((sd(mafacover))/sqrt(length((mafacover)))))
+# site  avg_mafacover SD        N   SE
+# 1	    31.87500	    17.33344	36	2.888907
+# 2	    14.13889	    15.72026	36	2.620043
+
+### print in Console
+mafa_cover_all_table %>%
+  dplyr::select(site, avg_mafacover, SE, N) %>%
+ kbl(caption = "MAFA cover by site", digits = 1) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
 
 ```
   
