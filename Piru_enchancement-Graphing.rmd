@@ -272,43 +272,67 @@ ggplotly(line1_surv_19_all)
 
 ```{r additional figures 2018 seedling survival, include=FALSE}
 
-# survival by species 2018 - old code
-survival_species_2018 <- ggplot(
-  data = survival_species_2018,
-  aes(x = month_count, y = mean, color = species)) +
-  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd)) +
-  geom_line(aes(color = species, linetype = species)) + 
-  geom_point(size=2, shape=16) +
-  theme(legend.position="top") +
-  theme_classic() +
-  labs(title="survival_species in 2018",x="Months Since Planting", y = "Amount Alive") 
-  #geom_smooth()
-ggplot(survival_species_2018)
+# # survival by species 2018 - old code
+# survival_species_2018 <- ggplot(
+#   data = survival_species_2018,
+#   aes(x = month_count, y = mean, color = species)) +
+#   geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd)) +
+#   geom_line(aes(color = species, linetype = species)) + 
+#   geom_point(size=2, shape=16) +
+#   theme(legend.position="top") +
+#   theme_classic() +
+#   labs(title="survival_species in 2018",x="Months Since Planting", y = "Amount Alive") 
+#   #geom_smooth()
+# ggplot(survival_species_2018)
 
 # 2018 survival by species - use this code
 ggplot(data = surv_2018_proportion_long_meanse,
   aes(x = month_proportion, 
       y = meanalive_2018, 
-      linetype = species, 
-      fill = species)) +
-  geom_line(aes(linetype = species), size = 1) + # color = species
-   geom_point(size=4, shape=21) +
+     linetype = species, 
+      shape = species,
+     fill = species)) + 
+  geom_line(size = 1) +
+  geom_point(size = 4) +
+    # geom_line(aes(linetype = species), size = 1) + # color = species
+  # geom_point(aes(fill = species), size=4) + #color = species, 
   geom_errorbar(aes(ymin=meanalive_2018-SE, ymax=meanalive_2018+SE), width = 0.2) +
   scale_y_continuous(limits = c(0, 1), 
                     breaks = seq(0, 1, by = 0.1)) +
   scale_x_continuous(limits = c(1, 12),
                      breaks = seq(1,12, by = 1), 
                       labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
-  # scale_x_discrete(limits = (1:12),
-  #                  labels = c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")) +
-  theme(legend.position ="top") +
+  scale_fill_manual(values = c("gray5", "gray30", "gray70", "gray95"),
+                    name = "Species", 
+                     labels = c(expression(italic("Ceanothus oliganthus")), 
+                               expression(italic("Heteromeles arbutifolia")), 
+                               expression(italic("Rhus ovata")), 
+                               expression(italic("Salvia apiana")))) +
+  scale_color_manual(values = c("gray5", "gray30", "gray70", "gray95"),
+                     name = "Species", 
+                     labels = c(expression(italic("Ceanothus oliganthus")), 
+                               expression(italic("Heteromeles arbutifolia")), 
+                               expression(italic("Rhus ovata")), 
+                               expression(italic("Salvia apiana")))) +
+  scale_shape_manual(values = c(21, 22, 23, 24),
+                     name = "Species", 
+                     labels = c(expression(italic("Ceanothus oliganthus")), 
+                               expression(italic("Heteromeles arbutifolia")), 
+                               expression(italic("Rhus ovata")), 
+                               expression(italic("Salvia apiana")))) +
+  scale_linetype_manual(values = c("solid", "dashed", "dotted", "dotdash"),
+                        name = "Species", 
+                        labels = c(expression(italic("Ceanothus oliganthus")), 
+                               expression(italic("Heteromeles arbutifolia")), 
+                               expression(italic("Rhus ovata")), 
+                               expression(italic("Salvia apiana")))) +
+  theme(legend.position = "top") +
   theme_bw() +
- # scale_linetype_manual(values=species,
-#                        name = "Species", 
-#                        labels = c("Ceanothus oliganthus", "Heteromeles arbutifolia", "Rhus ovata", "Salvia apiana")) +
-  labs(title="Proportion of alive seedlings in 2018", 
+   theme(panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank()) +
+  labs(title = "Proportion of alive seedlings in 2018", 
        x = "Month", 
-       y = "Proportion Alive") 
+       y = "Proportion Alive")
   
 ```
 
