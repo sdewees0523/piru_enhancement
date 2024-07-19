@@ -1,0 +1,68 @@
+---
+title: "mafa_density"
+author: "Stephanie Ma Lucero"
+date: "2024-07-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r library}
+library(tidyverse) 
+```
+
+```{r load}
+density_load <- read_csv("data/mafa_density_circumf.csv") %>% 
+  dplyr::select(site, plot, removal, MAFA_density) %>% 
+  na.omit()
+
+prep_no <- density_load %>% 
+  filter(removal == "no") %>% 
+  mutate(new_density = MAFA_density * 1)
+
+prep_half <- density_load %>% 
+  filter(removal == "half") %>% 
+  mutate(new_density = MAFA_density * 2)
+  
+density <- dplyr::full_join(prep_no, prep_half) 
+#view(density)
+```
+
+```{r normality}
+hist(density$new_density)
+ggqqplot(density$new_density)
+shapiro.test(density$new_density)
+# Shapiro-Wilk normality test
+# 
+# data:  density$new_density
+# W = 0.64156, p-value = 1.862e-06 <-- not normally distributed
+```
+
+```{r KW by site}
+wilcox.test(new_density ~ site, data=density) 
+# Wilcoxon rank sum test with continuity correction
+# 
+# data:  new_density by site
+# W = 105.5, p-value = 0.0561 <-- not sig diff
+# alternative hypothesis: true location shift is not equal to 0
+```
+
+```{r means}
+density_table <- density %>%  
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_MAFA_density = mean(new_density), 
+            SD = sd(new_density),
+            N = length(new_density), 
+            SE = ((sd(new_density))/sqrt(length((new_density)))))
+# site  avg_new_density  SD        N   SE
+# 1	    26.750000	33.572513	12	9.691550
+# 2	    8.083333	8.753787	12	2.527001
+
+### print in Console
+density_table %>%
+  dplyr::select(site, avg_MAFA_density, SE, N) %>%
+ kbl(caption = "MAFA density by site", digits = 1) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+```
