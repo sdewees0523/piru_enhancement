@@ -1,0 +1,25 @@
+﻿Species,Site,Treament,Month,Alive
+SAAP,1,full ,April,16
+SAAP,1,half,April,11
+SAAP,1,none,April,10
+SAAP,2,full ,April,9
+SAAP,2,half,April,9
+SAAP,2,none,April,15
+SAAP,1,full ,November,8
+SAAP,1,half,November,7
+SAAP,1,none,November,6
+SAAP,2,full ,November,4
+SAAP,2,half,November,3
+SAAP,2,none,November,4
+HEAR,1,full ,April,17
+HEAR,1,half,April,17
+HEAR,1,none,April,15
+HEAR,2,full ,April,11
+HEAR,2,half,April,9
+HEAR,2,none,April,12
+HEAR,1,full ,November,8
+HEAR,1,half,November,14
+HEAR,1,none,November,4
+HEAR,2,full ,November,0
+HEAR,2,half,November,3
+HEAR,2,none,November,4
