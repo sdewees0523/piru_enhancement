@@ -234,7 +234,7 @@ nnmod <- exotic_cover_all %>%
          mafacover = cover_percent.y, 
          treatment = MAFA_removal)#%>% 
   # dplyr::select("date", "year", "site", "plot_number", "treatment", "nncover", "mafacover")
-view(nnmod)
+#view(nnmod)
 #write.csv(nnmod, "data/processed/nnmod.csv")
 ```
 
@@ -301,7 +301,7 @@ environ_mod %>%  # check number of data points
             N_exocover = length(nncover))
 
 
-write.csv(environ_mod, "data/processed/full_environ_mod.csv")
+#write.csv(environ_mod, "data/processed/full_environ_mod.csv")
 
 environ_mod %>% 
   group_by(treatment) %>% 
@@ -1072,19 +1072,19 @@ summary(lme.tdrmod)
 
 ```{r tdrmod posthoc, include=TRUE}
 
-emmeans(lme.tdrmod, list(pairwise ~ treatment), adjust = "tukey")
+emmeans(lme.tdrmod, list(pairwise ~ treatment), adjust = "tukey") # by treatment
 #$`pairwise differences of treatment`
 # 1           estimate    SE   df t.ratio p.value
 # full - half     1.32 0.864 35.8   1.532  0.2884
 # full - none     3.52 0.940 40.1   3.740  0.0016 <--
 # half - none     2.19 0.808 33.0   2.716  0.0274 <--
 
-emmeans(lme.tdrmod, list(pairwise ~ site), adjust = "tukey")
+emmeans(lme.tdrmod, list(pairwise ~ site), adjust = "tukey") # by site
 #$`pairwise differences of site`
 # 1             estimate    SE   df t.ratio p.value
 # site1 - site2     3.24 0.761 40.8   4.260  0.0001 <-- site
 
-emmeans(lme.tdrmod, list(pairwise ~ month), adjust = "tukey")
+emmeans(lme.tdrmod, list(pairwise ~ month), adjust = "tukey") # by month
 #$`pairwise differences of month`
 # 1                estimate    SE   df t.ratio p.value
 # month12 - month3     3.84 0.659 89.5   5.833  <.0001
@@ -1095,7 +1095,8 @@ emmeans(lme.tdrmod, list(pairwise ~ month), adjust = "tukey")
 emmip(lme.tdrmod, treatment ~ year)
 # emmip(lme.tdrmod, month ~ treatment | site)
 
-tdrmod.mafacover <- lm(soil_moisture ~ mafacover, data = tdrmod_nncover %>%  filter(year == "2019"))
+tdrmod.mafacover <- lm(soil_moisture ~ mafacover, 
+                       data = tdrmod_nncover %>% filter(year == "2019"))
 anova(tdrmod.mafacover)
 summary(tdrmod.mafacover)
 
@@ -1108,11 +1109,18 @@ tdrmod.site <- lm(soil_moisture ~ site, data = tdrmod_nncover %>%  filter(year =
 anova(tdrmod.site)
 summary(tdrmod.site)
 
-tdrmod.treat <- aov(soil_moisture ~ treatment, data = tdrmod_nncover)
-tdrmod.treat <- aov(soil_moisture ~ treatment, data = tdrmod_nncover %>%  filter(year == "2019"))
+tdrmod.treat <- aov(soil_moisture ~ treatment, data = tdrmod_nncover) # all three collection points
 anova(tdrmod.treat)
 summary(tdrmod.treat)
+#  Df Sum Sq Mean Sq F value Pr(>F)  
+# treatment    2  146.1   73.05   4.068 0.0263 *
+# Residuals   33  592.5   17.96      
 TukeyHSD(tdrmod.treat)
+
+tdrmod.treat.19 <- aov(soil_moisture ~ treatment, data = tdrmod_nncover %>%  filter(year == "2019"))
+anova(tdrmod.treat.19)
+summary(tdrmod.treat.19)
+TukeyHSD(tdrmod.treat.19)
 
 # stats on site treatment interactions
 tdrmod.interaction <- lm(soil_moisture ~ site*treatment, data = tdrmod_nncover)
@@ -1131,21 +1139,103 @@ emmeans(lme.tdrmod, list(pairwise ~ site*treatment), adjust = "tukey")
 
 #$`pairwise differences of site, treatment`
 # 1                           estimate    SE   df t.ratio p.value
-# site1 full - site2 full        3.939 0.875 50.9   4.500  0.0005
+# site1 full - site2 full        3.939 0.875 50.9   4.500  0.0005 <-- 
 # site1 full - site1 half        0.871 0.833 35.3   1.045  0.8991
-# site1 full - site2 half        4.810 1.076 36.6   4.472  0.0010
-# site1 full - site1 nonene      3.172 0.930 41.2   3.411  0.0171
-# site1 full - site2 nonene      7.111 1.063 36.2   6.690  <.0001
+# site1 full - site2 half        4.810 1.076 36.6   4.472  0.0010 <-- 
+# site1 full - site1 nonene      3.172 0.930 41.2   3.411  0.0171 <-- 
+# site1 full - site2 nonene      7.111 1.063 36.2   6.690  <.0001 <-- 
 # site2 full - site1 half       -3.068 1.328 47.5  -2.311  0.2101
 # site2 full - site2 half        0.871 0.833 35.3   1.045  0.8991
 # site2 full - site1 nonene     -0.767 1.460 52.1  -0.525  0.9949
-# site2 full - site2 nonene      3.172 0.930 41.2   3.411  0.0171
-# site1 half - site2 half        3.939 0.875 50.9   4.500  0.0005
+# site2 full - site2 nonene      3.172 0.930 41.2   3.411  0.0171 <-- 
+# site1 half - site2 half        3.939 0.875 50.9   4.500  0.0005 <-- 
 # site1 half - site1 nonene      2.302 0.798 33.0   2.883  0.0688
-# site1 half - site2 nonene      6.241 1.098 37.6   5.684  <.0001
+# site1 half - site2 nonene      6.241 1.098 37.6   5.684  <.0001 <-- 
 # site2 half - site1 nonene     -1.637 1.266 45.0  -1.294  0.7869
 # site2 half - site2 nonene      2.302 0.798 33.0   2.883  0.0688
-# site1 nonene - site2 nonene    3.939 0.875 50.9   4.500  0.0005
+# site1 nonene - site2 nonene    3.939 0.875 50.9   4.500  0.0005 <-- 
+
+emmeans(lme.tdrmod, list(pairwise ~ month*treatment), adjust = "tukey") # by month and treatment
+# $`emmeans of month, treatment`
+#  month treatment emmean    SE   df lower.CL upper.CL
+#  12    full       24.33 0.746 57.4    22.84    25.83
+#  3     full       20.49 0.665 54.3    19.16    21.83
+#  4     full       10.28 0.746 57.4     8.79    11.78
+#  12    half       23.01 0.654 53.9    21.70    24.32
+#  3     half       19.17 0.685 54.8    17.79    20.54
+#  4     half        8.96 0.654 53.9     7.65    10.27
+#  12    none       20.82 0.646 52.2    19.52    22.11
+#  3     none       16.97 0.793 61.4    15.39    18.56
+#  4     none        6.77 0.646 52.2     5.47     8.06
+# 
+# Results are averaged over the levels of: site 
+# Degrees-of-freedom method: kenward-roger 
+# Confidence level used: 0.95 
+# 
+# $`pairwise differences of month, treatment`
+#  1                           estimate    SE   df t.ratio p.value
+#  
+#  
+#  month12 full - month12 half    1.323 0.864 35.8   1.532  0.8331  no diff 
+#  month12 half - month12 none    2.193 0.808 33.0   2.716  0.1812 no diff in Dec2018
+#  month12 full - month12 none    3.516 0.940 40.1   3.740  0.0151 <-- Dec2018 full and no rem
+#  
+#  month3 full - month3 half      1.323 0.864 35.8   1.532  0.8331  no diff 
+#  month3 half - month3 none      2.193 0.808 33.0   2.716  0.1812  no diff
+#  month3 full - month3 none      3.516 0.940 40.1   3.740  0.0151 <--
+#  
+#  month4 full - month4 half      1.323 0.864 35.8   1.532  0.8331  no diff
+#  month4 half - month4 none      2.193 0.808 33.0   2.716  0.1812  no diff
+#  month4 full - month4 none      3.516 0.940 40.1   3.740  0.0151 <--
+#  
+#  month3 full - month12 half    -2.520 1.012 65.0  -2.491  0.2558  no diff 
+#  month3 full - month12 none    -0.327 0.996 62.9  -0.328  1.0000  no diff 
+#  month3 half - month12 none    -1.650 0.957 62.0  -1.723  0.7301  no diff
+#  
+#  month12 full - month3 full     3.843 0.659 89.5   5.833  <.0001 <--
+#  month12 full - month4 full    14.051 0.542 68.5  25.919  <.0001 <--
+#  month12 full - month3 half     5.166 1.156 66.0   4.469  0.0010 <--
+#  month12 full - month4 half    15.374 1.020 63.0  15.077  <.0001 <--
+
+#  month12 full - month3 none     7.359 1.282 69.0   5.739  <.0001 <--
+#  month12 full - month4 none    17.567 1.085 64.4  16.188  <.0001 <--
+#  
+#  month3 full - month4 full     10.208 0.659 89.5  15.495  <.0001 <--
+# 
+#  month3 full - month4 half     11.531 1.012 65.0  11.397  <.0001 <--
+#  
+#  month3 full - month4 none     13.724 0.996 62.9  13.783  <.0001 <--
+#  
+#  month4 full - month12 half   -12.728 1.020 63.0 -12.482  <.0001 <--
+#  month4 full - month3 half     -8.885 1.156 66.0  -7.686  <.0001 <--
+#  
+#  month4 full - month12 none   -10.535 1.085 64.4  -9.708  <.0001 <--
+#  month4 full - month3 none     -6.692 1.282 69.0  -5.219  0.0001 <--
+
+#  
+#  month12 half - month3 half     3.843 0.659 89.5   5.833  <.0001 <--
+#  month12 half - month4 half    14.051 0.542 68.5  25.919  <.0001 <--
+#  
+#  month12 half - month3 none     6.036 1.121 68.5   5.386  <.0001 <--
+#  month12 half - month4 none    16.244 0.973 62.8  16.700  <.0001 <--
+#  
+#  month3 half - month4 half     10.208 0.659 89.5  15.495  <.0001 <--
+#  
+#  month3 half - month4 none     12.401 0.957 62.0  12.955  <.0001 <--
+#  
+#  month4 half - month12 none   -11.857 0.973 62.8 -12.191  <.0001 <--
+#  month4 half - month3 none     -8.015 1.121 68.5  -7.151  <.0001 <--
+# 
+#  month12 none - month3 none     3.843 0.659 89.5   5.833  <.0001 <--
+#  month12 none - month4 none    14.051 0.542 68.5  25.919  <.0001 <--
+# 
+#  month3 none - month4 none     10.208 0.659 89.5  15.495  <.0001 <--
+# 
+# Results are averaged over the levels of: site 
+# Degrees-of-freedom method: kenward-roger 
+# P value adjustment: tukey method for comparing a family of 9 estimates 
+# 
+
 
 # tdr by month
 tdrmod_nncover_bymonth <- aov(soil_moisture ~ month, data = tdrmod_nncover)
