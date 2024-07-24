@@ -1,0 +1,239 @@
+---
+title: "ch3 Site Differences - pre-removal"
+author: "Stephanie Ma Lucero"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# load library
+```{r load libraries, message=FALSE}
+library(here) # similar to set working directory
+library(dplyr) # includes functions:
+library(tidyverse) # data wrangling, includes packages: ggplot2, tibble, tidyr, rear, purrr, stringr, forcats
+library(ggpubr)
+
+# for pretty output tables
+install.packages("kableExtra")
+# For dev version
+# install.packages("devtools")
+devtools::install_github("haozhu233/kableExtra")
+library(kableExtra)
+```
+
+# Overall site differences
+
+## - non-native cover
+- Data is located in --> "Processed" data folder
+
+```{r nn load, include=TRUE}
+# load total_exotic percent cover data as a .csv
+nncover_noremoval_load <- read_csv("data/totexo_cover.csv", 
+    col_types = cols(
+      date = col_character(), 
+      year = col_character(),
+      plot_number = col_integer(), 
+      cover_percent = col_number(),
+      notes = col_character()
+      )
+    )
+
+nncover_noremoval <- nncover_noremoval_load %>% 
+  rename(treatment = MAFA_removal) %>% 
+  rename(nn_cover = cover_percent) %>% 
+  mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) %>% 
+  dplyr::filter(year %in% c(2018, 2019)) %>% 
+  dplyr::filter(treatment == "none") %>% 
+  dplyr::select(year, treatment, site, plot_number, nn_cover) 
+
+#view(nncover_noremoval)
+head(nncover_noremoval)
+
+#str(nncover_noremoval)
+print(nncover_noremoval)
+length(nncover_noremoval$site)
+```
+
+```{r nn norm, include = TRUE}
+# nn percent cover by site
+hist(nncover_noremoval$nn_cover)
+ggqqplot(nncover_noremoval$nn_cover)
+shapiro.test(nncover_noremoval$nn_cover)
+# Shapiro-Wilk normality test
+# 
+# data:  nncover_noremoval$cover_percent
+# W = 0.98116, p-value = 0.9162 <-- normally distributed
+```
+
+```{r nn stats, include=TRUE}
+nncover_aov <- aov(nn_cover ~ site, data= (nncover_noremoval))
+summary(nncover_aov)
+#             Df Sum Sq Mean Sq F value Pr(>F)
+# site         1    376   376.4   2.545  0.125
+# Residuals   22   3255   147.9  
+# 
+# 2017 pval = 0.123
+# 2018 pval = 0.688
+# 2019 pval = 0.101
+# 2018-2019 pval = 0.125
+
+nncover_table <- nncover_noremoval %>%  
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_nncover = mean(nn_cover), 
+            SD = sd(nn_cover),
+            N = length(nn_cover), 
+            SE = ((sd(nn_cover))/sqrt(length((nn_cover)))))
+# site  avg_nncover SD        N   SE
+# 1	    32.03750  	12.46517	12	3.598385
+# 2   	39.95833  	11.85279	12	3.421605
+
+### print in Console
+nncover_table %>%
+  dplyr::select(site, avg_nncover, SE, N) %>%
+ kbl(caption = "Non-native cover by site", digits = 1) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+```
+
+
+
+## - MAFA cover
+```{r load mafa cover, include=TRUE}
+
+mafa_cover_noremoval <- read_csv("data/mafa_cover.csv", 
+    col_types = cols(
+      date = col_character(), 
+      year = col_integer(),
+      plot_number = col_integer(), 
+      MAFA_removal = col_character(),
+      cover_type = col_character(),
+      cover_percent = col_number(), # question for SHANE - Percent cover as number or integer?
+      notes = col_character()
+      )
+    ) %>% 
+   dplyr::select(year, plot_number, MAFA_removal, cover_percent) %>% 
+   mutate(site = case_when(plot_number <= 18 ~ '1', plot_number >= 19 ~ '2')) %>% 
+   rename(mafacover = cover_percent) %>% 
+   rename(treatment = MAFA_removal) %>% 
+  mutate(site = as.character(site)) %>% 
+   dplyr::filter(year %in% c(2018, 2019)) %>% 
+   dplyr::filter(treatment == "none")
+  
+#view(mafa_cover_noremoval)
+#str(mafa_cover_noremoval)
+print(mafa_cover_noremoval)
+length(mafa_cover_noremoval$site)
+```
+
+```{r mafa_cover differences - normality, include=TRUE}
+# mafacover by site
+hist(mafa_cover_noremoval$mafacover)
+ggqqplot(mafa_cover_noremoval$mafacover)
+shapiro.test(mafa_cover_noremoval$mafacover)
+# Shapiro-Wilk normality test
+# 
+# data:  mafa_cover_noremoval$mafacover
+# W = 0.96348, p-value = 0.5121 <-- normally distributed
+```
+
+```{r mafa_cover differences - stats, include=TRUE}
+mafacover_aov <- aov(mafacover ~ site, data= (mafa_cover_noremoval))
+summary(mafacover_aov)
+# Df Sum Sq Mean Sq F value Pr(>F)   
+# site         1   3349    3349   13.35 0.0014 ** <-- sig different
+# Residuals   22   5520     251   
+
+mafacover_table <- mafa_cover_noremoval %>%  
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_mafacover = mean(mafacover), 
+            SD = sd(mafacover),
+            N = length(mafacover), 
+            SE = ((sd(mafacover))/sqrt(length((mafacover)))))
+# site      avg_mafacover    SD     N    SE
+# 1              44.3       15.6    12  4.50
+# 2              20.7       16.1    12  4.64
+
+### print in Console
+mafacover_table %>%
+  dplyr::select(site, avg_mafacover, SE, N) %>%
+ kbl(caption = "MAFA cover by site", digits = 1) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+```{r nngrass cover differences - normality, include=TRUE}
+# mafacover by site
+hist(exotic_cover_all$cover_percent)
+ggqqplot(exotic_cover_all$cover_percent)
+shapiro.test(exotic_cover_all$cover_percent)
+# Shapiro-Wilk normality test
+# 
+# data:  exotic_cover_all$cover_percent
+# W = 0.96645, p-value = 0.05159 <-- normally distributed!!!
+```
+
+## - MAFA density 
+Data collected in 2020.
+```{r mafa density load}
+density <- read_csv("data/mafa_density_circumf.csv",
+                         col_types = cols(
+                           date = col_character(), 
+                           standtype = col_character(),
+                           site = col_character(), 
+                           plot = col_integer(), 
+                           removal = col_character(),
+                           MAFA_density = col_integer()
+                           )
+                         ) %>% 
+  dplyr::select(site, plot, removal, MAFA_density) %>% 
+  na.omit() %>% 
+  rename(treatment = removal) %>% 
+  dplyr::filter(treatment == "no") 
+
+
+#view(density)
+```
+
+
+```{r mafa_density - normality, include=TRUE}
+# mafa_density by site
+hist(density$MAFA_density)
+ggqqplot(density$MAFA_density)
+shapiro.test(density$MAFA_density)
+# Shapiro-Wilk normality test
+# 
+# data:  density$MAFA_density
+# W = 0.6286, p-value = 0.0001878 <-- not normally distributed
+```
+
+```{r density - stats, include=TRUE}
+wilcox.test(MAFA_density ~ site, data=density) 
+#Wilcoxon rank sum test with continuity correction
+#
+# data:  MAFA_density by site
+# W = 28, p-value = 0.1249 <-- not sig different
+# alternative hypothesis: true location shift is not equal to 0
+
+
+density_table <- density %>%  
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_mafadensity = mean(MAFA_density), 
+            SD = sd(MAFA_density),
+            N = length(MAFA_density), 
+            SE = ((sd(MAFA_density))/sqrt(length((MAFA_density)))))
+# site        avg_mafadensity    SD     N     SE
+# 1                 22.5        27.4    6     11.2 
+# 2                 4.83        4.17    6     1.70
+
+
+### print in Console
+density_table %>%
+  dplyr::select(site, avg_mafadensity, SE, N) %>%
+ kbl(caption = "MAFA density by site", digits = 1) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
