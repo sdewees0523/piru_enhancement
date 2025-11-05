@@ -108,49 +108,6 @@ survival_treatment <- surv_all %>%
   group_by(treatment, month_count) %>%
   summarise_at(vars(alive), funs(mean,sd))
 
-surv_2019_treat <- surv_all %>%
-  filter(year == "2019") %>%
-  group_by(treatment) %>%
-  summarise(
-    mean_alive = mean(alive, na.rm = TRUE),
-    sd_alive   = sd(alive, na.rm = TRUE),
-    n_alive    = n()  # optional: sample size
-  )
-
-surv_2019_plot <- surv_all %>%
-  group_by(site, treatment, plot_number) %>%
-  summarise(total_alive = sum(alive, na.rm = TRUE))
- 
-# stats 2019
-alive_by_plot <- surv_all %>%
-  group_by(plot_number) %>%
-  summarise(total_alive = sum(alive, na.rm = TRUE))
-
-hist(surv_2019_plot$total_alive)
-shapiro.test(surv_all$alive) # <- not normal
-# not normal
-kruskal.test(alive ~ treatment, data = surv_all) # <- p-value = 0.1427
-# Pairwise comparisons (nonparametric post-hoc)
-# pairwise.wilcox.test(surv_all$alive, surv_all$treatment, p.adjust.method = "BH") <-- doesn't run (Stephanie 11/5/2025)
-
-# Plot mean ± SD survival per treatment
-# ggplot(surv_2019_treat, 
-#        aes(x = treatment, y = mean_alive)) +
-#   geom_col(fill = "darkseagreen3", color = "black", width = 0.6) +
-#   geom_errorbar(aes(ymin = mean_alive - sd_alive, ymax = mean_alive + sd_alive),
-#                 width = 0.2, size = 0.8) +
-#   labs(
-#     x = "Treatment",
-#     y = "Mean number of seedlings alive",
-#     title = "Seedling survival by treatment (2019)"
-#   ) +
-#   theme_bw(base_size = 16) +
-#   theme(
-#     axis.title = element_text(size = 18),
-#     axis.text = element_text(size = 14),
-#     plot.title = element_text(size = 18, face = "bold"),
-#     panel.grid.minor = element_blank()
-#   )
 ```
 
 ```{r stats, include=TRUE}
@@ -170,6 +127,8 @@ summary(surv_19_all_aov)
 #Df Sum Sq Mean Sq F value Pr(>F)    
 #month_count   1   2086  2086.5   412.9 <2e-16 ***
 #Residuals   214   1082     5.1  
+
+
 
 ```
 
@@ -524,3 +483,45 @@ tdr_cover_scatter_2020 <- ggplot(
 
 ggplotly(tdr_cover_scatter_2020)
 ```
+
+# survival x treatment
+### 2018
+```{r}
+surv_2018_treat <- surv_all %>%
+  filter(year == "2018") %>%
+  group_by(treatment) %>%
+  summarise(
+    mean_alive = mean(alive, na.rm = TRUE),
+    sd_alive   = sd(alive, na.rm = TRUE),
+    n_alive    = n()  # optional: sample size
+  )
+
+surv_2018_treat
+
+
+```
+
+### 2019
+```{r}
+
+
+surv_2019_treat <- surv_all %>%
+  filter(year == "2019") %>%
+  group_by(treatment) %>%
+  summarise(
+    mean_alive = mean(alive, na.rm = TRUE),
+    sd_alive   = sd(alive, na.rm = TRUE),
+    n_alive    = n()  # optional: sample size
+  )
+
+
+# stats 2019
+surv_2019_plot <- surv_all %>%
+  filter(year == "2019") %>% 
+  filter(month_count < 12) %>%
+  group_by(site, treatment, plot_number) %>%
+  summarise(total_alive = sum(alive, na.rm = TRUE))
+
+
+```
+
