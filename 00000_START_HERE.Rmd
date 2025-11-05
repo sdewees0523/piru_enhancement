@@ -1,0 +1,94 @@
+_start notes_
+
+Today is: _2025.09.24_
+This is a list of: _Files that run without breaking_
+
+
+_Piru_enhancement-Data_Prep.Rmd_ 
+
+# Code to hang on to: 
+### - find all .png files 
+```{r list.files}
+
+############# HOW TO FIND A SPECIFIC FILE (a specific search)
+
+
+# To check for a df within all files in a project:
+lapply(list.files(pattern = "\\.Rmd$", recursive = TRUE), function(f) {
+  lines <- readLines(f, warn = FALSE)
+  hits <- grep("NAME_OF_ITEM_HERE", lines, value = TRUE)
+  if (length(hits) > 0) {
+    cat("\n---", f, "---\n")
+    cat(hits, sep = "\n")
+  }
+})
+
+ rmd_files <- list.files(path = ".", pattern = "name_of_file\\.Rmd$", recursive = TRUE, full.names = TRUE)
+
+matches <- lapply(rmd_files, function(f) {
+  lines <- readLines(f, warn = FALSE)
+  grep("name_of_file\\.png", lines, value = TRUE)
+})
+
+names(matches) <- rmd_files
+matches[sapply(matches, length) > 0]
+
+############### HOW TO FIND A LIST OF CHARACTERS (a wider search)
+rmd_files <- list.files(path = ".", pattern = "\\.Rmd$", recursive = TRUE, full.names = TRUE)
+
+matches <- lapply(rmd_files, function(f) {
+  lines <- readLines(f, warn = FALSE)
+  grep("par_month_treatment", lines, value = TRUE)
+})
+
+names(matches) <- rmd_files
+matches[sapply(matches, length) > 0]
+
+
+
+# To check for a df within all files in a project:
+lapply(list.files(pattern = "\\.Rmd$", recursive = TRUE), function(f) {
+  lines <- readLines(f, warn = FALSE)
+  hits <- grep("NAME_OF_ITEM_HERE", lines, value = TRUE)
+  if (length(hits) > 0) {
+    cat("\n---", f, "---\n")
+    cat(hits, sep = "\n")
+  }
+})
+
+```
+
+
+```{r ggsave}
+ggsave(
+  filename = "survival_plot.png",  # name of your file
+  plot = surv_plot,                # object name of your plot
+  width = 8,                       # width in inches
+  height = 6,                      # height in inches
+  dpi = 300                        # resolution (good for publication)
+)
+
+ggsave("~/Documents/Dissertation/Figures/survival_plot.png", plot = surv_plot, width = 8, height = 6, dpi = 300)
+
+```
+
+
+```{r}
+# stats
+
+
+# normal data
+anova_surv <- aov(alive ~ treatment, data = surv_all)
+summary(anova_surv)
+TukeyHSD(anova_surv)
+
+
+# not normal
+kruskal.test(alive ~ treatment, data = surv_all)
+
+# Pairwise comparisons (nonparametric post-hoc)
+pairwise.wilcox.test(surv_all$alive, surv_all$treatment, p.adjust.method = "BH")
+
+
+
+```
