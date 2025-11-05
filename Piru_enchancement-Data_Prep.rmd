@@ -482,7 +482,7 @@ par <- par_load %>%
   dplyr::select(date, year, month, site, plot_number, treatment, normalized_par)
 
 print(par)
-write.csv(par, "data/processed/par.csv")
+# write.csv(par, "data/processed/par.csv")
 
 ```
 

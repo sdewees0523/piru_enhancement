@@ -25,11 +25,7 @@ devtools::install_github("haozhu233/kableExtra")
 library(kableExtra)
 ```
 
-# Overall site differences
-
-## - non-native cover
-- Data is located in --> "Processed" data folder
-
+- load data
 ```{r nn load, include=TRUE}
 # load total_exotic percent cover data as a .csv
 nncover_noremoval_load <- read_csv("data/totexo_cover.csv", 
@@ -57,6 +53,11 @@ head(nncover_noremoval)
 print(nncover_noremoval)
 length(nncover_noremoval$site)
 ```
+
+# Overall site differences
+
+## - non-native cover
+- Data is located in --> "Processed" data folder
 
 ```{r nn norm, include = TRUE}
 # nn percent cover by site
@@ -138,7 +139,7 @@ shapiro.test(mafa_cover_noremoval$mafacover)
 # data:  mafa_cover_noremoval$mafacover
 # W = 0.96348, p-value = 0.5121 <-- normally distributed
 ```
-
+### - 2018 - 2019
 ```{r mafa_cover differences - stats, include=TRUE}
 mafacover_aov <- aov(mafacover ~ site, data= (mafa_cover_noremoval))
 summary(mafacover_aov)
@@ -160,6 +161,61 @@ mafacover_table <- mafa_cover_noremoval %>%
 mafacover_table %>%
   dplyr::select(site, avg_mafacover, SE, N) %>%
  kbl(caption = "MAFA cover by site", digits = 1) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+### - 2018
+```{r mafa_cover differences - stats, include=TRUE}
+mafacover_aov <- aov(mafacover ~ site, data = mafa_cover_noremoval %>% filter(year == "2018"))
+summary(mafacover_aov)
+# Df Sum Sq Mean Sq F value Pr(>F)   
+# site         1  963.0   963.0   13.85 0.00396 ** <-- sig different
+# Residuals   22   5520     251   
+
+mafacover_table_2018 <- mafa_cover_noremoval %>%  
+  filter(year == "2018") %>% 
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_mafacover = mean(mafacover), 
+            SD = sd(mafacover),
+            N = length(mafacover), 
+            SE = ((sd(mafacover))/sqrt(length((mafacover)))))
+#  site  avg_mafacover    SD     N    SE
+# 1 1              34    7.38     6  3.01
+# 2 2              16.1  9.20     6  3.76
+
+### print in Console
+mafacover_table_2018 %>%
+  dplyr::select(site, avg_mafacover, SE, N) %>%
+ kbl(caption = "MAFA cover in 2018 by site", digits = 1) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+
+```
+
+
+### - 2019
+```{r mafa_cover differences - stats, include=TRUE}
+mafacover_aov <- aov(mafacover ~ site, data = mafa_cover_noremoval %>% filter(year == "2019"))
+summary(mafacover_aov)
+# Df Sum Sq Mean Sq F value Pr(>F)   
+# site         1   2581  2581.3   7.854 0.0187 *** <-- sig different
+
+
+mafacover_table_2019 <- mafa_cover_noremoval %>%  
+  filter(year == "2019") %>% 
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_mafacover = mean(mafacover), 
+            SD = sd(mafacover),
+            N = length(mafacover), 
+            SE = ((sd(mafacover))/sqrt(length((mafacover)))))
+#  site  avg_mafacover    SD     N    SE
+# 1 1              54.7  15.0     6  6.12
+# 2 2              25.3  20.8     6  8.49
+
+### print in Console
+mafacover_table_2019 %>%
+  dplyr::select(site, avg_mafacover, SE, N) %>%
+ kbl(caption = "MAFA cover in 2019 by site", digits = 1) %>%
  kable_classic(full_width = F, html_font = "Cambria")
 
 ```
@@ -237,3 +293,154 @@ density_table %>%
 
 ```
 
+## - TDR
+```{r}
+
+tdr_site <- read.csv(here("data/processed", "tdr.csv")) %>% 
+  mutate(treatment = case_when(treatment == "nonene" ~ "none", 
+         TRUE ~ treatment))
+
+hist(tdr_site$soil_moisture)
+ggqqplot(tdr_site$soil_moisture)
+shapiro.test(tdr_site$soil_moisture) # <-- not normally distributed, p-value = 2.254e-09
+
+```
+
+### - 2018 - 2019
+```{r}
+################### 2018 and 2019
+wilcox.test(soil_moisture ~ site, data = tdr_site) 
+# ata:  soil_moisture by site
+# W = 7882.5, p-value = 8.056e-06 <-- sig diff
+
+tdr_table <- tdr_site %>%  
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_TDR = mean(soil_moisture), 
+            SD = sd(soil_moisture),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture))/sqrt(length((soil_moisture)))))
+#   site avg_TDR    SD     N    SE
+# 1     1    20.8  7.77   108 0.748
+# 2     2    16.7  7.49   108 0.721
+
+
+### print in Console
+tdr_table %>%
+  dplyr::select(site, avg_TDR, SE, N) %>%
+ kbl(caption = "Soil Moisture by site", digits = 1) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+```
+
+### - 2018
+```{r}
+################### 2018 
+wilcox.test(soil_moisture ~ site, data = tdr_site %>%  filter(year == "2018")) 
+
+tdr_table_2018 <- tdr_site %>%  
+  filter(year == "2018") %>% 
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_TDR = mean(soil_moisture), 
+            SD = sd(soil_moisture),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture))/sqrt(length((soil_moisture)))))
+
+
+### print in Console
+tdr_table_2018 %>%
+  dplyr::select(site, avg_TDR, SE, N) %>%
+ kbl(caption = "Soil Moisture by site", digits = 1) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+```
+
+### - 2019
+```{r}
+################### 2019 
+wilcox.test(soil_moisture ~ site, data = tdr_site %>%  filter(year == "2019")) 
+
+tdr_table_2019 <- tdr_site %>%  
+  filter(year == "2019") %>% 
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_TDR = mean(soil_moisture), 
+            SD = sd(soil_moisture),
+            N = length(soil_moisture), 
+            SE = ((sd(soil_moisture))/sqrt(length((soil_moisture)))))
+
+
+### print in Console
+tdr_table_2019 %>%
+  dplyr::select(site, avg_TDR, SE, N) %>%
+ kbl(caption = "Soil Moisture by site", digits = 1) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+```
+
+
+## - PAR
+```{r}
+par_site <- read.csv(here("data/processed", "par.csv")) 
+
+hist(par_site$normalized_par)
+ggqqplot(par_site$normalized_par)
+shapiro.test(par_site$normalized_par) # <-- not normally distributed, p-value = 0.0005271
+ 
+```
+
+
+### - 2018 - 2019
+```{r}
+################### 2018 and 2019
+wilcox.test(normalized_par ~ site, data = par_site) 
+# W = 7119, p-value = 4.289e-06 <-- sig diff
+
+par_table <- par_site %>%  
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_normPAR = mean(normalized_par), 
+            SD = sd(normalized_par),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par))/sqrt(length((normalized_par)))))
+
+### print in Console
+par_table %>%
+  dplyr::select(site, avg_normPAR, SE, N) %>%
+ kbl(caption = "Normalized PAR by site", digits = 3) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+```
+
+### - 2018
+```{r}
+################### 2018 
+wilcox.test(normalized_par ~ site, data = par_site %>% filter(year == "2018")) # <- not sig
+
+par_table_2018 <- par_site %>%  
+  filter(year == "2018") %>% 
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_normPAR = mean(normalized_par), 
+            SD = sd(normalized_par),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par))/sqrt(length((normalized_par)))))
+
+### print in Console
+par_table_2018 %>%
+  dplyr::select(site, avg_normPAR, SE, N) %>%
+ kbl(caption = "Normalized PAR in 2018 by site", digits = 3) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+```
+
+### - 2019
+```{r}
+################### 2019 
+wilcox.test(normalized_par ~ site, data = par_site %>% filter(year == "2019")) # <-  sig
+
+par_table_2019 <- par_site %>%  
+  filter(year == "2019") %>% 
+  dplyr::group_by(site) %>% 
+  dplyr::summarize(avg_normPAR = mean(normalized_par), 
+            SD = sd(normalized_par),
+            N = length(normalized_par), 
+            SE = ((sd(normalized_par))/sqrt(length((normalized_par)))))
+
+### print in Console
+par_table_2019 %>%
+  dplyr::select(site, avg_normPAR, SE, N) %>%
+ kbl(caption = "Normalized PAR in 2019 by site", digits = 3) %>%
+ kable_classic(full_width = F, html_font = "Cambria")
+```

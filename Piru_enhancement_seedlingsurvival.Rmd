@@ -9,6 +9,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
 # library
 ```{r load libraries, message=FALSE}
 library(here) # similar to set working directory
@@ -2937,7 +2938,7 @@ write.csv(height_jan_surv_may_2019, "data/processed/height_jan_surv_may_2019.csv
 
 ### E1. Basic stats on seedling survival - anovas and ttests
 ```{r}
-# average seedling olume
+# average seedling volume
 height_jan_surv_may_2019_notransf %>%  
   summarize(avg_Jan_vol = mean(jan_volume_cm3), 
             N = length(jan_volume_cm3), 
@@ -4610,7 +4611,10 @@ site_cond_nov2019 <- full_join(par_nov2019, nncover_may2019, by = c("site", "plo
     full_join(mafacover_may2019, by = c("site", "plot_number")) 
 print(site_cond_nov2019)
 
-write.csv(site_cond_nov2019, "data/processed/nov2019_site_conditions.csv")
+# write.csv(site_cond_nov2019, "data/processed/nov2019_site_conditions.csv")
+# site_cond_nov2019 <- read_csv("data/processed/nov2019_site_conditions.csv") 
+# site_cond_nov2019 <- site_cond_nov2019 %>%
+#   mutate(plot_number = as.character(plot_number)) 
 ```
 
 ```{r may 2019 height survival df, include=TRUE}
@@ -5380,7 +5384,7 @@ print(height_may_surv_nov_2019_notransf %>%
 
 ```
 
-
+##### CEOL
 ```{r nov 2019 glmer by species CEOL, include=TRUE}
 
 # par and nn cover - original glmer
@@ -5459,8 +5463,9 @@ glme.nov2019.mod1_ceol_treat <- glmer(as.factor(nov_alive) ~ treatment    + may_
                          data = (height_may_surv_nov_2019 %>% filter(species == "CEOL")) %>%  filter(site == "1"), na.action = "na.fail")
 summary(glme.nov2019.mod1_ceol_cover)
 
-```
+``` 
 
+##### HEAR
 ```{r nov 2019 glmer by species HEAR, include=TRUE}
 
 
@@ -5590,7 +5595,7 @@ TukeyHSD(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
 ```
 
 
-
+##### RHOV
 ```{r nov 2019 glmer by species RHOV, include=TRUE}
 glme.nov2019.mod1_rhov <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3  
                              + (1|plot_number), 
@@ -5641,6 +5646,8 @@ print(height_may_surv_nov_2019_notransf %>%
             percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
 ```
 
+
+##### SAAP
 ```{r nov 2019 glmer by species SAAP, include=TRUE}
 glme.nov2019.mod1_SAAP <- glmer(as.factor(nov_alive) ~ normalized_par + exotic_percentcover + site + may_volume_cm3  
                              + (1|plot_number), 
@@ -5733,6 +5740,8 @@ glme.nov2019.mod1_SAAP.scatter <- ggplot(data = height_may_surv_nov_2019 %>%  fi
   geom_jitter(width = 0.0, height = 0.0) +
   theme_classic()
 glme.nov2019.mod1_SAAP.scatter
+
+
 
 # SAAP sandbox... nothing is ever significant. Survival is driven by "luck"
 glme.nov2019.mod1_SAAP_cover <- glmer(as.factor(nov_alive) ~ mafacover +treatment + normalized_par + exotic_percentcover + site + may_volume_cm3  
