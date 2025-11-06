@@ -13,6 +13,8 @@ library(lubridate)
 library(readr)
 library(plotly)
 library(here)
+library(survival)
+library(survminer)
 ```
 
 ```{r callin, include = FALSE}
@@ -487,40 +489,141 @@ ggplotly(tdr_cover_scatter_2020)
 # survival x treatment
 ### 2018
 ```{r}
-surv_2018_treat <- surv_all %>%
-  filter(year == "2018") %>%
-  group_by(treatment) %>%
-  summarise(
-    mean_alive = mean(alive, na.rm = TRUE),
-    sd_alive   = sd(alive, na.rm = TRUE),
-    n_alive    = n()  # optional: sample size
+# Example data
+initial_2018 <- initial %>% 
+  filter(year == 2018)
+
+surv_2018 <- surv_all %>% 
+  filter(year == 2018) %>% 
+  drop_na(species) %>%
+  group_by(plot_number, treatment, species) %>%
+  arrange(month_count) %>%
+  mutate(
+    deaths_this_month = dead - lag(dead, default = 0),
+    deaths_this_month = if_else(deaths_this_month < 0, 0, deaths_this_month) # safety check
   )
 
-surv_2018_treat
+# Step 2. Identify how many individuals were still alive at last obs
+final_alive_2018 <- surv_2018 %>%
+  filter(month_count == max(month_count)) %>%
+  pull(alive)
 
+# Step 3. Expand deaths into individual records
+deaths_2018 <- surv_2018 %>%
+  filter(deaths_this_month > 0) %>%
+  select(plot_number, treatment, species, month_count, deaths_this_month) %>%
+  uncount(deaths_this_month, .id = "individual_id") %>%
+  mutate(event = 1)
+
+# Step 4. Expand survivors (still alive at end)
+alive_final_2018 <- surv_2018 %>%
+  filter(month_count == max(month_count)) %>%
+  select(plot_number, treatment, species, month_count, alive) %>%
+  uncount(alive, .id = "individual_id") %>%
+  mutate(event = 0)
+
+# Step 5. Combine to full survival dataframe
+survival_df_2018 <- bind_rows(deaths_2018, alive_final_2018) %>%
+  rename(time = month_count)
+
+hear_survival_2018 <- survival_df_2018 %>% 
+  filter(species == "HEAR")
+
+# Step 6. Fit survival model by treatment
+hear_surv_obj_2018 <- Surv(time = hear_survival_2018$time, event = hear_survival_2018$event)
+hear_fit_2018 <- survfit(hear_surv_obj_2018 ~ treatment, data = hear_survival_2018)
+
+# Optional plot
+ggsurvplot(hear_fit_2018, data = hear_survival_2018,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
+
+saap_survival_2018 <- survival_df_2018 %>% 
+  filter(species == "SAAP")
+
+# Step 6. Fit survival model by treatment
+saap_surv_obj_2018 <- Surv(time = saap_survival_2018$time, event = saap_survival_2018$event)
+saap_fit_2018 <- survfit(saap_surv_obj_2018 ~ treatment, data = saap_survival_2018)
+
+# Optional plot
+ggsurvplot(saap_fit_2018, data = saap_survival_2018,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
 
 ```
 
 ### 2019
 ```{r}
+# Example data
+initial_2019 <- initial %>% 
+  filter(year == 2019)
 
+surv_2019 <- surv_all %>% 
+  filter(year == 2019) %>% 
+  drop_na(species) %>%
+  group_by(plot_number, treatment, species) %>%
+  mutate(month_count = month_count - 12) %>% 
+  arrange(month_count) %>%
+  mutate(
+    deaths_this_month = dead - lag(dead, default = 0),
+    deaths_this_month = if_else(deaths_this_month < 0, 0, deaths_this_month) # safety check
+  ) %>% 
+  ungroup()
 
-surv_2019_treat <- surv_all %>%
-  filter(year == "2019") %>%
-  group_by(treatment) %>%
-  summarise(
-    mean_alive = mean(alive, na.rm = TRUE),
-    sd_alive   = sd(alive, na.rm = TRUE),
-    n_alive    = n()  # optional: sample size
-  )
+# Step 2. Identify how many individuals were still alive at last obs
+final_alive_2019 <- surv_2019 %>%
+  filter(month_count == max(month_count)) %>%
+  pull(alive)
 
+# Step 3. Expand deaths into individual records
+deaths_2019 <- surv_2019 %>%
+  filter(deaths_this_month > 0) %>%
+  select(plot_number, treatment, native_cover, species, month_count, deaths_this_month) %>%
+  uncount(deaths_this_month, .id = "individual_id") %>%
+  mutate(event = 1)
 
-# stats 2019
-surv_2019_plot <- surv_all %>%
-  filter(year == "2019") %>% 
-  filter(month_count < 12) %>%
-  group_by(site, treatment, plot_number) %>%
-  summarise(total_alive = sum(alive, na.rm = TRUE))
+# Step 4. Expand survivors (still alive at end)
+alive_final_2019 <- surv_2019 %>%
+  filter(month_count == max(month_count)) %>%
+  select(plot_number, treatment, native_cover, species, month_count, alive) %>%
+  uncount(alive, .id = "individual_id") %>%
+  mutate(event = 0)
+
+# Step 5. Combine to full survival dataframe
+survival_df_2019 <- bind_rows(deaths_2019, alive_final_2019) %>%
+  rename(time = month_count)
+
+hear_survival_2019 <- survival_df_2019 %>% 
+  filter(species == "HEAR") %>% 
+  filter(native_cover %in% c(min(native_cover), median(native_cover), max(native_cover))) %>% 
+  mutate(native_cover = as.character(native_cover))
+
+# Step 6. Fit survival model by treatment
+hear_surv_obj_2019 <- Surv(time = hear_survival_2019$time, event = hear_survival_2019$event)
+hear_fit_2019 <- survfit(hear_surv_obj_2019 ~ native_cover, data = hear_survival_2019)
+
+# Optional plot
+ggsurvplot(hear_fit_2019, data = hear_survival_2019,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
+
+saap_survival_2019 <- survival_df_2019 %>% 
+  filter(species == "SAAP") %>% 
+  filter(native_cover %in% c(min(native_cover), median(native_cover), max(native_cover))) %>% 
+  mutate(native_cover = as.character(native_cover))
+
+# Step 6. Fit survival model by treatment
+saap_surv_obj_2019 <- Surv(time = saap_survival_2019$time, event = saap_survival_2019$event)
+saap_fit_2019 <- survfit(saap_surv_obj_2019 ~ native_cover, data = saap_survival_2019)
+
+# Optional plot
+ggsurvplot(saap_fit_2019, data = saap_survival_2019,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
 
 
 ```
