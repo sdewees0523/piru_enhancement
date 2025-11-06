@@ -596,31 +596,49 @@ survival_df_2019 <- bind_rows(deaths_2019, alive_final_2019) %>%
   rename(time = month_count)
 
 hear_survival_2019 <- survival_df_2019 %>% 
-  filter(species == "HEAR") %>% 
+  filter(species == "HEAR") 
+
+hear_cover_2019 <- hear_survival_2019 %>% 
   filter(native_cover %in% c(min(native_cover), median(native_cover), max(native_cover))) %>% 
   mutate(native_cover = as.character(native_cover))
 
 # Step 6. Fit survival model by treatment
 hear_surv_obj_2019 <- Surv(time = hear_survival_2019$time, event = hear_survival_2019$event)
-hear_fit_2019 <- survfit(hear_surv_obj_2019 ~ native_cover, data = hear_survival_2019)
-
+hear_treatment_2019 <- survfit(hear_surv_obj_2019 ~ treatment, data = hear_survival_2019)
+hear_surv_obj_2019_2 <- Surv(time = hear_cover_2019$time, event = hear_cover_2019$event)
+hear_native_cover_2019 <- survfit(hear_surv_obj_2019_2 ~ native_cover, data = hear_cover_2019)
 # Optional plot
-ggsurvplot(hear_fit_2019, data = hear_survival_2019,
+ggsurvplot(hear_treatment_2019, data = hear_survival_2019,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
+
+ggsurvplot(hear_native_cover_2019, data = hear_cover_2019,
            conf.int = TRUE,
            risk.table = F,
            pval = TRUE)
 
 saap_survival_2019 <- survival_df_2019 %>% 
-  filter(species == "SAAP") %>% 
+  filter(species == "SAAP") 
+
+saap_cover_2019 <- saap_survival_2019 %>% 
   filter(native_cover %in% c(min(native_cover), median(native_cover), max(native_cover))) %>% 
   mutate(native_cover = as.character(native_cover))
 
 # Step 6. Fit survival model by treatment
 saap_surv_obj_2019 <- Surv(time = saap_survival_2019$time, event = saap_survival_2019$event)
-saap_fit_2019 <- survfit(saap_surv_obj_2019 ~ native_cover, data = saap_survival_2019)
+saap_treatment_2019 <- survfit(saap_surv_obj_2019 ~ treatment, data = saap_survival_2019)
+
+saap_surv_obj_2019_2 <- Surv(time = saap_cover_2019$time, event = saap_cover_2019$event)
+saap_native_cover_2019 <- survfit(saap_surv_obj_2019_2 ~ native_cover, data = saap_cover_2019)
 
 # Optional plot
-ggsurvplot(saap_fit_2019, data = saap_survival_2019,
+ggsurvplot(saap_treatment_2019, data = saap_survival_2019,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
+
+ggsurvplot(saap_native_cover_2019, data = saap_cover_2019,
            conf.int = TRUE,
            risk.table = F,
            pval = TRUE)
