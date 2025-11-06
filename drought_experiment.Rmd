@@ -528,7 +528,113 @@ stomatal_moisture <- right_join(midday_stomata, soil_moisture, by = c("species",
          stomatal_conductance = case_when(stomatal_conductance <= 0 ~ 0.0001,
                                           TRUE ~ stomatal_conductance)) %>% 
   filter(stomatal_conductance < 0.5)
+```
 
+```{r}
+ceol_moisture <- stomatal_moisture %>% 
+  filter(species == "ceanothus") %>% 
+  filter(treatment == "drought")
+
+rhov_moisture <- stomatal_moisture %>% 
+  filter(species == "rhus") %>% 
+  filter(treatment == "drought")
+
+hear_moisture <- stomatal_moisture %>% 
+  filter(species == "heteromeles") %>% 
+  filter(treatment == "drought")
+
+ceol_sum <- summary(ceol_moisture$soil_moisture)
+ceol_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = ceol_moisture,
+                  start = list(a = ceol_sum[6], H = 26, c = 12))
+
+rhov_sum <- summary(rhov_moisture$soil_moisture)
+rhov_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = rhov_moisture,
+                  start = list(a = rhov_sum[6], H = 26, c = 12))
+
+hear_sum <- summary(hear_moisture$soil_moisture)
+hear_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = hear_moisture,
+                  start = list(a = hear_sum[6], H = 26, c = 12))
+
+saap_sum <- summary(saap_gsw_moisture$soil_moisture)
+saap_nls <- nls(formula = stomatal_conductance ~ (a * (soil_moisture - c))/(H + (soil_moisture - c)), 
+                  data = saap_gsw_moisture %>% filter(soil_moisture > 6),
+                  start = list(a = saap_sum[6], H = 8, c = 7))
+
+ceol_newdata <- data.frame(soil_moisture = seq(7, 50, by = 1))
+ceol_interval <- as_tibble(predFit(ceol_nls, newdata = ceol_newdata, interval = "confidence", level= 0.95)) %>% 
+      mutate(soil_moisture = ceol_newdata$soil_moisture,
+             species = "CEOL")
+
+rhov_newdata <- data.frame(soil_moisture = seq(7, 50, by = 1))
+rhov_interval <- as_tibble(predFit(rhov_nls, newdata = rhov_newdata, interval = "confidence", level= 0.95)) %>% 
+      mutate(soil_moisture = rhov_newdata$soil_moisture,
+             species = "RHOV")
+
+hear_newdata <- data.frame(soil_moisture = seq(7, 50, by = 1))
+hear_interval <- as_tibble(predFit(hear_nls, newdata = hear_newdata, interval = "confidence", level= 0.95)) %>% 
+      mutate(soil_moisture = hear_newdata$soil_moisture,
+             species = "HEAR")
+
+saap_newdata <- data.frame(soil_moisture = seq(7, 50, by = 1))
+saap_interval <- as_tibble(predFit(saap_nls, newdata = saap_newdata, interval = "confidence", level= 0.95)) %>% 
+      mutate(soil_moisture = saap_newdata$soil_moisture,
+             species = "SAAP")
+
+
+ceol_sm_graph <- ggplot()+
+  geom_point(data = ceol_moisture, aes(x = soil_moisture, y = stomatal_conductance), alpha = 0.25)+
+  geom_line(data = ceol_interval, aes(x = soil_moisture, y = fit))+
+  geom_ribbon(data = ceol_interval, aes(x = soil_moisture, ymin = lwr, ymax = upr), alpha = 0.25)+
+  theme_classic()+
+  labs(title = "CEOL")+ 
+  ylim(-0.1, 0.6)
+
+rhov_sm_graph <- ggplot()+
+  geom_point(data = rhov_moisture, aes(x = soil_moisture, y = stomatal_conductance), alpha = 0.25)+
+  geom_line(data = rhov_interval, aes(x = soil_moisture, y = fit))+
+  geom_ribbon(data = rhov_interval, aes(x = soil_moisture, ymin = lwr, ymax = upr), alpha = 0.25)+
+  theme_classic()+
+  labs(title = "RHOV")+
+  ylim(-0.1,0.6)
+
+hear_sm_graph <- ggplot()+
+  geom_point(data = hear_moisture, aes(x = soil_moisture, y = stomatal_conductance), alpha = 0.25)+
+  geom_line(data = hear_interval, aes(x = soil_moisture, y = fit))+
+  geom_ribbon(data = hear_interval, aes(x = soil_moisture, ymin = lwr, ymax = upr), alpha = 0.25)+
+  theme_classic()+
+  labs(title = "HEAR")+
+  ylim(-0.1,0.6)
+
+saap_sm_graph <- ggplot()+
+  geom_point(data = saap_gsw_moisture, aes(x =soil_moisture, y = stomatal_conductance), alpha = 0.25)+
+  geom_line(data = saap_interval, aes(x = soil_moisture, y = fit))+
+  geom_ribbon(data = saap_interval, aes(x = soil_moisture, ymin = lwr, ymax = upr), alpha = 0.25)+
+  theme_classic()+
+  labs(title = "SAAP")+
+  ylim(-0.1,0.6)
+
+ceol_sm_graph
+rhov_sm_graph
+hear_sm_graph
+saap_sm_graph
+
+sm_species_1 <- (ceol_sm_graph + rhov_sm_graph)/(hear_sm_graph + saap_sm_graph)
+
+ggsave(filename = "sm_species_1.png", plot = sm_species_1, path = here())
+
+all_interval <- rbind(ceol_interval, rhov_interval, hear_interval, saap_interval)
+
+ggplot(all_interval, aes(x = soil_moisture, col = species))+
+  geom_line(aes(y = fit))+
+  geom_ribbon(aes(ymin = lwr, ymax = upr, fill = species), alpha = 0.25)+
+  theme_classic()
+```
+
+
+```{r}
 # CEOL
 ceol_sm_1 <- stomatal_moisture %>% 
   filter(species == "ceanothus") %>% 
@@ -1053,20 +1159,34 @@ gsw0_moist <- multcompLetters(gsw0_moist_tukey$species[,4]) %>%
 drought_parameters_stats <- drought_parameters %>% 
   left_join(gsw50_moist, by = "species") %>% 
   left_join(gsw_max, by = "species") %>% 
-  left_join(gsw0_moist, by = "species")
+  left_join(gsw0_moist, by = "species")%>% 
+  mutate(species = case_when(species == "ceol" ~ "CEOL",
+                             species == "rhov" ~ "RHOV",
+                             species == "saap" ~ "SAAP",
+                             species == "hear" ~ "HEAR"))
 
-ggplot(drought_parameters_stats) + 
+b <- ggplot(drought_parameters_stats) + 
   geom_boxplot(aes(x = species, y = gsw_max)) + 
   geom_text(aes(x = species, y = 0.4, label = gsw_max_lettters), check_overlap = TRUE) +
-  theme_classic()
+  theme_classic()+
+  labs(x = "Species",
+       y = "Stomatal conductance to \n water (mol m^-2 s ^-1)")
 
-ggplot(drought_parameters_stats) + 
+d <- ggplot(drought_parameters_stats) + 
   geom_boxplot(aes(x = species, y = gsw50_moist)) + 
   geom_text(aes(x = species, y = 40, label = gsw50_letters), check_overlap = TRUE) +
-  theme_classic()
+  theme_classic() +
+  labs(x = "Species",
+       y = "Soil moisture (%)")
 
-ggplot(drought_parameters_stats) + 
+f <- ggplot(drought_parameters_stats) + 
   geom_boxplot(aes(x = species, y = gsw0_moist)) + 
   geom_text(aes(x = species, y = 17, label = gsw0_letters), check_overlap = TRUE) +
-  theme_classic()
+  theme_classic()+
+  labs(x = "Species",
+       y = "Soil moisture (%)")
+
+b
+d
+f
 ```

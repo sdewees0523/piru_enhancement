@@ -14,6 +14,7 @@ library(gmodels)
 library(janitor)
 library(sicegar)
 library(multcompView)
+library(investr)
 ```
 
 ```{r}
@@ -33,6 +34,88 @@ rhov_licor <- licor %>%
 saap_licor <- licor %>% 
   filter(species == "SAAP")
 ```
+
+```{r}
+ceol_sum <- summary(ceol_licor$Photo)
+ceol_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = ceol_licor,
+                  start = list(a = ceol_sum[6], H = 1000, c = 0))
+ceol_newdata <- data.frame(PAR_actual = seq(0, 2000, by = 100))
+ceol_interval <- as_tibble(predFit(ceol_nls, newdata = ceol_newdata, interval = "confidence", level= 0.95)) %>% 
+      mutate(PAR_actual = ceol_newdata$PAR_actual,
+             species = "CEOL")
+
+rhov_sum <- summary(rhov_licor$Photo)
+rhov_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = rhov_licor,
+                  start = list(a = rhov_sum[6], H = 1000, c = 0))
+rhov_newdata <- data.frame(PAR_actual = seq(0, 2000, by = 100))
+rhov_interval <- as_tibble(predFit(rhov_nls, newdata = rhov_newdata, interval = "confidence", level= 0.95)) %>% 
+      mutate(PAR_actual = rhov_newdata$PAR_actual,
+             species = "RHOV")
+
+hear_sum <- summary(hear_licor$Photo)
+hear_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = hear_licor,
+                  start = list(a = hear_sum[6], H = 1000, c = 0))
+hear_newdata <- data.frame(PAR_actual = seq(0, 2000, by = 100))
+hear_interval <- as_tibble(predFit(hear_nls, newdata = hear_newdata, interval = "confidence", level= 0.95)) %>% 
+      mutate(PAR_actual = hear_newdata$PAR_actual,
+             species = "HEAR")
+
+saap_sum <- summary(saap_licor$Photo)
+saap_nls <- nls(formula = Photo ~ (a * (PAR_actual - c))/(H + (PAR_actual - c)), 
+                  data = saap_licor,
+                  start = list(a = saap_sum[6], H = 1000, c = 0))
+saap_newdata <- data.frame(PAR_actual = seq(0, 2000, by = 100))
+saap_interval <- as_tibble(predFit(saap_nls, newdata = saap_newdata, interval = "confidence", level= 0.95)) %>% 
+      mutate(PAR_actual = saap_newdata$PAR_actual, 
+             species = "SAAP")
+
+ceol_par_graph <- ggplot()+
+  geom_point(data = ceol_licor, aes(x = PAR_actual, y = Photo))+
+  geom_line(data = ceol_interval, aes(x = PAR_actual, y = fit))+
+  geom_ribbon(data = ceol_interval, aes(x = PAR_actual, ymin = lwr, ymax = upr), alpha = 0.25)+
+  theme_classic()+
+  labs(title = "CEOL")+
+  ylim(-5, 20)
+
+rhov_par_graph <- ggplot()+
+  geom_point(data = rhov_licor, aes(x = PAR_actual, y = Photo))+
+  geom_line(data = rhov_interval, aes(x = PAR_actual, y = fit))+
+  geom_ribbon(data = rhov_interval, aes(x = PAR_actual, ymin = lwr, ymax = upr), alpha = 0.25)+
+  theme_classic()+
+  labs(title = "RHOV")+
+  ylim(-5, 20)
+
+hear_par_graph <- ggplot()+
+  geom_point(data = hear_licor, aes(x = PAR_actual, y = Photo))+
+  geom_line(data = hear_interval, aes(x = PAR_actual, y = fit))+
+  geom_ribbon(data = hear_interval, aes(x = PAR_actual, ymin = lwr, ymax = upr), alpha = 0.25)+
+  theme_classic()+
+  labs(title = "HEAR")+
+  ylim(-5, 20)
+
+saap_par_graph <- ggplot()+
+  geom_point(data = saap_licor, aes(x = PAR_actual, y = Photo))+
+  geom_line(data = saap_interval, aes(x = PAR_actual, y = fit))+
+  geom_ribbon(data = saap_interval, aes(x = PAR_actual, ymin = lwr, ymax = upr), alpha = 0.25)+
+  theme_classic()+
+  labs(title = "SAAP")+
+  ylim(-5, 20)
+
+par_species_1 <- (ceol_par_graph + rhov_par_graph)/(hear_par_graph + saap_par_graph)
+
+ggsave(filename = "par_species_1.png", plot = par_species_1, path = here())
+
+all_interval <- rbind(ceol_interval, rhov_interval, hear_interval, saap_interval)
+
+ggplot(all_interval, aes(x = PAR_actual, col = species))+
+  geom_line(aes(y = fit))+
+  geom_ribbon(aes(ymin = lwr, ymax = upr, fill = species), alpha = 0.25)+
+  theme_classic()
+```
+
 
 ```{r}
 ##CEOL
@@ -474,21 +557,12 @@ A0_par <- multcompLetters(A0_par_tukey$species[,4]) %>%
 light_parameters_stats <- light_parameters %>% 
   left_join(A50_par, by = "species") %>% 
   left_join(A_max, by = "species") %>% 
-  left_join(A0_par, by = "species")
+  left_join(A0_par, by = "species") %>% 
+  mutate(species = case_when(species == "ceol" ~ "CEOL",
+                             species == "rhov" ~ "RHOV",
+                             species == "saap" ~ "SAAP",
+                             species == "hear" ~ "HEAR"))
 
-ggplot(light_parameters_stats) + 
-  geom_boxplot(aes(x = species, y = A_max)) + 
-  geom_text(aes(x = species, y = 25, label = A_max_lettters), check_overlap = TRUE) +
-  theme_classic()
-
-ggplot(light_parameters_stats) + 
-  geom_boxplot(aes(x = species, y = A50_par)) + 
-  geom_text(aes(x = species, y = 800, label = A50_letters), check_overlap = TRUE) +
-  theme_classic()
-
-ggplot(light_parameters_stats) + 
-  geom_boxplot(aes(x = species, y = A0_par)) + 
-  geom_text(aes(x = species, y = 250, label = A0_letters), check_overlap = TRUE) +
-  theme_classic()
+_
 ```
 
