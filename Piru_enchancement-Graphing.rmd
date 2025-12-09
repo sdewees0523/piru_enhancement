@@ -143,7 +143,7 @@ initial <- surv_all %>%
   select("year", "plot_number", "species", "alive") %>% 
   rename(initial = alive)
   
-view(initial)  
+# view(initial)  
 glimpse(initial)
 
 # 2018
@@ -157,7 +157,7 @@ surv_all_wider <- pivot_wider(surv_all_prep,
   dplyr::select(!"4" & !"9") %>% 
   na.omit()
 
-view(surv_all_wider)
+# view(surv_all_wider)
 
 surv_all_initial_2018 <- surv_all_wider %>% 
   left_join(initial, by = c("year", "plot_number", "species")) 
@@ -173,7 +173,7 @@ surv_2018_proportion_long <- surv_2018_proportion %>%
   pivot_longer(cols = c('January_proportion', 'February_proportion', 'May_proportion', 'December_proportion'),
                     names_to='month_proportion',
                     values_to='proportion_alive')
-view(surv_2018_proportion_long)
+# view(surv_2018_proportion_long)
 
 surv_2018_proportion_long_meanse <- surv_2018_proportion_long %>% 
    mutate(month_proportion = case_when(month_proportion == "December_proportion"~ "12",
@@ -206,7 +206,7 @@ surv_all_wider_2019 <- pivot_wider(surv_all_prep_2019,
   dplyr::select(!"7") %>% 
   drop_na()
 
-view(surv_all_wider_2019)
+# view(surv_all_wider_2019)
 surv_all_wider_2019 %>% 
   group_by(plot_number) %>% 
   summarize(N = length(plot_number)) # all plots contain 4 species
@@ -224,7 +224,7 @@ surv_2019_proportion_long <- surv_2019_proportion %>%
                     names_to='month_proportion',
                     values_to='proportion_alive') 
 
-view(surv_2019_proportion_long)
+# view(surv_2019_proportion_long)
 
 surv_2019_proportion_long_meanse <- surv_2019_proportion_long %>% 
    mutate(month_proportion = case_when(month_proportion == "november_proportion"~ "11",
@@ -552,6 +552,21 @@ ggsurvplot(saap_fit_2018, data = saap_survival_2018,
            risk.table = F,
            pval = TRUE)
 
+
+###
+
+
+# Step 6. Fit survival model by treatment
+total_surv_obj_2018 <- Surv(time = survival_df_2018$time, event = survival_df_2018$event)
+
+total_fit_2018 <- survfit(total_surv_obj_2018 ~ treatment, data = survival_df_2018)
+
+# Optional plot
+ggsurvplot(total_fit_2018, data = survival_df_2018,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
+
 ```
 
 ### 2019
@@ -646,3 +661,56 @@ ggsurvplot(saap_native_cover_2019, data = saap_cover_2019,
 
 ```
 
+```{r}
+
+### full year
+# Step 6. Fit survival model by treatment
+total_surv_obj_2019 <- Surv(time = survival_df_2019$time, event = survival_df_2019$event)
+total_treatment_2019 <- survfit(total_surv_obj_2019 ~ treatment, data = survival_df_2019)
+total_surv_obj_2019_2 <- Surv(time = total_cover_2019$time, event = total_cover_2019$event)
+total_native_cover_2019 <- survfit(total_surv_obj_2019_2 ~ native_cover, data = total_cover_2019)
+
+# Optional plot
+ggsurvplot(total_treatment_2019, data = survival_df_2019,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
+
+ggsurvplot(hear_native_cover_2019, data = hear_cover_2019,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
+
+### fall of 2019
+surv_2019_fall <- survival_df_2019 %>% 
+  filter(time > 3)
+# Step 6. Fit survival model by treatment
+total_surv_obj_2019_fall <- Surv(time = surv_2019_fall$time, event = surv_2019_fall$event)
+total_treatment_2019_fall <- survfit(total_surv_obj_2019_fall ~ treatment, data = surv_2019_fall)
+
+total_surv_obj_2019_2_fall <- Surv(time = surv_2019_fall$time, event = surv_2019_fall$event)
+total_native_cover_2019 <- survfit(total_surv_obj_2019_2_fall ~ native_cover, data = surv_2019_fall)
+
+# Optional plot
+ggsurvplot(total_treatment_2019_fall, data = surv_2019_fall,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
+
+ggsurvplot(total_native_cover_2019, data = surv_2019_fall,
+           conf.int = TRUE,
+           risk.table = F,
+           pval = TRUE)
+
+# ggsave("figures/total_surv_2019_treat_figure.pdf",
+#        total_surv_2019_treat_figure$plot,
+#        width = 8, height = 6)
+
+
+
+```
+
+```{r}
+print("You're reached the end of the code!")
+
+```
