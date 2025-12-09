@@ -621,9 +621,9 @@ rhov_sm_graph
 hear_sm_graph
 saap_sm_graph
 
-sm_species_1 <- (ceol_sm_graph + rhov_sm_graph)/(hear_sm_graph + saap_sm_graph)
+# sm_species_1 <- (ceol_sm_graph + rhov_sm_graph)/(hear_sm_graph + saap_sm_graph)
 
-ggsave(filename = "sm_species_1.png", plot = sm_species_1, path = here())
+# ggsave(filename = "sm_species_1.png", plot = sm_species_1, path = here())
 
 all_interval <- rbind(ceol_interval, rhov_interval, hear_interval, saap_interval)
 
