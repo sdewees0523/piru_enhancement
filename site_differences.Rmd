@@ -246,8 +246,13 @@ density <- read_csv("data/mafa_density_circumf.csv",
                          ) %>% 
   dplyr::select(site, plot, removal, MAFA_density) %>% 
   na.omit() %>% 
-  rename(treatment = removal) %>% 
-  dplyr::filter(treatment == "no") 
+  rename(treatment = removal, 
+         MAFA_density_2x2 = MAFA_density) %>% 
+  dplyr::filter(treatment == "no") %>% # density = 2x2 = 4m^2
+  mutate(
+    MAFA_density_1m2 = MAFA_density_2x2/4,
+    MAFA_density_100m2 = (MAFA_density_2x2/4)*100
+    )
 
 
 #view(density)
@@ -256,9 +261,9 @@ density <- read_csv("data/mafa_density_circumf.csv",
 
 ```{r mafa_density - normality, include=TRUE}
 # mafa_density by site
-hist(density$MAFA_density)
-ggqqplot(density$MAFA_density)
-shapiro.test(density$MAFA_density)
+hist(density$MAFA_density_100m2)
+ggqqplot(density$MAFA_density_100m2)
+shapiro.test(density$MAFA_density_100m2)
 # Shapiro-Wilk normality test
 # 
 # data:  density$MAFA_density
@@ -266,7 +271,7 @@ shapiro.test(density$MAFA_density)
 ```
 
 ```{r density - stats, include=TRUE}
-wilcox.test(MAFA_density ~ site, data=density) 
+wilcox.test(MAFA_density_100m2 ~ site, data=density) 
 #Wilcoxon rank sum test with continuity correction
 #
 # data:  MAFA_density by site
@@ -276,10 +281,10 @@ wilcox.test(MAFA_density ~ site, data=density)
 
 density_table <- density %>%  
   dplyr::group_by(site) %>% 
-  dplyr::summarize(avg_mafadensity = mean(MAFA_density), 
-            SD = sd(MAFA_density),
-            N = length(MAFA_density), 
-            SE = ((sd(MAFA_density))/sqrt(length((MAFA_density)))))
+  dplyr::summarize(avg_mafadensity = mean(MAFA_density_100m2), 
+            SD = sd(MAFA_density_100m2),
+            N = length(MAFA_density_100m2), 
+            SE = ((sd(MAFA_density_100m2))/sqrt(length((MAFA_density_100m2)))))
 # site        avg_mafadensity    SD     N     SE
 # 1                 22.5        27.4    6     11.2 
 # 2                 4.83        4.17    6     1.70
@@ -288,9 +293,10 @@ density_table <- density %>%
 ### print in Console
 density_table %>%
   dplyr::select(site, avg_mafadensity, SE, N) %>%
- kbl(caption = "MAFA density by site", digits = 1) %>%
+ kbl(caption = "MAFA density by site (#/100 m^2", digits = 1) %>%
  kable_classic(full_width = F, html_font = "Cambria")
 
+wilcox.test(MAFA_density_100m2 ~ site, data = density) 
 ```
 
 ## - TDR
