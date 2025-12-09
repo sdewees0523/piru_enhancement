@@ -3058,17 +3058,18 @@ t.test(may2019_alive~site, data = height_jan_surv_may_2019_notransf)
 tapply(as.integer(height_jan_surv_may_2019_notransf$may2019_alive), 
        height_jan_surv_may_2019_notransf$treatment, mean)
 #     full      half      none 
-#0.6307692 0.5227273 0.5909091 
+#  0.6307692 0.5227273 0.5909091 
 print(height_jan_surv_may_2019_notransf %>%  
   group_by(treatment) %>% 
   summarise(N = length(may2019_alive), 
             total_survived = sum(may2019_alive == "1"), 
             total_died = sum(may2019_alive == "0"),
             percent_survived = 100*(sum(may2019_alive == "1")/length(may2019_alive))))
+
 # treatment. N. total_survived. total_died. percent_survived
-# full	130	82	48	63.07692
-# half	132	69	63	52.27273
-# none	132	78	54	59.09091
+# full	    130	  82	           48	        63.07692
+# half	    132	  69	           63	        52.27273
+# none	    132	  78	           54	        59.09091
 
 summary(aov(may2019_alive ~ treatment, data = height_jan_surv_may_2019_notransf))
 # Df Sum Sq Mean Sq F value               Pr(>F)
@@ -4845,10 +4846,10 @@ print(height_may_surv_nov_2019_notransf %>%
             total_survived = sum(nov_alive == "1"), 
             total_died = sum(nov_alive == "0"),
             percent_survived = 100*(sum(nov_alive == "1")/length(nov_alive))))
-# species.  N.  total_survived.  total_died.  percent_survived
-# full	84	0.2619048	22	62	26.19048
-# half	72	0.4583333	33	39	45.83333
-# none	80	0.2750000	22	58	27.50000
+# species.  N.         total_survived.  total_died.  percent_survived
+# full    	84	    0.2619048	    22	62	    26.19048
+# half	    72	    0.4583333	    33	39	    45.83333
+# none	    80	    0.2750000	    22	58	    27.50000
 summary(aov(nov_alive ~ treatment, data = height_may_surv_nov_2019_notransf))
 #              Df Sum Sq Mean Sq F value Pr(>F)  
 # treatment     2   1.81  0.9070   4.221 0.0158 *
