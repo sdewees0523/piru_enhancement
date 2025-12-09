@@ -9,26 +9,22 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-```{r load libraries, include=FALSE}
+```{r load libraries}
 
 library(here) # similar to set working directory
 library(dplyr) # includes functions:
 library(tidyverse) # data wrangling, includes packages: ggplot2, tibble, tidyr, rear, purrr, stringr, forcats
 library(vegan)
 library(plotly)
-```
 
-```{r}
-remotes::install_github("gavinsimpson/ggvegan")
-remotes::install_github("jfq3/ggordiplots")
+# remotes::install_github("gavinsimpson/ggvegan")
+# remotes::install_github("jfq3/ggordiplots")
 
 #loading libraries
 library(ggvegan)
-library(tidyverse)
-library(vegan)
 library(ggpubr)
-library(plotly)
-library(ggordiplots)
+
+# library(ggordiplots)
 ```
 
 ```{r load data, include=FALSE}
@@ -59,6 +55,9 @@ glimpse(leaftraits)
 
 ggplot(data = leaftraits, aes(y = SLA_m2kg, x = species, color = individual_ID)) + 
   geom_jitter()
+
+hist(leaftraits$SLA_m2kg)
+shapiro.test(leaftraits$SLA_m2kg) # <-- not normaly distributed
 
 print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="HEAR")))) # leaf sla is similar between individuals
 print(TukeyHSD(aov(SLA_m2kg ~ individual_ID, data = leaftraits %>%  filter(species =="SAAP")))) # leaf sla is similar between individuals
