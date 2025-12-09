@@ -104,9 +104,9 @@ saap_par_graph <- ggplot()+
   labs(title = "SAAP")+
   ylim(-5, 20)
 
-par_species_1 <- (ceol_par_graph + rhov_par_graph)/(hear_par_graph + saap_par_graph)
+# par_species_1 <- (ceol_par_graph + rhov_par_graph) / (hear_par_graph + saap_par_graph)
 
-ggsave(filename = "par_species_1.png", plot = par_species_1, path = here())
+# ggsave(filename = "par_species_1.png", plot = par_species_1, path = here())
 
 all_interval <- rbind(ceol_interval, rhov_interval, hear_interval, saap_interval)
 
