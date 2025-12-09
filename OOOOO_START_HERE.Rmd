@@ -1,8 +1,0 @@
-_start notes_
-
-Today is: _2025.09.24_
-This is a list of: _Files that run without breaking_
-
-
-_Piru_enhancement-Data_Prep.Rmd_ 
-
