@@ -11,11 +11,14 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r library}
 library(tidyverse) 
+library(dplyr)
+library(tidyverse)
+library(ggpubr)
 ```
 
 ```{r load}
 density_load <- read_csv("data/mafa_density_circumf.csv") %>% 
-  dplyr::select(site, plot, removal, MAFA_density) %>% 
+  dplyr::select(site, plot, removal, MAFA_density) %>% # density = 2 x 2 m = 4m^2
   na.omit()
 
 prep_no <- density_load %>% 
